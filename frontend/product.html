@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadiusX — Product</title>
+
+<link rel="icon" href="assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/product.css">
+
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<div class="header-wrapper">
+  <header class="navbar">
+
+    <div class="nav-left">
+      <a href="index.html" class="logo">
+        <img src="assets/logo/logo.png" alt="RadiusX">
+      </a>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" id="breadcrumb">
+      <a href="index.html">Home</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="bcCategory">—</span>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="bcName">—</span>
+    </nav>
+
+    <div class="nav-right">
+      <a href="cart.html" class="nav-cart-btn">
+        <i class="fa-solid fa-basket-shopping"></i>
+        <span class="nav-cart-badge" id="navCartBadge">0</span>
+      </a>
+      <a href="index.html" class="nav-back-link">
+        <i class="fa-solid fa-arrow-left"></i> Back
+      </a>
+    </div>
+
+  </header>
+</div>
+
+<!-- ===== PRODUCT HERO ===== -->
+<main class="product-main" id="productMain">
+
+  <!-- LEFT — Image Gallery -->
+  <section class="gallery-section">
+
+    <!-- Thumbnail rail -->
+    <div class="thumb-rail" id="thumbRail">
+      <!-- injected by JS -->
+    </div>
+
+    <!-- Main image viewer -->
+    <div class="main-image-wrap">
+      <div class="wishlist-btn" id="wishlistBtn" onclick="toggleWishlist()">
+        <i class="fa-regular fa-heart" id="wishlistIcon"></i>
+      </div>
+      <div class="badge-label" id="discountBadge"></div>
+      <img class="main-image" id="mainImage" src="" alt="Product Image"
+           onerror="this.src='assets/products/demo.jpg'">
+      <!-- zoom hint -->
+      <span class="zoom-hint"><i class="fa-solid fa-magnifying-glass-plus"></i> Hover to zoom</span>
+    </div>
+
+    <!-- Share row -->
+    <div class="share-row">
+      <span class="share-label">Share:</span>
+      <button class="share-btn" onclick="shareProduct('whatsapp')" title="WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+      </button>
+      <button class="share-btn" onclick="shareProduct('copy')" title="Copy Link">
+        <i class="fa-solid fa-link"></i>
+      </button>
+      <button class="share-btn" onclick="shareProduct('twitter')" title="Twitter">
+        <i class="fa-brands fa-x-twitter"></i>
+      </button>
+    </div>
+
+  </section>
+
+  <!-- RIGHT — Product Info -->
+  <section class="info-section">
+
+    <!-- Category tag -->
+    <div class="category-tag" id="productCategory"></div>
+
+    <!-- Title -->
+    <h1 class="product-title" id="productName">—</h1>
+
+    <!-- Rating row -->
+    <div class="rating-row">
+      <div class="stars" id="productStars"></div>
+      <span class="rating-val" id="ratingVal"></span>
+      <span class="review-link" id="reviewLink" onclick="scrollToReviews()"></span>
+      <span class="divider-dot">·</span>
+      <span class="in-stock" id="stockStatus"></span>
+    </div>
+
+    <!-- Price block -->
+    <div class="price-block">
+      <span class="price-current" id="priceMain"></span>
+      <span class="price-strike" id="priceOriginal"></span>
+      <span class="price-off-tag" id="priceOff"></span>
+    </div>
+    <p class="tax-note">Inclusive of all taxes. <span class="free-del-note" id="freeDelNote"></span></p>
+
+    <!-- Variants (colour swatches placeholder) -->
+    <div class="variants-wrap" id="variantsWrap">
+      <span class="variant-label">Colour:</span>
+      <div class="swatches" id="swatches"></div>
+    </div>
+
+    <!-- Quantity + Actions -->
+    <div class="qty-action-row">
+      <div class="qty-stepper">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-val" id="qtyVal">1</span>
+        <button class="qty-btn" onclick="changeQty(+1)">+</button>
+      </div>
+      <button class="btn-cart" id="btnCart" onclick="handleAddToCart()">
+        <i class="fa-solid fa-basket-shopping"></i> Add to Cart
+      </button>
+      <button class="btn-buy" onclick="handleBuyNow()">
+        <i class="fa-solid fa-bolt"></i> Buy Now
+      </button>
+    </div>
+
+    <!-- Key highlights -->
+    <div class="highlights-box" id="highlightsBox">
+      <h3 class="section-mini-title">Highlights</h3>
+      <ul class="highlights-list" id="highlightsList"></ul>
+    </div>
+
+    <!-- Delivery info -->
+    <div class="delivery-box">
+      <div class="delivery-row">
+        <i class="fa-solid fa-truck-fast"></i>
+        <div>
+          <strong>Fast Delivery</strong>
+          <p>Estimated delivery in <span id="deliveryDays">2–4</span> business days</p>
+        </div>
+      </div>
+      <div class="delivery-row">
+        <i class="fa-solid fa-rotate-left"></i>
+        <div>
+          <strong>7-Day Returns</strong>
+          <p>Easy hassle-free returns & exchanges</p>
+        </div>
+      </div>
+      <div class="delivery-row">
+        <i class="fa-solid fa-shield-halved"></i>
+        <div>
+          <strong>Secure Payment</strong>
+          <p>100% secure transactions</p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ===== TABS — Description / Specs / Reviews ===== -->
+<div class="tabs-wrapper" id="tabsWrapper">
+
+  <div class="tabs-bar">
+    <button class="tab-btn active" data-tab="description" onclick="switchTab(this,'description')">Description</button>
+    <button class="tab-btn" data-tab="specs"       onclick="switchTab(this,'specs')">Specifications</button>
+    <button class="tab-btn" data-tab="reviews"     onclick="switchTab(this,'reviews')">Reviews</button>
+    <span class="tab-underline" id="tabUnderline"></span>
+  </div>
+
+  <!-- Description -->
+  <div class="tab-panel active" id="tabDescription">
+    <p id="productDescription" class="description-text"></p>
+  </div>
+
+  <!-- Specifications -->
+  <div class="tab-panel" id="tabSpecs">
+    <table class="specs-table" id="specsTable"></table>
+  </div>
+
+  <!-- Reviews -->
+  <div class="tab-panel" id="tabReviews">
+
+    <!-- Rating overview -->
+    <div class="reviews-overview">
+      <div class="big-rating" id="bigRating"></div>
+      <div class="rating-bars" id="ratingBars"></div>
+    </div>
+
+    <!-- Reviews list -->
+    <div class="reviews-list" id="reviewsList"></div>
+
+    <!-- Write a review -->
+    <div class="write-review">
+      <h3 class="section-mini-title">Write a Review</h3>
+      <div class="star-picker" id="starPicker">
+        <i class="fa-regular fa-star rev-star" data-v="1" onclick="pickStar(1)"></i>
+        <i class="fa-regular fa-star rev-star" data-v="2" onclick="pickStar(2)"></i>
+        <i class="fa-regular fa-star rev-star" data-v="3" onclick="pickStar(3)"></i>
+        <i class="fa-regular fa-star rev-star" data-v="4" onclick="pickStar(4)"></i>
+        <i class="fa-regular fa-star rev-star" data-v="5" onclick="pickStar(5)"></i>
+      </div>
+      <textarea id="reviewText" placeholder="Share your experience with this product…"></textarea>
+      <button class="submit-review-btn" onclick="submitReview()">
+        <i class="fa-solid fa-paper-plane"></i> Submit Review
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ===== RELATED PRODUCTS ===== -->
+<section class="related-section" id="relatedSection">
+  <h2 class="related-title">Related Products</h2>
+  <div class="related-grid" id="relatedGrid"></div>
+</section>
+
+<!-- ===== IMAGE ZOOM LIGHTBOX ===== -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="">
+  <button class="lb-close" onclick="closeLightbox()"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="js/product.js"></script>
+</body>
+</html>

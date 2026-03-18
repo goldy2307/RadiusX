@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadiusX &#8212; Sign In</title>
+
+<link rel="icon" href="assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/login.css">
+
+</head>
+<body>
+
+<a class="back-home" href="index.html">
+  <i class="fa-solid fa-arrow-left"></i> Back to RadiusX
+</a>
+
+<div class="auth-wrapper">
+
+  <!-- LEFT PANEL -->
+  <div class="auth-left">
+    <div class="auth-left-inner">
+      <div class="auth-logo">
+        <img src="assets/logo/logo.png" alt="RadiusX">
+      </div>
+      <h1 class="auth-tagline">Shop Smart.<br><em>Shop Local.</em></h1>
+      <p class="auth-sub">Discover the best products and deals available right around you. Your neighbourhood marketplace, reimagined.</p>
+      <ul class="auth-perks">
+        <li><i class="fa-solid fa-location-dot"></i> Location-aware recommendations</li>
+        <li><i class="fa-solid fa-tag"></i> Exclusive local deals</li>
+        <li><i class="fa-solid fa-shield-halved"></i> Secure &amp; private</li>
+        <li><i class="fa-solid fa-bolt"></i> Fast delivery nearby</li>
+      </ul>
+      <div class="dot-grid" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="auth-right">
+
+    <div class="auth-tabs" id="authTabs">
+      <button class="auth-tab active" id="tabSignIn" onclick="switchTab('signin')">Sign In</button>
+      <button class="auth-tab" id="tabSignUp" onclick="switchTab('signup')">Sign Up</button>
+      <button class="auth-tab seller-tab" id="tabSeller" onclick="switchTab('seller')">
+        <i class="fa-solid fa-store"></i> Sell on RadiusX
+      </button>
+      <span class="tab-indicator" id="tabIndicator"></span>
+    </div>
+
+    <!-- SIGN IN -->
+    <div class="auth-form" id="formSignIn">
+      <p class="form-welcome">Welcome back &#128075;</p>
+
+      <div class="field-group">
+        <label>Email / Mobile</label>
+        <div class="input-wrap">
+          <i class="fa-regular fa-envelope"></i>
+          <input type="text" id="siIdentifier" placeholder="you@gmail.com or 9XXXXXXXXX">
+        </div>
+        <span class="field-error" id="siIdentifierErr"></span>
+      </div>
+
+      <div class="field-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="siPassword" placeholder="Enter your password">
+          <i class="fa-regular fa-eye toggle-pass" onclick="togglePassword('siPassword',this)"></i>
+        </div>
+        <span class="field-error" id="siPasswordErr"></span>
+      </div>
+
+      <button class="auth-btn" onclick="handleSignIn()">
+        <span>Sign In</span><i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+      <div class="auth-links">
+        <a href="#" onclick="showModal('forgot')">Forgot Password?</a>
+        <span>&#183;</span>
+        <a href="#" onclick="switchTab('signup')">Create Account</a>
+        <span>&#183;</span>
+        <a href="#" onclick="switchTab('seller')">Become a Seller</a>
+        <span>&#183;</span>
+        <a href="#" onclick="showModal('help')">Help</a>
+      </div>
+    </div>
+
+    <!-- SIGN UP -->
+    <div class="auth-form hidden" id="formSignUp">
+      <p class="form-welcome">Create your account &#10024;</p>
+
+      <div class="fields-grid">
+
+        <div class="field-group">
+          <label>Full Name</label>
+          <div class="input-wrap">
+            <i class="fa-regular fa-user"></i>
+            <input type="text" id="suName" placeholder="Ravi Kumar">
+          </div>
+          <span class="field-error" id="suNameErr"></span>
+        </div>
+
+        <div class="field-group">
+          <label>Gmail Address</label>
+          <div class="input-wrap">
+            <i class="fa-regular fa-envelope"></i>
+            <input type="email" id="suEmail" placeholder="you@gmail.com">
+          </div>
+          <span class="field-error" id="suEmailErr"></span>
+        </div>
+
+        <div class="field-group">
+          <label>Mobile Number</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span class="dial-code">+91</span>
+            <input type="tel" id="suMobile" placeholder="9XXXXXXXXX" maxlength="10">
+          </div>
+          <span class="field-error" id="suMobileErr"></span>
+        </div>
+
+        <div class="field-group">
+          <label>Pincode</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-map-pin"></i>
+            <input type="text" id="suPincode" placeholder="452001" maxlength="6" oninput="fetchPincode(this.value)">
+          </div>
+          <span class="field-error" id="suPincodeErr"></span>
+          <span class="pincode-resolved" id="pincodeInfo"></span>
+        </div>
+
+        <div class="field-group full-width">
+          <label>Residential Address</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-house"></i>
+            <input type="text" id="suAddress" placeholder="Flat / House no., Street, Locality">
+          </div>
+          <span class="field-error" id="suAddressErr"></span>
+        </div>
+
+        <div class="field-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="suPassword" placeholder="Min. 8 characters" oninput="checkStrength(this.value)">
+            <i class="fa-regular fa-eye toggle-pass" onclick="togglePassword('suPassword',this)"></i>
+          </div>
+          <div class="strength-bar"><span id="strengthFill"></span></div>
+          <span class="strength-label" id="strengthLabel"></span>
+          <span class="field-error" id="suPasswordErr"></span>
+        </div>
+
+        <div class="field-group">
+          <label>Confirm Password</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="suConfirm" placeholder="Re-enter password">
+            <i class="fa-regular fa-eye toggle-pass" onclick="togglePassword('suConfirm',this)"></i>
+          </div>
+          <span class="field-error" id="suConfirmErr"></span>
+        </div>
+
+      </div>
+
+      <div class="terms-row">
+        <input type="checkbox" id="suTerms">
+        <label for="suTerms">I agree to the <a href="#">Terms &amp; Conditions</a> and <a href="#">Privacy Policy</a></label>
+      </div>
+
+      <button class="auth-btn" onclick="handleSignUp()">
+        <span>Create Account</span><i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+      <div class="auth-links">
+        <a href="#" onclick="switchTab('signin')">Already have an account? Sign In</a>
+        <span>&#183;</span>
+        <a href="#" onclick="switchTab('seller')">Become a Seller</a>
+        <span>&#183;</span>
+        <a href="#" onclick="showModal('help')">Help</a>
+      </div>
+    </div>
+
+    <!-- ================================================
+         SELLER REGISTRATION &#8212; 3-step form
+         ================================================ -->
+    <div class="auth-form hidden" id="formSeller">
+
+      <p class="form-welcome">Start selling on RadiusX &#127978;</p>
+      <p class="seller-intro">Reach thousands of local customers. Setup takes less than 3 minutes.</p>
+
+      <!-- Step indicator -->
+      <div class="seller-steps" id="sellerSteps">
+        <div class="seller-step active" id="step-dot-1">
+          <div class="step-dot">1</div>
+          <span>Business</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="seller-step" id="step-dot-2">
+          <div class="step-dot">2</div>
+          <span>Store</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="seller-step" id="step-dot-3">
+          <div class="step-dot">3</div>
+          <span>Bank &amp; Docs</span>
+        </div>
+      </div>
+
+      <!-- ---- STEP 1: Business Info ---- -->
+      <div class="seller-step-form" id="sellerStep1">
+        <div class="step-heading">
+          <i class="fa-solid fa-building"></i>
+          <span>Business Information</span>
+        </div>
+
+        <div class="fields-grid">
+
+          <div class="field-group">
+            <label>Owner / Contact Name</label>
+            <div class="input-wrap">
+              <i class="fa-regular fa-user"></i>
+              <input type="text" id="sl-ownerName" placeholder="Ravi Kumar">
+            </div>
+            <span class="field-error" id="sl-ownerNameErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Business Email</label>
+            <div class="input-wrap">
+              <i class="fa-regular fa-envelope"></i>
+              <input type="email" id="sl-email" placeholder="business@gmail.com">
+            </div>
+            <span class="field-error" id="sl-emailErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Mobile Number</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-mobile-screen"></i>
+              <span class="dial-code">+91</span>
+              <input type="tel" id="sl-mobile" placeholder="9XXXXXXXXX" maxlength="10">
+            </div>
+            <span class="field-error" id="sl-mobileErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Business Type</label>
+            <div class="input-wrap input-wrap-select">
+              <i class="fa-solid fa-briefcase"></i>
+              <select id="sl-bizType">
+                <option value="">Select type</option>
+                <option value="individual">Individual / Sole Proprietor</option>
+                <option value="partnership">Partnership Firm</option>
+                <option value="pvt_ltd">Private Limited Company</option>
+                <option value="llp">LLP</option>
+                <option value="trust">Trust / NGO</option>
+              </select>
+            </div>
+            <span class="field-error" id="sl-bizTypeErr"></span>
+          </div>
+
+          <div class="field-group full-width">
+            <label>Business / Legal Name</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-store"></i>
+              <input type="text" id="sl-bizName" placeholder="e.g. Kumar Electronics Pvt. Ltd.">
+            </div>
+            <span class="field-error" id="sl-bizNameErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>GST Number <span class="label-opt">(optional)</span></label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-receipt"></i>
+              <input type="text" id="sl-gst" placeholder="22AAAAA0000A1Z5" maxlength="15"
+                     oninput="this.value=this.value.toUpperCase()">
+            </div>
+            <span class="field-error" id="sl-gstErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>PAN Number</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-id-card"></i>
+              <input type="text" id="sl-pan" placeholder="ABCDE1234F" maxlength="10"
+                     oninput="this.value=this.value.toUpperCase()">
+            </div>
+            <span class="field-error" id="sl-panErr"></span>
+          </div>
+
+        </div>
+
+        <div class="step-nav">
+          <span></span>
+          <button class="auth-btn step-next-btn" onclick="sellerNextStep(1)">
+            <span>Next: Store Details</span><i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ---- STEP 2: Store Details ---- -->
+      <div class="seller-step-form hidden" id="sellerStep2">
+        <div class="step-heading">
+          <i class="fa-solid fa-shop"></i>
+          <span>Store Details</span>
+        </div>
+
+        <div class="fields-grid">
+
+          <div class="field-group full-width">
+            <label>Store / Shop Name</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-store"></i>
+              <input type="text" id="sl-storeName" placeholder="e.g. Ravi's Electronics">
+            </div>
+            <span class="field-error" id="sl-storeNameErr"></span>
+          </div>
+
+          <div class="field-group full-width">
+            <label>Store Description</label>
+            <div class="input-wrap input-wrap-textarea">
+              <i class="fa-solid fa-align-left"></i>
+              <textarea id="sl-storeDesc" placeholder="Brief description of what you sell..." rows="3"></textarea>
+            </div>
+            <span class="field-error" id="sl-storeDescErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Product Category</label>
+            <div class="input-wrap input-wrap-select">
+              <i class="fa-solid fa-tags"></i>
+              <select id="sl-category">
+                <option value="">Select category</option>
+                <option value="electronics">Electronics &amp; Gadgets</option>
+                <option value="fashion">Fashion &amp; Clothing</option>
+                <option value="home">Home &amp; Furniture</option>
+                <option value="food">Food &amp; Groceries</option>
+                <option value="health">Health &amp; Beauty</option>
+                <option value="sports">Sports &amp; Fitness</option>
+                <option value="books">Books &amp; Stationery</option>
+                <option value="toys">Toys &amp; Games</option>
+                <option value="auto">Automotive</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <span class="field-error" id="sl-categoryErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Pincode</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-map-pin"></i>
+              <input type="text" id="sl-pincode" placeholder="452001" maxlength="6"
+                     oninput="fetchSellerPincode(this.value)">
+            </div>
+            <span class="field-error" id="sl-pincodeErr"></span>
+            <span class="pincode-resolved" id="sl-pincodeInfo"></span>
+          </div>
+
+          <div class="field-group full-width">
+            <label>Store Address</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-location-dot"></i>
+              <input type="text" id="sl-storeAddr" placeholder="Shop no., Building, Street, Area, City">
+            </div>
+            <span class="field-error" id="sl-storeAddrErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Password</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" id="sl-password" placeholder="Min. 8 characters"
+                     oninput="checkSellerStrength(this.value)">
+              <i class="fa-regular fa-eye toggle-pass" onclick="togglePassword('sl-password',this)"></i>
+            </div>
+            <div class="strength-bar"><span id="sl-strengthFill"></span></div>
+            <span class="strength-label" id="sl-strengthLabel"></span>
+            <span class="field-error" id="sl-passwordErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Confirm Password</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock"></i>
+              <input type="password" id="sl-confirm" placeholder="Re-enter password">
+              <i class="fa-regular fa-eye toggle-pass" onclick="togglePassword('sl-confirm',this)"></i>
+            </div>
+            <span class="field-error" id="sl-confirmErr"></span>
+          </div>
+
+        </div>
+
+        <div class="step-nav">
+          <button class="auth-btn step-back-btn" onclick="sellerBackStep(2)">
+            <i class="fa-solid fa-arrow-left"></i><span>Back</span>
+          </button>
+          <button class="auth-btn step-next-btn" onclick="sellerNextStep(2)">
+            <span>Next: Bank &amp; Docs</span><i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ---- STEP 3: Bank & Docs ---- -->
+      <div class="seller-step-form hidden" id="sellerStep3">
+        <div class="step-heading">
+          <i class="fa-solid fa-landmark"></i>
+          <span>Bank &amp; Documents</span>
+        </div>
+
+        <div class="fields-grid">
+
+          <div class="field-group">
+            <label>Account Holder Name</label>
+            <div class="input-wrap">
+              <i class="fa-regular fa-user"></i>
+              <input type="text" id="sl-accName" placeholder="As per bank records">
+            </div>
+            <span class="field-error" id="sl-accNameErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Bank Name</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-building-columns"></i>
+              <input type="text" id="sl-bankName" placeholder="e.g. State Bank of India">
+            </div>
+            <span class="field-error" id="sl-bankNameErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Account Number</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-credit-card"></i>
+              <input type="text" id="sl-accNo" placeholder="Account number" maxlength="18">
+            </div>
+            <span class="field-error" id="sl-accNoErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>IFSC Code</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-code-branch"></i>
+              <input type="text" id="sl-ifsc" placeholder="e.g. SBIN0001234" maxlength="11"
+                     oninput="this.value=this.value.toUpperCase()">
+            </div>
+            <span class="field-error" id="sl-ifscErr"></span>
+          </div>
+
+          <!-- Document uploads (UI only &#8212; stores filename in state) -->
+          <div class="field-group full-width">
+            <label class="upload-section-label">
+              <i class="fa-solid fa-file-arrow-up"></i> Document Uploads
+              <span class="label-opt">(required for verification)</span>
+            </label>
+          </div>
+
+          <div class="field-group">
+            <label>PAN Card</label>
+            <div class="upload-box" id="upPAN" onclick="triggerUpload('filePAN','upPAN','docPANName')">
+              <i class="fa-solid fa-id-card"></i>
+              <span id="docPANName">Click to upload (JPG / PNG / PDF)</span>
+            </div>
+            <input type="file" id="filePAN" accept=".jpg,.jpeg,.png,.pdf"
+                   onchange="handleUpload('filePAN','upPAN','docPANName')" style="display:none">
+            <span class="field-error" id="sl-panDocErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>GST Certificate <span class="label-opt">(if applicable)</span></label>
+            <div class="upload-box" id="upGST" onclick="triggerUpload('fileGST','upGST','docGSTName')">
+              <i class="fa-solid fa-receipt"></i>
+              <span id="docGSTName">Click to upload (JPG / PNG / PDF)</span>
+            </div>
+            <input type="file" id="fileGST" accept=".jpg,.jpeg,.png,.pdf"
+                   onchange="handleUpload('fileGST','upGST','docGSTName')" style="display:none">
+          </div>
+
+          <div class="field-group">
+            <label>Business Proof</label>
+            <div class="upload-box" id="upBiz" onclick="triggerUpload('fileBiz','upBiz','docBizName')">
+              <i class="fa-solid fa-file-invoice"></i>
+              <span id="docBizName">Click to upload (JPG / PNG / PDF)</span>
+            </div>
+            <input type="file" id="fileBiz" accept=".jpg,.jpeg,.png,.pdf"
+                   onchange="handleUpload('fileBiz','upBiz','docBizName')" style="display:none">
+            <span class="field-error" id="sl-bizDocErr"></span>
+          </div>
+
+          <div class="field-group">
+            <label>Cancelled Cheque / Passbook</label>
+            <div class="upload-box" id="upBank" onclick="triggerUpload('fileBank','upBank','docBankName')">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+              <span id="docBankName">Click to upload (JPG / PNG / PDF)</span>
+            </div>
+            <input type="file" id="fileBank" accept=".jpg,.jpeg,.png,.pdf"
+                   onchange="handleUpload('fileBank','upBank','docBankName')" style="display:none">
+            <span class="field-error" id="sl-bankDocErr"></span>
+          </div>
+
+        </div>
+
+        <div class="terms-row">
+          <input type="checkbox" id="slTerms">
+          <label for="slTerms">I agree to the <a href="#">Seller Terms &amp; Conditions</a>,
+            <a href="#">Commission Policy</a> and <a href="#">Privacy Policy</a></label>
+        </div>
+
+        <!-- Info note -->
+        <div class="seller-note">
+          <i class="fa-solid fa-circle-info"></i>
+          Your application will be reviewed within <strong>24&#8211;48 hours</strong>.
+          You'll receive an email once your store is approved and live.
+        </div>
+
+        <div class="step-nav">
+          <button class="auth-btn step-back-btn" onclick="sellerBackStep(3)">
+            <i class="fa-solid fa-arrow-left"></i><span>Back</span>
+          </button>
+          <button class="auth-btn step-submit-btn" onclick="handleSellerSubmit()">
+            <span>Submit Application</span><i class="fa-solid fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="auth-links" style="margin-top:16px">
+        <a href="#" onclick="switchTab('signin')">Already have an account? Sign In</a>
+        <span>&#183;</span>
+        <a href="#" onclick="showModal('help')">Help</a>
+      </div>
+
+    </div><!-- /formSeller -->
+
+  </div><!-- /auth-right -->
+</div><!-- /auth-wrapper -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- SUCCESS TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadiusX</title>
+<link rel="icon" href="assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/styles.css">
+<script src="https://unpkg.com/css-doodle@0.38.3/css-doodle.min.js"></script>
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<div class="header-wrapper">
+
+  <header class="navbar">
+
+    <div class="nav-left">
+      <div class="logo">
+        <img src="assets/logo/logo.png" alt="RadiusX">
+      </div>
+      <!-- LOCATION BOX -->
+      <div class="location-box" id="locationBox">
+        <i class="fa-solid fa-location-dot"></i>
+        <span id="locationText">Detect Location</span>
+        <i class="fa-solid fa-chevron-down loc-chevron" id="locChevron"></i>
+
+        <!-- ADDRESS DROPDOWN -->
+        <div class="addr-dropdown" id="addrDropdown">
+
+          <!-- Header -->
+          <div class="addr-dd-header">
+            <i class="fa-solid fa-map-pin"></i>
+            <span>Deliver To</span>
+            <button class="addr-dd-close" onclick="closeAddrDropdown(event)">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- GPS detect button -->
+          <div class="addr-dd-gps" onclick="triggerGPS(event)">
+            <div class="addr-gps-icon"><i class="fa-solid fa-crosshairs"></i></div>
+            <div class="addr-gps-text">
+              <span class="addr-gps-label">Use current location</span>
+              <span class="addr-gps-sub">Detect via GPS</span>
+            </div>
+          </div>
+
+          <!-- Saved addresses list -->
+          <div class="addr-dd-section-label" id="savedAddrLabel">Saved Addresses</div>
+          <div id="savedAddrList" class="addr-saved-list">
+            <!-- filled by JS -->
+          </div>
+
+          <!-- Divider + Add new -->
+          <div class="addr-dd-divider"></div>
+          <button class="addr-add-btn" onclick="showAddrForm(event)">
+            <i class="fa-solid fa-plus"></i> Add New Address
+          </button>
+
+          <!-- Manual address form (hidden by default) -->
+          <div class="addr-form-wrap" id="addrFormWrap">
+            <div class="addr-form-title">
+              <i class="fa-solid fa-pen-to-square"></i> New Address
+            </div>
+            <div class="addr-form-grid">
+              <input class="addr-input" id="af-name"     placeholder="Full Name"       autocomplete="off">
+              <input class="addr-input" id="af-phone"    placeholder="Phone Number"    autocomplete="off" type="tel">
+              <input class="addr-input" id="af-house"    placeholder="House / Flat No" autocomplete="off">
+              <input class="addr-input" id="af-street"   placeholder="Street / Road"   autocomplete="off">
+              <input class="addr-input addr-input-full" id="af-colony"   placeholder="Colony / Area"    autocomplete="off">
+              <input class="addr-input" id="af-city"     placeholder="City"            autocomplete="off">
+              <input class="addr-input" id="af-state"    placeholder="State"           autocomplete="off">
+              <input class="addr-input" id="af-pin"      placeholder="Pincode"         autocomplete="off" maxlength="6" type="tel">
+            </div>
+            <div class="addr-form-row-label" id="addrFormLabel" style="display:none"></div>
+            <div class="addr-form-actions">
+              <button class="addr-form-cancel" onclick="hideAddrForm(event)">Cancel</button>
+              <button class="addr-form-save"   onclick="saveManualAddress(event)">
+                <i class="fa-solid fa-floppy-disk"></i> Save Address
+              </button>
+            </div>
+          </div>
+
+          <!-- Current GPS address card -->
+          <div class="addr-dd-divider" id="gpsCardDivider" style="display:none"></div>
+          <div class="addr-current-card" id="addrCurrentCard" style="display:none">
+            <div class="addr-current-label">
+              <i class="fa-solid fa-satellite-dish"></i> Detected Address
+            </div>
+            <div id="lfcBody" class="lfc-body"></div>
+          </div>
+
+        </div><!-- /addr-dropdown -->
+      </div><!-- /location-box -->
+    </div>
+
+    <!-- SEARCH — opens overlay on click -->
+    <div class="search-wrapper">
+      <div class="search-box" onclick="openSearchOverlay()">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="Search products, shops..." readonly>
+        <i class="fa-solid fa-sliders filter-icon" onclick="event.stopPropagation(); toggleFilter()"></i>
+      </div>
+      <div class="search-suggestions" id="suggestions"></div>
+      <div class="filter-panel" id="filterPanel">
+        <h4>Filters</h4>
+        <select id="priceFilter">
+          <option value="">All Prices</option>
+          <option value="low">Under ₹500</option>
+          <option value="mid">₹500 – ₹2000</option>
+          <option value="high">Above ₹2000</option>
+        </select>
+        <button onclick="applyFilters()">Apply</button>
+      </div>
+    </div>
+
+    <!-- NAV RIGHT — icons are white via .nav-icon-link -->
+    <div class="nav-right">
+      <a href="cart.html"   class="nav-icon-link"><i class="fa-solid fa-cart-shopping"></i></a>
+
+      <!-- THEME TOGGLE -->
+      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <i class="fa-solid fa-sun"  id="themeIconSun"></i>
+        <i class="fa-solid fa-moon" id="themeIconMoon" style="display:none"></i>
+      </button>
+
+      <a href="orders.html" class="nav-icon-link"><i class="fa-solid fa-clock-rotate-left"></i></a>
+      <div class="profile-menu">
+        <i class="fa-solid fa-user"></i>
+        <div class="profile-dropdown">
+          <div><a href="login.html?tab=signin">Sign In</a></div>
+          <div><a href="profile.html">Profile</a></div>
+          <div id="signupOption"><a href="login.html?tab=signup">Sign Up</a></div>
+          <div><a href="forgot.html">Forgot Password</a></div>
+          <div id="logoutOption" onclick="logoutUser()">Logout</div>
+        </div>
+      </div>
+      <div class="dropdown-icon">
+        <i class="fa-solid fa-angle-down"></i>
+        <div class="dropdown-menu">
+          <div><a href="sell.html">Become a Seller</a></div>
+          <div><a href="help.html">Help</a></div>
+        </div>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- CATEGORY BAR -->
+  <div class="categories">
+    <div class="category active" data-category="all">All</div>
+    <div class="category" data-category="electronics">Electronics</div>
+    <div class="category" data-category="fashion">Fashion</div>
+    <div class="category" data-category="home">Home</div>
+  </div>
+
+</div><!-- /header-wrapper -->
+
+<!-- ================= BANNER ================= -->
+<section class="banner">
+  <div class="banner-track" id="bannerTrack"></div>
+  <css-doodle class="banner-doodle">
+    :doodle { @grid: 15 / 100%; --s: 0; }
+    :doodle:hover { --s: 1; }
+    background: rgb(14,18,22);
+    :after {
+      content: @pick(O,+,•);
+      font-size: 3vmax;
+      color: rgb(196,223,154);
+      opacity: 0.7;
+      transform: scale(@rand(.3,.8));
+    }
+    transition: .6s cubic-bezier(.175,.885,.32,1.275);
+    transition-delay: @rand(500ms);
+    transform: translateY(calc(var(--s)*100%)) rotate(calc(var(--s)*360deg));
+  </css-doodle>
+  <button class="banner-arrow banner-prev" onclick="prevSlide()">&#8249;</button>
+  <button class="banner-arrow banner-next" onclick="nextSlide()">&#8250;</button>
+  <div class="banner-dots" id="bannerDots"></div>
+</section>
+
+<!-- ================= TRENDING SHOPS (real data from OSM) ================= -->
+<div class="shops-section">
+  <div class="shops-header">
+    <div class="shops-title-group">
+      <h2 class="section-title" style="margin:0">Trending Shops Near You</h2>
+      <span class="shops-location-pill" id="shopsLocationPill" style="display:none">
+        <i class="fa-solid fa-location-dot"></i>
+        <span id="shopsCity">your area</span>
+      </span>
+    </div>
+    <span class="shops-scroll-hint">
+      <i class="fa-solid fa-arrows-left-right"></i> scroll to explore
+    </span>
+  </div>
+
+  <!-- loading state -->
+  <div class="shops-loading" id="shopsLoading">
+    <div class="shops-loader-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <p>Finding shops near you…</p>
+  </div>
+
+  <!-- error / permission denied state -->
+  <div class="shops-error hidden" id="shopsError">
+    <i class="fa-solid fa-location-dot"></i>
+    <p id="shopsErrorMsg">Allow location permission to see shops near you.</p>
+    <button onclick="detectLocation()">Try Again</button>
+  </div>
+
+  <!-- actual scrollable grid -->
+  <div class="shops-scroll-wrap hidden" id="shopsScrollWrap">
+    <div class="shops-grid" id="shopsGrid"></div>
+  </div>
+</div>
+
+<!-- ================= PRODUCTS ================= -->
+<h2 class="section-title">Trending Products</h2>
+<div class="products" id="productsContainer"></div>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div>
+      <h4>About</h4>
+      <p>E-commerce platform for smart shopping in your area with real-time location-based recommendations.</p>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <p>Email: support.radiusx@gmail.com</p>
+    </div>
+    <div>
+      <img src="assets/logo/logo.png" alt="RadiusX">
+    </div>
+  </div>
+  <div class="copyright">© 2026 RadiusX</div>
+</footer>
+
+<!-- ================= SEARCH OVERLAY ================= -->
+<div class="search-overlay" id="searchOverlay">
+  <div class="sov-box">
+    <div class="sov-header">
+      <i class="fa-solid fa-magnifying-glass sov-search-icon"></i>
+      <input
+        type="text" id="sovInput"
+        placeholder="Search products, shops..."
+        oninput="handleOverlaySearch(this.value)"
+        autocomplete="off">
+      <button class="sov-close" onclick="closeSearchOverlay()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="sov-tabs">
+      <button class="sov-tab active" onclick="sovTab('products',this)">
+        <i class="fa-solid fa-box"></i> Products
+      </button>
+      <button class="sov-tab" onclick="sovTab('shops',this)">
+        <i class="fa-solid fa-store"></i> Shops
+      </button>
+    </div>
+    <div class="sov-results" id="sovResults">
+      <div class="sov-empty-state">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <p>Start typing to search…</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>

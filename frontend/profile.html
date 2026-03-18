@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadiusX — My Profile</title>
+
+<link rel="icon" href="assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/profile.css">
+
+</head>
+<body>
+
+<!-- ===== TOP NAVBAR ===== -->
+<div class="topbar">
+  <a href="index.html" class="topbar-logo">
+    <img src="assets/logo/logo.png" alt="RadiusX">
+  </a>
+  <div class="topbar-right">
+    <a href="index.html" class="topbar-link"><i class="fa-solid fa-house"></i><span> Home</span></a>
+    <a href="cart.html"  class="topbar-link"><i class="fa-solid fa-basket-shopping"></i><span> Cart</span></a>
+    <a href="orders.html" class="topbar-link"><i class="fa-solid fa-box-open"></i><span> Orders</span></a>
+    <div class="topbar-avatar" id="topbarAvatar">R</div>
+  </div>
+</div>
+
+<!-- ===== MAIN LAYOUT ===== -->
+<div class="profile-layout">
+
+  <!-- ============================================================
+       LEFT SIDEBAR
+       ============================================================ -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- User Card in sidebar -->
+    <div class="sidebar-user-card">
+      <div class="avatar-ring">
+        <div class="avatar-circle" id="sidebarAvatar">R</div>
+        <button class="avatar-cam-btn" onclick="document.getElementById('avatarUpload').click()" title="Change photo">
+          <i class="fa-solid fa-camera"></i>
+        </button>
+        <input type="file" id="avatarUpload" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
+      </div>
+      <div class="sidebar-user-info">
+        <span class="sidebar-name" id="sidebarName">Ravi Kumar</span>
+        <span class="sidebar-email" id="sidebarEmail">ravi@gmail.com</span>
+        <span class="sidebar-badge"><i class="fa-solid fa-circle-check"></i> Verified</span>
+      </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidebar-nav">
+
+      <div class="nav-section-label">Account</div>
+
+      <button class="nav-item active" data-panel="dashboard" onclick="switchPanel(this,'dashboard')">
+        <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+      <button class="nav-item" data-panel="profile" onclick="switchPanel(this,'profile')">
+        <i class="fa-regular fa-user"></i><span>My Profile</span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+      <button class="nav-item" data-panel="addresses" onclick="switchPanel(this,'addresses')">
+        <i class="fa-solid fa-location-dot"></i><span>Addresses</span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+
+      <div class="nav-section-label">Shopping</div>
+
+      <button class="nav-item" data-panel="orders" onclick="switchPanel(this,'orders')">
+        <i class="fa-solid fa-box-open"></i><span>My Orders</span>
+        <span class="nbadge" id="ordersBadge">24</span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+      <button class="nav-item" data-panel="cart" onclick="switchPanel(this,'cart')">
+        <i class="fa-solid fa-basket-shopping"></i><span>Cart</span>
+        <span class="nbadge" id="cartBadge">3</span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+      <button class="nav-item" data-panel="wishlist" onclick="switchPanel(this,'wishlist')">
+        <i class="fa-regular fa-heart"></i><span>Wishlist</span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+
+      <div class="nav-section-label">Preferences</div>
+
+      <button class="nav-item" data-panel="notifications" onclick="switchPanel(this,'notifications')">
+        <i class="fa-regular fa-bell"></i><span>Notifications</span>
+        <span class="nbadge-dot" id="notifDot"></span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+      <button class="nav-item" data-panel="security" onclick="switchPanel(this,'security')">
+        <i class="fa-solid fa-shield-halved"></i><span>Security</span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+
+      <div class="nav-section-label">Support</div>
+
+      <button class="nav-item" data-panel="help" onclick="switchPanel(this,'help')">
+        <i class="fa-regular fa-circle-question"></i><span>Help &amp; Support</span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+      <button class="nav-item" data-panel="seller" onclick="switchPanel(this,'seller')">
+        <i class="fa-solid fa-store"></i><span>Become a Seller</span>
+        <i class="fa-solid fa-chevron-right nav-arr"></i>
+      </button>
+
+      <div class="nav-divider"></div>
+
+      <button class="nav-item nav-danger" onclick="handleLogout()">
+        <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+      </button>
+
+    </nav>
+  </aside>
+
+  <!-- ============================================================
+       RIGHT CONTENT
+       ============================================================ -->
+  <main class="profile-main">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="panel-header">
+        <h2>Dashboard</h2>
+        <p>Welcome back, <span id="dashGreetName">Ravi</span> 👋</p>
+      </div>
+
+      <div class="dash-stats" id="dashStats">
+        <div class="dstat" style="--d:0s">
+          <div class="dstat-icon"><i class="fa-solid fa-box-open"></i></div>
+          <span class="dstat-val" id="dstatOrders">24</span>
+          <span class="dstat-lbl">Total Orders</span>
+        </div>
+        <div class="dstat" style="--d:.07s">
+          <div class="dstat-icon"><i class="fa-solid fa-Indian-rupee-sign"></i></div>
+          <span class="dstat-val" id="dstatSpent">₹1,24,800</span>
+          <span class="dstat-lbl">Total Spent</span>
+        </div>
+        <div class="dstat" style="--d:.14s">
+          <div class="dstat-icon"><i class="fa-solid fa-basket-shopping"></i></div>
+          <span class="dstat-val" id="dstatCart">3</span>
+          <span class="dstat-lbl">In Cart</span>
+        </div>
+        <div class="dstat" style="--d:.21s">
+          <div class="dstat-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+          <span class="dstat-val" id="dstatSaved">₹18,200</span>
+          <span class="dstat-lbl">Total Saved</span>
+        </div>
+      </div>
+
+      <div class="dash-block">
+        <div class="dash-block-header">
+          <h3>Recent Orders</h3>
+          <button class="see-all-btn" onclick="switchPanel(document.querySelector('[data-panel=orders]'),'orders')">
+            See All <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+        <div class="recent-orders" id="recentOrders"></div>
+      </div>
+
+      <div class="dash-block">
+        <h3 class="dash-block-title">Quick Actions</h3>
+        <div class="quick-actions" id="quickActions">
+          <button class="qa-card" onclick="switchPanel(document.querySelector('[data-panel=profile]'),'profile')">
+            <i class="fa-regular fa-user"></i><span>Edit Profile</span>
+          </button>
+          <button class="qa-card" onclick="switchPanel(document.querySelector('[data-panel=addresses]'),'addresses')">
+            <i class="fa-solid fa-location-dot"></i><span>Addresses</span>
+          </button>
+          <button class="qa-card" onclick="window.location.href='cart.html'">
+            <i class="fa-solid fa-basket-shopping"></i><span>View Cart</span>
+          </button>
+          <button class="qa-card" onclick="switchPanel(document.querySelector('[data-panel=security]'),'security')">
+            <i class="fa-solid fa-lock"></i><span>Change Password</span>
+          </button>
+          <button class="qa-card" onclick="switchPanel(document.querySelector('[data-panel=notifications]'),'notifications')">
+            <i class="fa-regular fa-bell"></i><span>Notifications</span>
+          </button>
+          <button class="qa-card" onclick="switchPanel(document.querySelector('[data-panel=help]'),'help')">
+            <i class="fa-regular fa-circle-question"></i><span>Help</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MY PROFILE ===== -->
+    <div class="panel" id="panel-profile">
+      <div class="panel-header">
+        <h2>My Profile</h2>
+        <p>Manage your personal information</p>
+      </div>
+
+      <div class="profile-avatar-row">
+        <div class="pav-ring">
+          <div class="pav-circle" id="profileAvCircle">R</div>
+          <button class="pav-edit-btn" onclick="document.getElementById('avatarUpload').click()">
+            <i class="fa-solid fa-camera"></i>
+          </button>
+        </div>
+        <div>
+          <div class="pav-name" id="profileAvName">Ravi Kumar</div>
+          <div class="pav-since">Member since Jan 2024</div>
+          <button class="pav-upload-btn" onclick="document.getElementById('avatarUpload').click()">
+            <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload Photo
+          </button>
+        </div>
+      </div>
+
+      <div class="pf-form">
+        <div class="pf-row">
+          <div class="pf-group">
+            <label>Full Name</label>
+            <div class="pf-wrap"><i class="fa-regular fa-user"></i><input type="text" id="pfName" placeholder="Your full name"></div>
+          </div>
+          <div class="pf-group">
+            <label>Gmail Address</label>
+            <div class="pf-wrap"><i class="fa-regular fa-envelope"></i><input type="email" id="pfEmail" placeholder="you@gmail.com"></div>
+          </div>
+        </div>
+        <div class="pf-row">
+          <div class="pf-group">
+            <label>Mobile Number</label>
+            <div class="pf-wrap">
+              <i class="fa-solid fa-mobile-screen"></i>
+              <span class="pf-dial">+91</span>
+              <input type="tel" id="pfMobile" placeholder="9XXXXXXXXX" maxlength="10">
+            </div>
+          </div>
+          <div class="pf-group">
+            <label>Date of Birth</label>
+            <div class="pf-wrap"><i class="fa-regular fa-calendar"></i><input type="date" id="pfDob"></div>
+          </div>
+        </div>
+        <div class="pf-row">
+          <div class="pf-group">
+            <label>Gender</label>
+            <div class="pf-wrap">
+              <i class="fa-solid fa-venus-mars"></i>
+              <select id="pfGender">
+                <option value="">Select</option>
+                <option>Male</option><option>Female</option>
+                <option>Other</option><option>Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+          <div class="pf-group">
+            <label>Pincode</label>
+            <div class="pf-wrap"><i class="fa-solid fa-map-pin"></i><input type="text" id="pfPincode" placeholder="452001" maxlength="6" oninput="lookupPin(this.value,'pfPinInfo')"></div>
+            <span class="pin-info" id="pfPinInfo"></span>
+          </div>
+        </div>
+        <div class="pf-row">
+          <div class="pf-group pf-full">
+            <label>Residential Address</label>
+            <div class="pf-wrap"><i class="fa-solid fa-house"></i><input type="text" id="pfAddress" placeholder="Flat, House No., Street, Locality"></div>
+          </div>
+        </div>
+        <div class="pf-actions">
+          <button class="btn-save" onclick="saveProfile()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+          <button class="btn-reset" onclick="loadProfileForm()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ADDRESSES ===== -->
+    <div class="panel" id="panel-addresses">
+      <div class="panel-header">
+        <h2>Saved Addresses</h2>
+        <p>Manage your delivery locations</p>
+      </div>
+      <button class="btn-add-addr" onclick="openAddrModal()">
+        <i class="fa-solid fa-plus"></i> Add New Address
+      </button>
+      <div class="addresses-grid" id="addressesGrid"></div>
+    </div>
+
+    <!-- ===== ORDERS (redirect card) ===== -->
+    <div class="panel" id="panel-orders">
+      <div class="panel-header"><h2>My Orders</h2><p>Track and manage your purchases</p></div>
+      <div class="redirect-card">
+        <i class="fa-solid fa-box-open"></i>
+        <div>
+          <h3>Full Order History &amp; Expense Tracker</h3>
+          <p>View all orders, track shipments, initiate returns, and analyse spending with the expense calculator.</p>
+        </div>
+        <a href="orders.html" class="redirect-btn">Open Orders <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </div>
+
+    <!-- ===== CART (redirect card) ===== -->
+    <div class="panel" id="panel-cart">
+      <div class="panel-header"><h2>My Cart</h2><p>Items waiting for you</p></div>
+      <div class="redirect-card">
+        <i class="fa-solid fa-basket-shopping"></i>
+        <div>
+          <h3>View Your Cart</h3>
+          <p>Review items, apply coupons, and proceed to checkout.</p>
+        </div>
+        <a href="cart.html" class="redirect-btn">Open Cart <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </div>
+
+    <!-- ===== WISHLIST ===== -->
+    <div class="panel" id="panel-wishlist">
+      <div class="panel-header"><h2>Wishlist</h2><p>Products saved for later</p></div>
+      <div class="wishlist-grid" id="wishlistGrid"></div>
+    </div>
+
+    <!-- ===== NOTIFICATIONS ===== -->
+    <div class="panel" id="panel-notifications">
+      <div class="panel-header"><h2>Notifications</h2><p>Stay updated on orders and offers</p></div>
+      <div class="notif-prefs-box">
+        <h3>Preferences</h3>
+        <div id="notifPrefList"></div>
+      </div>
+      <div class="notif-feed-box">
+        <div class="notif-feed-top">
+          <h3>Recent</h3>
+          <button class="mark-read-btn" onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div id="notifFeed"></div>
+      </div>
+    </div>
+
+    <!-- ===== SECURITY ===== -->
+    <div class="panel" id="panel-security">
+      <div class="panel-header"><h2>Security</h2><p>Password &amp; account safety</p></div>
+
+      <div class="security-block">
+        <h3>Change Password</h3>
+        <div class="pf-group mb14" style="max-width:440px">
+          <label>Current Password</label>
+          <div class="pf-wrap"><i class="fa-solid fa-lock"></i>
+            <input type="password" id="secCur" placeholder="Current password">
+            <i class="fa-regular fa-eye tp" onclick="togglePass('secCur',this)"></i>
+          </div>
+        </div>
+        <div class="pf-group mb14" style="max-width:440px">
+          <label>New Password</label>
+          <div class="pf-wrap"><i class="fa-solid fa-lock"></i>
+            <input type="password" id="secNew" placeholder="Min. 8 characters" oninput="secStrength(this.value)">
+            <i class="fa-regular fa-eye tp" onclick="togglePass('secNew',this)"></i>
+          </div>
+          <div class="strength-bar"><span id="secStrFill"></span></div>
+          <span class="strength-lbl" id="secStrLbl"></span>
+        </div>
+        <div class="pf-group mb20" style="max-width:440px">
+          <label>Confirm Password</label>
+          <div class="pf-wrap"><i class="fa-solid fa-lock"></i>
+            <input type="password" id="secConf" placeholder="Re-enter new password">
+            <i class="fa-regular fa-eye tp" onclick="togglePass('secConf',this)"></i>
+          </div>
+          <span class="field-error" id="secErr"></span>
+        </div>
+        <button class="btn-save" onclick="changePassword()">
+          <i class="fa-solid fa-shield-halved"></i> Update Password
+        </button>
+      </div>
+
+      <div class="security-tiles">
+        <div class="sec-tile">
+          <i class="fa-solid fa-mobile-screen"></i>
+          <div><span class="sec-tile-t">Two-Factor Authentication</span><span class="sec-tile-s">Extra layer via OTP</span></div>
+          <label class="tog"><input type="checkbox" id="togTwoFa"><span class="tog-slider"></span></label>
+        </div>
+        <div class="sec-tile">
+          <i class="fa-solid fa-envelope-circle-check"></i>
+          <div><span class="sec-tile-t">Login Email Alerts</span><span class="sec-tile-s">Notified on new logins</span></div>
+          <label class="tog"><input type="checkbox" id="togAlerts" checked><span class="tog-slider"></span></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== HELP ===== -->
+    <div class="panel" id="panel-help">
+      <div class="panel-header"><h2>Help &amp; Support</h2><p>We're here whenever you need us</p></div>
+      <div class="help-grid">
+        <div class="help-card"><i class="fa-solid fa-box-open"></i><h4>Order Issues</h4><p>Track, cancel or report missing items.</p><a href="orders.html">View Orders →</a></div>
+        <div class="help-card"><i class="fa-solid fa-rotate-left"></i><h4>Returns &amp; Refunds</h4><p>Initiate returns or check refund status.</p><a href="#">Start Return →</a></div>
+        <div class="help-card"><i class="fa-solid fa-credit-card"></i><h4>Payments</h4><p>Failed transactions, EMI, gift cards.</p><a href="#">Payment Help →</a></div>
+        <div class="help-card"><i class="fa-solid fa-store"></i><h4>Seller Support</h4><p>Register your business and start selling.</p><a href="#" onclick="switchPanel(document.querySelector('[data-panel=seller]'),'seller')">Become a Seller →</a></div>
+      </div>
+      <div class="help-contact">
+        <h3>Contact Us</h3>
+        <div class="help-contact-grid">
+          <div class="hc-tile"><i class="fa-regular fa-envelope"></i><span>support.radiusx@gmail.com</span></div>
+          <div class="hc-tile"><i class="fa-solid fa-phone"></i><span>1800-XXX-XXXX (9AM–9PM)</span></div>
+          <div class="hc-tile"><i class="fa-brands fa-whatsapp"></i><span>Chat on WhatsApp</span></div>
+          <div class="hc-tile"><i class="fa-solid fa-headset"></i><span>Live Chat (App only)</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SELLER ===== -->
+    <div class="panel" id="panel-seller">
+      <div class="panel-header"><h2>Become a Seller</h2><p>Join local sellers on RadiusX</p></div>
+      <div class="seller-hero">
+        <div>
+          <h3>Reach customers <em>near you</em></h3>
+          <p>RadiusX connects local businesses to nearby customers. List products, set your delivery radius, and start selling — no upfront fees.</p>
+        </div>
+        <div class="seller-perks">
+          <div class="sp"><i class="fa-solid fa-check"></i> Zero registration fees</div>
+          <div class="sp"><i class="fa-solid fa-check"></i> Local delivery network</div>
+          <div class="sp"><i class="fa-solid fa-check"></i> Real-time order dashboard</div>
+          <div class="sp"><i class="fa-solid fa-check"></i> GST &amp; invoice support</div>
+          <div class="sp"><i class="fa-solid fa-check"></i> Dedicated seller support</div>
+        </div>
+      </div>
+      <div class="seller-form">
+        <h3>Apply to Sell</h3>
+        <div class="pf-row">
+          <div class="pf-group">
+            <label>Business / Store Name</label>
+            <div class="pf-wrap"><i class="fa-solid fa-store"></i><input type="text" id="selBiz" placeholder="Your Shop Name"></div>
+          </div>
+          <div class="pf-group">
+            <label>GST / Reg. No.</label>
+            <div class="pf-wrap"><i class="fa-solid fa-file-invoice"></i><input type="text" id="selGst" placeholder="22AAAAA0000A1Z5"></div>
+          </div>
+        </div>
+        <div class="pf-row">
+          <div class="pf-group">
+            <label>Category</label>
+            <div class="pf-wrap">
+              <i class="fa-solid fa-tag"></i>
+              <select id="selCat"><option value="">Select</option><option>Electronics</option><option>Fashion</option><option>Home &amp; Furniture</option><option>Groceries</option><option>Beauty</option><option>Other</option></select>
+            </div>
+          </div>
+          <div class="pf-group">
+            <label>Business Pincode</label>
+            <div class="pf-wrap"><i class="fa-solid fa-map-pin"></i><input type="text" id="selPin" placeholder="452001" maxlength="6"></div>
+          </div>
+        </div>
+        <button class="btn-save" onclick="submitSellerForm()"><i class="fa-solid fa-paper-plane"></i> Submit Application</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ===== ADDRESS MODAL ===== -->
+<div class="modal-overlay" id="addrModal" onclick="closeAddrModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeAddrModal()"><i class="fa-solid fa-xmark"></i></button>
+    <h3 id="addrModalTitle">Add New Address</h3>
+
+    <div class="addr-type-row" id="addrTypeRow">
+      <button class="atype active" data-t="Home" onclick="selectAddrType(this)">🏠 Home</button>
+      <button class="atype" data-t="Work" onclick="selectAddrType(this)">🏢 Work</button>
+      <button class="atype" data-t="Other" onclick="selectAddrType(this)">📍 Other</button>
+    </div>
+
+    <div class="pf-row">
+      <div class="pf-group"><label>Full Name</label>
+        <div class="pf-wrap"><i class="fa-regular fa-user"></i><input type="text" id="aName" placeholder="Recipient name"></div>
+      </div>
+      <div class="pf-group"><label>Mobile</label>
+        <div class="pf-wrap"><i class="fa-solid fa-mobile-screen"></i><input type="tel" id="aMobile" placeholder="9XXXXXXXXX" maxlength="10"></div>
+      </div>
+    </div>
+    <div class="pf-group mb14"><label>Address Line</label>
+      <div class="pf-wrap"><i class="fa-solid fa-house"></i><input type="text" id="aLine" placeholder="Flat, House No., Street, Locality"></div>
+    </div>
+    <div class="pf-row">
+      <div class="pf-group"><label>Pincode</label>
+        <div class="pf-wrap"><i class="fa-solid fa-map-pin"></i><input type="text" id="aPin" placeholder="452001" maxlength="6" oninput="lookupPin(this.value,'aPinInfo')"></div>
+        <span class="pin-info" id="aPinInfo"></span>
+      </div>
+      <div class="pf-group"><label>City</label>
+        <div class="pf-wrap"><i class="fa-solid fa-city"></i><input type="text" id="aCity" placeholder="City"></div>
+      </div>
+    </div>
+    <div class="modal-check-row">
+      <input type="checkbox" id="aDefault">
+      <label for="aDefault">Set as default address</label>
+    </div>
+    <button class="btn-save" style="width:100%;margin-top:8px" onclick="saveAddress()">
+      <i class="fa-solid fa-floppy-disk"></i> Save Address
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="js/profile.js"></script>
+</body>
+</html>

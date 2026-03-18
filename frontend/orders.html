@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadiusX — My Orders</title>
+
+<link rel="icon" href="assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/orders.css">
+
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<div class="header-wrapper">
+  <header class="navbar">
+    <div class="nav-left">
+      <a href="index.html" class="logo"><img src="assets/logo/logo.png" alt="RadiusX"></a>
+    </div>
+    <div class="nav-center">
+      <h1 class="nav-page-title">
+        <i class="fa-solid fa-box-open"></i>
+        My Orders
+      </h1>
+    </div>
+    <div class="nav-right">
+      <a href="index.html" class="nav-back-btn">
+        <i class="fa-solid fa-arrow-left"></i> Back to Home
+      </a>
+    </div>
+  </header>
+</div>
+
+<!-- ===== PAGE BODY ===== -->
+<div class="page-body">
+
+  <!-- ============================================================
+       LEFT COLUMN — Order History
+       ============================================================ -->
+  <div class="orders-col">
+
+    <!-- Stat Cards Row -->
+    <div class="stat-cards" id="statCards">
+      <div class="stat-card">
+        <i class="fa-solid fa-box-open"></i>
+        <div>
+          <span class="stat-val" id="statTotal">0</span>
+          <span class="stat-label">Total Orders</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fa-solid fa-Indian-rupee-sign"></i>
+        <div>
+          <span class="stat-val" id="statSpent">₹0</span>
+          <span class="stat-label">Total Spent</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fa-solid fa-circle-check"></i>
+        <div>
+          <span class="stat-val" id="statDelivered">0</span>
+          <span class="stat-label">Delivered</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fa-solid fa-rotate-left"></i>
+        <div>
+          <span class="stat-val" id="statReturned">0</span>
+          <span class="stat-label">Returned</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter + Search Bar -->
+    <div class="orders-toolbar">
+
+      <div class="orders-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="orderSearch" placeholder="Search orders by name or ID..." oninput="filterOrders()">
+      </div>
+
+      <div class="filter-tabs" id="filterTabs">
+        <button class="ftab active" data-filter="all"       onclick="setFilter(this,'all')">All</button>
+        <button class="ftab"        data-filter="delivered" onclick="setFilter(this,'delivered')">Delivered</button>
+        <button class="ftab"        data-filter="shipped"   onclick="setFilter(this,'shipped')">Shipped</button>
+        <button class="ftab"        data-filter="processing"onclick="setFilter(this,'processing')">Processing</button>
+        <button class="ftab"        data-filter="cancelled" onclick="setFilter(this,'cancelled')">Cancelled</button>
+        <button class="ftab"        data-filter="returned"  onclick="setFilter(this,'returned')">Returned</button>
+      </div>
+
+      <div class="sort-wrap">
+        <label><i class="fa-solid fa-arrow-up-wide-short"></i></label>
+        <select id="orderSort" onchange="filterOrders()">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="high">Price: High–Low</option>
+          <option value="low">Price: Low–High</option>
+        </select>
+      </div>
+
+    </div>
+
+    <!-- Orders List -->
+    <div class="orders-list" id="ordersList"></div>
+
+    <!-- Empty -->
+    <div class="orders-empty hidden" id="ordersEmpty">
+      <i class="fa-solid fa-box-open"></i>
+      <h3>No orders found</h3>
+      <p>Try changing your filters, or <a href="index.html">start shopping</a>.</p>
+    </div>
+
+  </div><!-- /orders-col -->
+
+  <!-- ============================================================
+       RIGHT COLUMN — Expense Calculator
+       ============================================================ -->
+  <aside class="expense-col">
+
+    <div class="expense-card">
+
+      <div class="expense-header">
+        <div class="expense-title-wrap">
+          <i class="fa-solid fa-calculator"></i>
+          <h2>Expense Calculator</h2>
+        </div>
+        <span class="expense-sub">Your spending analytics</span>
+      </div>
+
+      <!-- Year Selector -->
+      <div class="year-tabs" id="yearTabs">
+        <!-- injected by JS -->
+      </div>
+
+      <!-- Big Total -->
+      <div class="expense-total-wrap">
+        <span class="expense-total-label">Total Spent in <span id="selectedYearLabel">2025</span></span>
+        <div class="expense-total-amount" id="expenseTotalAmount">₹0</div>
+        <div class="expense-total-meta" id="expenseTotalMeta">0 orders · avg ₹0/order</div>
+      </div>
+
+      <!-- Monthly Bar Chart -->
+      <div class="chart-section">
+        <div class="chart-label-row">
+          <span class="chart-title">Monthly Breakdown</span>
+          <span class="chart-peak" id="chartPeak"></span>
+        </div>
+        <div class="bar-chart" id="barChart">
+          <!-- injected by JS -->
+        </div>
+        <div class="month-labels" id="monthLabels">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+      <!-- Category Breakdown -->
+      <div class="category-breakdown">
+        <h3 class="breakdown-title">By Category</h3>
+        <div class="category-bars" id="categoryBars">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+      <!-- Key Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-tile">
+          <span class="metric-label">Highest Order</span>
+          <span class="metric-val" id="metricHighest">₹0</span>
+        </div>
+        <div class="metric-tile">
+          <span class="metric-label">Lowest Order</span>
+          <span class="metric-val" id="metricLowest">₹0</span>
+        </div>
+        <div class="metric-tile">
+          <span class="metric-label">Avg / Month</span>
+          <span class="metric-val" id="metricAvgMonth">₹0</span>
+        </div>
+        <div class="metric-tile">
+          <span class="metric-label">Most Bought</span>
+          <span class="metric-val" id="metricCategory">—</span>
+        </div>
+      </div>
+
+      <!-- Savings vs MRP -->
+      <div class="savings-panel">
+        <i class="fa-solid fa-piggy-bank"></i>
+        <div>
+          <span class="savings-panel-label">Total Savings (vs MRP)</span>
+          <span class="savings-panel-val" id="expenseSavings">₹0</span>
+        </div>
+      </div>
+
+    </div><!-- /expense-card -->
+
+  </aside>
+
+</div><!-- /page-body -->
+
+
+<!-- ===== ORDER DETAIL DRAWER ===== -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<div class="order-drawer" id="orderDrawer">
+  <div class="drawer-header">
+    <h3>Order Details</h3>
+    <button class="drawer-close" onclick="closeDrawer()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="drawer-body" id="drawerBody">
+    <!-- injected by JS -->
+  </div>
+</div>
+
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="js/orders.js"></script>
+</body>
+</html>

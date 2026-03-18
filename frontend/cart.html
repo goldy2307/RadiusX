@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadiusX — Your Cart</title>
+
+<link rel="icon" href="assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/cart.css">
+
+</head>
+<body>
+
+<!-- ===== NAVBAR (same as main site) ===== -->
+<div class="header-wrapper">
+  <header class="navbar">
+
+    <div class="nav-left">
+      <div class="logo">
+        <a href="index.html"><img src="assets/logo/logo.png" alt="RadiusX"></a>
+      </div>
+    </div>
+
+    <div class="nav-center">
+      <h1 class="nav-page-title">
+        <i class="fa-solid fa-basket-shopping"></i>
+        Your Cart
+        <span class="cart-count-badge" id="cartCountBadge">0</span>
+      </h1>
+    </div>
+
+    <div class="nav-right">
+      <a href="index.html" class="nav-back-btn">
+        <i class="fa-solid fa-arrow-left"></i> Continue Shopping
+      </a>
+    </div>
+
+  </header>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="cart-main">
+
+  <!-- LEFT — Cart Items -->
+  <section class="cart-section" id="cartSection">
+
+    <!-- Select All Bar -->
+    <div class="cart-topbar" id="cartTopbar">
+      <label class="select-all-wrap">
+        <input type="checkbox" id="selectAllCheck" onchange="toggleSelectAll(this.checked)">
+        <span class="custom-check"></span>
+        <span>Select All (<span id="selectAllCount">0</span> items)</span>
+      </label>
+      <button class="delete-selected-btn" id="deleteSelectedBtn" onclick="deleteSelected()">
+        <i class="fa-regular fa-trash-can"></i> Remove Selected
+      </button>
+    </div>
+
+    <!-- Items List -->
+    <div class="cart-items" id="cartItems">
+      <!-- injected by JS -->
+    </div>
+
+    <!-- Empty State -->
+    <div class="cart-empty hidden" id="cartEmpty">
+      <div class="empty-icon">
+        <i class="fa-solid fa-basket-shopping"></i>
+      </div>
+      <h3>Your cart is empty</h3>
+      <p>Looks like you haven't added anything yet. Browse our products and find something you'll love.</p>
+      <a href="index.html" class="empty-shop-btn">
+        <i class="fa-solid fa-store"></i> Shop Now
+      </a>
+    </div>
+
+  </section>
+
+  <!-- RIGHT — Order Summary -->
+  <aside class="cart-summary" id="cartSummary">
+
+    <h2 class="summary-title">Order Summary</h2>
+
+    <!-- Coupon -->
+    <div class="coupon-wrap">
+      <div class="coupon-input-row">
+        <div class="coupon-field">
+          <i class="fa-solid fa-ticket"></i>
+          <input type="text" id="couponInput" placeholder="Enter coupon code" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <button class="coupon-apply-btn" onclick="applyCoupon()">Apply</button>
+      </div>
+      <span class="coupon-msg" id="couponMsg"></span>
+    </div>
+
+    <!-- Price Breakdown -->
+    <div class="price-breakdown">
+
+      <div class="price-row">
+        <span>Subtotal (<span id="summaryItemCount">0</span> items)</span>
+        <span id="summarySubtotal">₹0</span>
+      </div>
+
+      <div class="price-row">
+        <span>Savings</span>
+        <span class="savings-val" id="summarySavings">−₹0</span>
+      </div>
+
+      <div class="price-row" id="couponRow" style="display:none">
+        <span>Coupon Discount</span>
+        <span class="savings-val" id="summaryCoupon">−₹0</span>
+      </div>
+
+      <div class="price-row">
+        <span>Delivery</span>
+        <span id="summaryDelivery">₹0</span>
+      </div>
+
+      <div class="price-divider"></div>
+
+      <div class="price-row total-row">
+        <span>Total</span>
+        <span id="summaryTotal">₹0</span>
+      </div>
+
+      <p class="savings-note" id="savingsNote"></p>
+
+    </div>
+
+    <!-- Delivery Info -->
+    <div class="delivery-info">
+      <i class="fa-solid fa-truck-fast"></i>
+      <span id="deliveryNote">Add ₹499 more for free delivery</span>
+    </div>
+
+    <!-- Checkout Button -->
+    <button class="checkout-btn" id="checkoutBtn" onclick="handleCheckout()">
+      <span>Proceed to Checkout</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </button>
+
+    <!-- Secure badges -->
+    <div class="secure-badges">
+      <span><i class="fa-solid fa-shield-halved"></i> Secure Checkout</span>
+      <span><i class="fa-solid fa-rotate-left"></i> Easy Returns</span>
+      <span><i class="fa-solid fa-headset"></i> 24/7 Support</span>
+    </div>
+
+  </aside>
+
+</main>
+
+<!-- ===== RECENTLY VIEWED ===== -->
+<section class="recently-section" id="recentlySection">
+  <h2 class="section-label">You might also like</h2>
+  <div class="recently-grid" id="recentlyGrid">
+    <!-- injected by JS -->
+  </div>
+</section>
+
+<!-- ===== CHECKOUT MODAL ===== -->
+<div class="modal-overlay" id="checkoutModal" onclick="closeCheckoutModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeCheckoutModal()"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-success-icon"><i class="fa-solid fa-circle-check"></i></div>
+    <h3>Order Placed!</h3>
+    <p>Your order has been placed successfully. You'll receive a confirmation on your registered email shortly.</p>
+    <p class="order-id-line">Order ID: <strong id="modalOrderId"></strong></p>
+    <button class="modal-go-btn" onclick="window.location.href='index.html'">
+      <i class="fa-solid fa-store"></i> Continue Shopping
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="js/cart.js"></script>
+</body>
+</html>

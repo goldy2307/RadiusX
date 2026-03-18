@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadiusX — Reset Password</title>
+
+<link rel="icon" href="assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/forgot.css">
+
+</head>
+<body>
+
+<a class="back-home" href="login.html">
+  <i class="fa-solid fa-arrow-left"></i> Back to Sign In
+</a>
+
+<!-- animated background particles -->
+<div class="bg-particles" aria-hidden="true">
+  <span></span><span></span><span></span>
+  <span></span><span></span><span></span>
+</div>
+
+<div class="fp-wrapper">
+
+  <!-- LOGO -->
+  <div class="fp-logo">
+    <img src="assets/logo/logo.png" alt="RadiusX">
+  </div>
+
+  <!-- STEP INDICATOR -->
+  <div class="steps-track" id="stepsTrack">
+    <div class="step active" id="step1Dot">
+      <span class="step-num">1</span>
+      <span class="step-label">Enter Email</span>
+    </div>
+    <div class="step-line" id="line1"></div>
+    <div class="step" id="step2Dot">
+      <span class="step-num">2</span>
+      <span class="step-label">New Password</span>
+    </div>
+    <div class="step-line" id="line2"></div>
+    <div class="step" id="step3Dot">
+      <span class="step-num">3</span>
+      <span class="step-label">Verify OTP</span>
+    </div>
+  </div>
+
+  <!-- CARD -->
+  <div class="fp-card">
+
+    <!-- ===== STEP 1 — Enter Email ===== -->
+    <div class="fp-step" id="stepEmail">
+
+      <div class="fp-icon-wrap">
+        <i class="fa-solid fa-envelope-open-text"></i>
+      </div>
+
+      <h2 class="fp-title">Forgot your password?</h2>
+      <p class="fp-desc">No worries. Enter your registered email address and we'll send you a secure reset link.</p>
+
+      <div class="field-group">
+        <label>Email Address</label>
+        <div class="input-wrap">
+          <i class="fa-regular fa-envelope"></i>
+          <input type="email" id="fpEmail" placeholder="you@gmail.com" oninput="clearFpError('fpEmailErr')">
+        </div>
+        <span class="field-error" id="fpEmailErr"></span>
+      </div>
+
+      <button class="fp-btn" id="sendLinkBtn" onclick="handleSendLink()">
+        <span>Send Reset Link</span>
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+
+      <!-- sent confirmation panel (hidden until sent) -->
+      <div class="sent-confirm hidden" id="sentConfirm">
+        <i class="fa-solid fa-circle-check"></i>
+        <div>
+          <strong>Link sent!</strong>
+          <p>Check your inbox at <span id="sentEmailDisplay"></span>. The link expires in <strong>15 minutes</strong>.</p>
+        </div>
+      </div>
+
+      <div class="fp-links">
+        <a href="login.html">Back to Sign In</a>
+        <span>·</span>
+        <a href="#" onclick="resendLink()">Resend Link</a>
+      </div>
+
+    </div>
+
+    <!-- ===== STEP 2 — New Password (opened via reset link ?reset=true) ===== -->
+    <div class="fp-step hidden" id="stepReset">
+
+      <div class="fp-icon-wrap">
+        <i class="fa-solid fa-lock-open"></i>
+      </div>
+
+      <h2 class="fp-title">Set a new password</h2>
+      <p class="fp-desc">Enter your email, choose a strong new password, then verify with the OTP we'll send you.</p>
+
+      <div class="field-group">
+        <label>Email Address</label>
+        <div class="input-wrap">
+          <i class="fa-regular fa-envelope"></i>
+          <input type="email" id="resetEmail" placeholder="you@gmail.com" oninput="clearFpError('resetEmailErr')">
+        </div>
+        <span class="field-error" id="resetEmailErr"></span>
+      </div>
+
+      <div class="field-group">
+        <label>New Password</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="resetPassword" placeholder="Min. 8 characters" oninput="checkResetStrength(this.value); clearFpError('resetPasswordErr')">
+          <i class="fa-regular fa-eye toggle-pass" onclick="togglePassword('resetPassword', this)"></i>
+        </div>
+        <div class="strength-bar"><span id="resetStrengthFill"></span></div>
+        <span class="strength-label" id="resetStrengthLabel"></span>
+        <span class="field-error" id="resetPasswordErr"></span>
+      </div>
+
+      <div class="field-group">
+        <label>Confirm New Password</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="resetConfirm" placeholder="Re-enter new password" oninput="clearFpError('resetConfirmErr')">
+          <i class="fa-regular fa-eye toggle-pass" onclick="togglePassword('resetConfirm', this)"></i>
+        </div>
+        <span class="field-error" id="resetConfirmErr"></span>
+      </div>
+
+      <button class="fp-btn" onclick="handleSendOtp()">
+        <span>Send OTP &amp; Verify</span>
+        <i class="fa-solid fa-shield-halved"></i>
+      </button>
+
+      <div class="fp-links">
+        <a href="login.html">Back to Sign In</a>
+      </div>
+
+    </div>
+
+    <!-- ===== STEP 3 — OTP Verification ===== -->
+    <div class="fp-step hidden" id="stepOtp">
+
+      <div class="fp-icon-wrap pulse">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+      </div>
+
+      <h2 class="fp-title">Enter OTP</h2>
+      <p class="fp-desc">A 6-digit OTP has been sent to <strong id="otpEmailDisplay"></strong>. It expires in <span id="otpTimer" class="otp-timer">10:00</span>.</p>
+
+      <div class="otp-inputs" id="otpInputs">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpInput(this,0)" onkeydown="otpBack(this,0,event)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpInput(this,1)" onkeydown="otpBack(this,1,event)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpInput(this,2)" onkeydown="otpBack(this,2,event)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpInput(this,3)" onkeydown="otpBack(this,3,event)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpInput(this,4)" onkeydown="otpBack(this,4,event)">
+        <input type="text" class="otp-box" maxlength="1" oninput="otpInput(this,5)" onkeydown="otpBack(this,5,event)">
+      </div>
+      <span class="field-error" id="otpErr" style="text-align:center;display:block;margin-top:6px;"></span>
+
+      <button class="fp-btn" onclick="handleVerifyOtp()">
+        <span>Verify &amp; Reset Password</span>
+        <i class="fa-solid fa-check"></i>
+      </button>
+
+      <div class="fp-links">
+        <a href="#" onclick="resendOtp()">Resend OTP</a>
+        <span>·</span>
+        <a href="login.html">Cancel</a>
+      </div>
+
+    </div>
+
+    <!-- ===== SUCCESS ===== -->
+    <div class="fp-step hidden" id="stepSuccess">
+
+      <div class="fp-icon-wrap success-icon">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+
+      <h2 class="fp-title">Password Reset!</h2>
+      <p class="fp-desc">Your password has been successfully updated. You can now sign in with your new password.</p>
+
+      <button class="fp-btn" onclick="window.location.href='login.html'">
+        <span>Go to Sign In</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+    </div>
+
+  </div><!-- /fp-card -->
+
+</div><!-- /fp-wrapper -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="js/forgot.js"></script>
+</body>
+</html>
