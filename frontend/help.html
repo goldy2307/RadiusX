@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadiusX &mdash; Help &amp; Support</title>
+<link rel="icon" href="assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/help.css">
+
+<!-- Apply saved theme immediately to prevent flash -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.documentElement.style.background = "rgb(255,246,232)";
+  }
+})();
+</script>
+</head>
+<body>
+
+<!-- Apply theme class before first paint -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.body.classList.add("light-mode");
+  }
+})();
+</script>
+
+<!-- NAVBAR -->
+<header class="help-nav">
+  <a href="index.html" class="help-nav-logo">
+    <img src="assets/logo/logo.png" alt="RadiusX" id="helpLogo">
+  </a>
+  <div class="help-nav-right">
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+      <i class="fa-solid fa-sun" id="themeIconSun"></i>
+      <i class="fa-solid fa-moon" id="themeIconMoon" style="display:none"></i>
+    </button>
+    <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to RadiusX</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="help-hero">
+  <div class="hero-inner">
+    <h1>How can we help you?</h1>
+    <p>Search our knowledge base or browse topics below.</p>
+    <div class="help-search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="helpSearch" placeholder="Search for answers..." oninput="searchFAQ(this.value)">
+    </div>
+  </div>
+</section>
+
+<!-- QUICK LINKS -->
+<section class="quick-links">
+  <div class="container">
+    <div class="ql-grid">
+      <div class="ql-card" onclick="scrollToSection('buyers')">
+        <div class="ql-icon blue"><i class="fa-solid fa-cart-shopping"></i></div>
+        <div class="ql-label">Buyer Help</div>
+      </div>
+      <div class="ql-card" onclick="scrollToSection('sellers')">
+        <div class="ql-icon green"><i class="fa-solid fa-store"></i></div>
+        <div class="ql-label">Seller Help</div>
+      </div>
+      <div class="ql-card" onclick="scrollToSection('account')">
+        <div class="ql-icon purple"><i class="fa-solid fa-user-shield"></i></div>
+        <div class="ql-label">Account &amp; Security</div>
+      </div>
+      <div class="ql-card" onclick="scrollToSection('contact')">
+        <div class="ql-icon amber"><i class="fa-solid fa-headset"></i></div>
+        <div class="ql-label">Contact Us</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ SECTIONS -->
+<main class="help-main">
+  <div class="container">
+
+    <!-- BUYERS -->
+    <div class="faq-section" id="section-buyers">
+      <div class="faq-section-header">
+        <div class="faq-section-icon blue"><i class="fa-solid fa-cart-shopping"></i></div>
+        <h2>Buyer Help</h2>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>How do I place an order?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Browse products on the homepage, click on a product you like, then click <strong>Buy Now</strong> or <strong>Add to Cart</strong>. Follow the checkout steps to enter your delivery address and complete payment.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>How does location-based shopping work?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            RadiusX uses your GPS location or pincode to show you products and shops available near you. Allow location access when prompted for the best experience. You can also set your location manually by clicking the location box in the navbar.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>How do I track my order?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Go to <strong>Orders</strong> from the top navigation. You'll see all your orders with their current status. Click on any order for detailed tracking information.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>Can I return or cancel an order?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Yes. Orders can be cancelled within 1 hour of placing them. For returns, raise a request within 7 days of delivery. Go to Orders &rarr; select order &rarr; Request Return. The seller will review and process it within 48 hours.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>What payment methods are accepted?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            RadiusX accepts UPI, debit/credit cards, net banking, and Cash on Delivery (COD) for eligible orders. Payment options may vary by seller.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SELLERS -->
+    <div class="faq-section" id="section-sellers">
+      <div class="faq-section-header">
+        <div class="faq-section-icon green"><i class="fa-solid fa-store"></i></div>
+        <h2>Seller Help</h2>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>How do I become a seller on RadiusX?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Click <strong>Sell on RadiusX</strong> on the login page. Fill in your business details, store information, and upload the required documents (PAN card, business proof, bank details). Our team reviews applications within 24-48 hours.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>What documents do I need to register as a seller?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            You will need: <br><br>
+            &bull; PAN card (mandatory)<br>
+            &bull; GST certificate (if applicable)<br>
+            &bull; Business proof (shop registration / trade licence)<br>
+            &bull; Cancelled cheque or bank passbook<br><br>
+            All documents must be clear, valid, and in JPG, PNG, or PDF format.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>How do I add products to my store?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Once approved, log in and go to your <strong>Seller Dashboard</strong>. Click <strong>Add Product</strong>, fill in the product details including name, description, price, stock quantity, and images. Products go live immediately after being saved.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>When and how do I get paid?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Payments are settled to your registered bank account within 7 business days after order delivery confirmation. A platform commission of 5-10% (depending on category) is deducted before settlement.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>My application was rejected. What should I do?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Check the rejection email for the specific reason. Common reasons include blurry documents, mismatched PAN details, or invalid GST numbers. Fix the issue and apply again from the login page using the same email address.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div class="faq-section" id="section-account">
+      <div class="faq-section-header">
+        <div class="faq-section-icon purple"><i class="fa-solid fa-user-shield"></i></div>
+        <h2>Account &amp; Security</h2>
+      </div>
+      <div class="faq-list">
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>I forgot my password. How do I reset it?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            On the login page, click <strong>Forgot Password?</strong> Enter your registered email address and we'll send you a reset link. The link expires in 30 minutes. Check your spam folder if you don't see it.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>How do I update my delivery address?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Click the location box in the top navigation bar. You can add a new address manually or detect your current location via GPS. Saved addresses are stored in your profile and can be managed from the Profile page.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>Is my personal data safe?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Yes. RadiusX uses industry-standard encryption (bcrypt for passwords, JWT for sessions). We never sell your personal data. Your location is only used to show relevant local products and is never shared with third parties without your consent.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" onclick="toggleFAQ(this)">
+            <span>How do I delete my account?</span>
+            <i class="fa-solid fa-chevron-down"></i>
+          </button>
+          <div class="faq-a">
+            Go to your Profile page &rarr; Account Settings &rarr; Delete Account. This action is irreversible. All your data will be permanently deleted within 30 days. Active orders must be resolved before deletion.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CONTACT -->
+    <div class="faq-section" id="section-contact">
+      <div class="faq-section-header">
+        <div class="faq-section-icon amber"><i class="fa-solid fa-headset"></i></div>
+        <h2>Contact Us</h2>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fa-solid fa-envelope"></i></div>
+          <div class="contact-label">Email Support</div>
+          <div class="contact-value">support.radiusx@gmail.com</div>
+          <div class="contact-note">Response within 24 hours</div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fa-solid fa-phone"></i></div>
+          <div class="contact-label">Phone Helpline</div>
+          <div class="contact-value">1800-XXX-XXXX</div>
+          <div class="contact-note">Mon&ndash;Sat, 9 AM &ndash; 9 PM IST</div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fa-solid fa-comments"></i></div>
+          <div class="contact-label">Live Chat</div>
+          <div class="contact-value">Available in app</div>
+          <div class="contact-note">Fastest response time</div>
+        </div>
+      </div>
+
+      <!-- CONTACT FORM -->
+      <div class="contact-form-wrap">
+        <h3>Send us a message</h3>
+        <div class="fields-grid">
+          <div class="field-group">
+            <label>Your Name</label>
+            <div class="input-wrap">
+              <i class="fa-regular fa-user"></i>
+              <input type="text" id="cfName" placeholder="Ravi Kumar">
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Email Address</label>
+            <div class="input-wrap">
+              <i class="fa-regular fa-envelope"></i>
+              <input type="email" id="cfEmail" placeholder="you@gmail.com">
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Topic</label>
+            <div class="input-wrap input-wrap-select">
+              <i class="fa-solid fa-tag"></i>
+              <select id="cfTopic">
+                <option value="">Select a topic</option>
+                <option>Order Issue</option>
+                <option>Refund Request</option>
+                <option>Seller Application</option>
+                <option>Account Problem</option>
+                <option>Technical Issue</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-group">
+            <label>Order ID <span class="label-opt">(if applicable)</span></label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-hashtag"></i>
+              <input type="text" id="cfOrderId" placeholder="RX-12345">
+            </div>
+          </div>
+          <div class="field-group full-width">
+            <label>Message</label>
+            <div class="input-wrap input-wrap-textarea">
+              <i class="fa-solid fa-align-left"></i>
+              <textarea id="cfMessage" rows="4" placeholder="Describe your issue in detail..."></textarea>
+            </div>
+          </div>
+        </div>
+        <button class="submit-btn" onclick="submitContactForm()">
+          <i class="fa-solid fa-paper-plane"></i> Send Message
+        </button>
+        <div class="form-msg" id="cfMsg"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="help-footer">
+  <div class="container">
+    <img src="assets/logo/logo.png" alt="RadiusX" class="footer-logo" id="footerLogo">
+    <p>Your neighbourhood marketplace &mdash; bringing local shops closer to you.</p>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="login.html">Sign In</a>
+      <a href="login.html?tab=seller">Become a Seller</a>
+    </div>
+    <p class="copyright">&copy; 2026 RadiusX. All rights reserved.</p>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/help.js"></script>
+
+<!-- THEME TOGGLE LOGIC (self-contained, no external file) -->
+<script>
+(function () {
+  var isLight = document.body.classList.contains("light-mode");
+  var sun      = document.getElementById("themeIconSun");
+  var moon     = document.getElementById("themeIconMoon");
+  var navLogo  = document.getElementById("helpLogo");
+  var footLogo = document.getElementById("footerLogo");
+  if (isLight) {
+    if (sun)      sun.style.display      = "none";
+    if (moon)     moon.style.display     = "";
+    if (navLogo)  navLogo.src  = "assets/logo/logo-light.png";
+    if (footLogo) footLogo.src = "assets/logo/logo-light.png";
+  }
+})();
+
+function toggleTheme() {
+  var body     = document.body;
+  var sun      = document.getElementById("themeIconSun");
+  var moon     = document.getElementById("themeIconMoon");
+  var navLogo  = document.getElementById("helpLogo");
+  var footLogo = document.getElementById("footerLogo");
+  var isLight  = body.classList.toggle("light-mode");
+  if (isLight) {
+    sun.style.display  = "none";
+    moon.style.display = "";
+    if (navLogo)  navLogo.src  = "assets/logo/logo-light.png";
+    if (footLogo) footLogo.src = "assets/logo/logo-light.png";
+    localStorage.setItem("rx_theme", "light");
+  } else {
+    sun.style.display  = "";
+    moon.style.display = "none";
+    if (navLogo)  navLogo.src  = "assets/logo/logo.png";
+    if (footLogo) footLogo.src = "assets/logo/logo.png";
+    localStorage.setItem("rx_theme", "dark");
+  }
+}
+</script>
+</body>
+</html>

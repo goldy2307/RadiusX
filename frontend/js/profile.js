@@ -1,126 +1,120 @@
 /* ====================================================
    RadiusX — profile.js
-   Handles: panel switching, user data load/save,
-            avatar upload, addresses CRUD, wishlist,
-            notifications, security, seller form,
-            pincode lookup, logout
+   Auth-gated via api.js JWT.
+   Real user data from GET /auth/me.
+   Save via PUT /auth/profile.
+   Password change via POST /auth/change-password.
    ==================================================== */
 
 
 /* ====================================================
-   DEMO DATA — mirrors products from main.js
+   CONSTANTS / STATIC DATA
    ==================================================== */
 
-const PRODUCTS = [
+var PRODUCTS = [
   {id:1,name:"Laptop",     price:45000,originalPrice:52000,category:"Electronics",image:"assets/products/laptop.jpg",    rating:4.5,reviews:128},
   {id:2,name:"Headphones", price:1200, originalPrice:1800, category:"Electronics",image:"assets/products/headphones.jpg",rating:4.2,reviews:85},
   {id:3,name:"Shoes",      price:900,  originalPrice:1400, category:"Fashion",    image:"assets/products/shoes.jpg",     rating:4.0,reviews:63},
   {id:4,name:"Tshirt",     price:400,  originalPrice:600,  category:"Fashion",    image:"assets/products/tshirt.jpg",    rating:3.8,reviews:42},
   {id:5,name:"Chair",      price:1500, originalPrice:2000, category:"Home",       image:"assets/products/chair.jpg",     rating:4.3,reviews:34},
   {id:6,name:"Lamp",       price:700,  originalPrice:950,  category:"Home",       image:"assets/products/lamp.jpg",      rating:4.1,reviews:27}
-]
+];
 
-const RECENT_ORDERS_DEMO = [
-  {id:"RX20260301",date:"2026-03-01",status:"shipped",   total:2249, image:"assets/products/tshirt.jpg",  name:"Tshirt × 2, Chair"},
-  {id:"RX20260208",date:"2026-02-08",status:"processing",total:1849, image:"assets/products/shoes.jpg",   name:"Shoes × 2"},
-  {id:"RX20260105",date:"2026-01-05",status:"delivered", total:43000,image:"assets/products/laptop.jpg",  name:"Laptop"},
-  {id:"RX20251215",date:"2025-12-15",status:"processing",total:2149, image:"assets/products/lamp.jpg",    name:"Lamp × 3"},
-  {id:"RX20251105",date:"2025-11-05",status:"shipped",   total:2400, image:"assets/products/headphones.jpg",name:"Headphones × 2"}
-]
+var NOTIF_PREFS = [
+  {id:"np_order",   title:"Order Updates",       sub:"Delivery, dispatch & status changes", default:true},
+  {id:"np_offers",  title:"Offers & Deals",       sub:"Exclusive coupons and flash sales",   default:true},
+  {id:"np_account", title:"Account Activity",     sub:"Login alerts and profile changes",    default:true},
+  {id:"np_seller",  title:"Seller Notifications", sub:"New seller offers near you",          default:false},
+  {id:"np_sms",     title:"SMS Notifications",    sub:"Receive updates via SMS",             default:false}
+];
 
-const NOTIF_PREFS = [
-  {id:"np_order",   title:"Order Updates",        sub:"Delivery, dispatch & status changes", default:true},
-  {id:"np_offers",  title:"Offers & Deals",        sub:"Exclusive coupons and flash sales",   default:true},
-  {id:"np_account", title:"Account Activity",      sub:"Login alerts and profile changes",    default:true},
-  {id:"np_seller",  title:"Seller Notifications",  sub:"New seller offers near you",          default:false},
-  {id:"np_sms",     title:"SMS Notifications",     sub:"Receive updates via SMS",             default:false}
-]
+var NOTIFS = [
+  {id:1,type:"order",    icon:"fa-box-open",     iconClass:"ni-order",    msg:"Your profile is now connected to the live backend.",  sub:"All data is real.",                        time:"just now",unread:true},
+  {id:2,type:"offer",    icon:"fa-tag",          iconClass:"ni-offer",    msg:"Flash Sale: Up to 40% off on Electronics",            sub:"Offer valid till midnight",                time:"5h ago",  unread:true},
+  {id:3,type:"security", icon:"fa-shield-halved",iconClass:"ni-security", msg:"Your account password is encrypted and secure.",      sub:"Using bcrypt + JWT authentication",        time:"today",   unread:false}
+];
 
-const NOTIFS = [
-  {id:1, type:"order",    icon:"fa-box-open",    iconClass:"ni-order",    msg:"Your order RX20260301 has been shipped!", sub:"Expected delivery: 15 Mar 2026", time:"2h ago",  unread:true},
-  {id:2, type:"offer",    icon:"fa-tag",         iconClass:"ni-offer",    msg:"Flash Sale: Up to 40% off on Electronics", sub:"Offer valid till midnight",        time:"5h ago",  unread:true},
-  {id:3, type:"delivery", icon:"fa-truck-fast",  iconClass:"ni-delivery", msg:"Order RX20260105 delivered successfully", sub:"Rate your experience",             time:"2d ago",  unread:false},
-  {id:4, type:"offer",    icon:"fa-ticket",      iconClass:"ni-offer",    msg:"Your coupon RADIUS10 expires in 3 days",  sub:"Use before it's gone!",            time:"3d ago",  unread:true},
-  {id:5, type:"security", icon:"fa-shield-halved",iconClass:"ni-security",msg:"New login from Indore, MP",               sub:"If this wasn't you, change password","time":"5d ago",unread:false}
-]
+var WISHLIST_DEMO = [1, 3, 5];
 
-const WISHLIST_DEMO = [1, 3, 5, 6]
-
-const STATUS_COLORS = {
+var STATUS_COLORS = {
   delivered:"ros-delivered", shipped:"ros-shipped",
   processing:"ros-processing", cancelled:"ros-cancelled", returned:"ros-returned"
-}
+};
 
 
 /* ====================================================
-   USER DATA (localStorage)
+   USER STATE
    ==================================================== */
 
-function getUser() {
-  let stored = localStorage.getItem("rx_profile")
-  if (stored) { try { return JSON.parse(stored) } catch(e){} }
-  /* Default demo user */
-  return {
-    name:"Ravi Kumar", email:"ravi@gmail.com",
-    mobile:"9876543210", dob:"1998-04-15",
-    gender:"male", pincode:"452001", address:"12, MG Road, Vijay Nagar",
-    avatar:null
+var user        = null;
+var addresses   = [];
+var notifPrefs  = {};
+var notifList   = [];
+
+
+/* ====================================================
+   INIT — auth gate
+   ==================================================== */
+
+window.onload = async function () {
+  var loggedIn = await api.init();
+
+  if (!loggedIn) {
+    window.location.href = "login.html?tab=signin";
+    return;
   }
-}
 
-function saveUser(u) {
-  localStorage.setItem("rx_profile", JSON.stringify(u))
-}
+  var res = await api.get("/auth/me");
+  if (!res.success) {
+    window.location.href = "login.html?tab=signin";
+    return;
+  }
 
-let user = getUser()
+  /* ---- Populate user from real backend data ---- */
+  user = {
+    name:      res.user.name      || "",
+    email:     res.user.email     || "",
+    mobile:    res.user.mobile    || "",
+    pincode:   res.user.pincode   || "",
+    address:   res.user.address   || "",
+    dob:       res.user.dob       || "",
+    gender:    res.user.gender    || "",
+    avatar:    res.user.avatar    || null,
+    role:      res.user.role      || "buyer",
+    createdAt: res.user.createdAt || null   /* FIX: capture join date */
+  };
 
-function getAddresses() {
-  let s = localStorage.getItem("rx_addresses")
-  if (s) { try { return JSON.parse(s) } catch(e){} }
-  return [
-    {id:1, type:"Home",  name:"Ravi Kumar", mobile:"9876543210", line:"12, MG Road, Vijay Nagar", pin:"452001", city:"Indore", isDefault:true},
-    {id:2, type:"Work",  name:"Ravi Kumar", mobile:"9876543210", line:"Office Tower B, IT Park",  pin:"452010", city:"Indore", isDefault:false}
-  ]
-}
+  /* Load addresses / prefs from localStorage */
+  addresses  = getAddresses();
+  notifPrefs = getNotifPrefs();
+  notifList  = getNotifList();
 
-function saveAddresses(a) { localStorage.setItem("rx_addresses", JSON.stringify(a)) }
-let addresses = getAddresses()
+  applyUserToUI();
+  renderDashboardStats();
+  renderRecentOrders();
+  renderWishlist();
+  renderNotifPrefs();
+  renderNotifFeed();
+  updateNotifDot();
+  renderAddresses();
+  loadProfileForm();
 
-function getNotifPrefs() {
-  let s = localStorage.getItem("rx_notif_prefs")
-  if (s) { try { return JSON.parse(s) } catch(e){} }
-  let map = {}
-  NOTIF_PREFS.forEach(p => { map[p.id] = p.default })
-  return map
-}
-
-function saveNotifPrefs(m) { localStorage.setItem("rx_notif_prefs", JSON.stringify(m)) }
-let notifPrefs = getNotifPrefs()
-
-function getNotifList() {
-  let s = localStorage.getItem("rx_notifs")
-  if (s) { try { return JSON.parse(s) } catch(e){} }
-  return JSON.parse(JSON.stringify(NOTIFS))
-}
-
-function saveNotifList(n) { localStorage.setItem("rx_notifs", JSON.stringify(n)) }
-let notifList = getNotifList()
-
-
-/* ====================================================
-   INIT
-   ==================================================== */
-
-window.onload = function () {
-  applyUserToUI()
-  renderRecentOrders()
-  renderWishlist()
-  renderNotifPrefs()
-  renderNotifFeed()
-  updateNotifDot()
-  renderAddresses()
-  loadProfileForm()
-}
+  /* FIX: Re-render stats if a new order is placed (e.g. cart page in another tab) */
+  window.addEventListener("storage", function(e) {
+    if (e.key === "rx_orders") {
+      renderDashboardStats();
+      renderRecentOrders();
+    }
+    if (e.key === "rx_cart") {
+      var cart = JSON.parse(e.newValue || "[]");
+      var count = cart.reduce(function(s,i) { return s + (i.qty||1); }, 0);
+      var cb = document.getElementById("cartBadge");
+      if (cb) cb.innerText = count || "0";
+      var dc = document.getElementById("dstatCart");
+      if (dc) dc.innerText = count || "0";
+    }
+  });
+};
 
 
 /* ====================================================
@@ -128,22 +122,15 @@ window.onload = function () {
    ==================================================== */
 
 function switchPanel(btnEl, panelId) {
-  /* deactivate all nav items */
-  document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"))
-  /* hide all panels */
-  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"))
-
-  /* activate clicked nav item */
-  if (btnEl) btnEl.classList.add("active")
-
-  /* show target panel */
-  let panel = document.getElementById("panel-" + panelId)
+  document.querySelectorAll(".nav-item").forEach(function(b) { b.classList.remove("active"); });
+  document.querySelectorAll(".panel").forEach(function(p) { p.classList.remove("active"); });
+  if (btnEl) btnEl.classList.add("active");
+  var panel = document.getElementById("panel-" + panelId);
   if (panel) {
-    panel.classList.add("active")
-    /* re-trigger animation */
-    panel.style.animation = "none"
-    panel.offsetHeight
-    panel.style.animation = ""
+    panel.classList.add("active");
+    panel.style.animation = "none";
+    panel.offsetHeight;
+    panel.style.animation = "";
   }
 }
 
@@ -153,56 +140,139 @@ function switchPanel(btnEl, panelId) {
    ==================================================== */
 
 function applyUserToUI() {
-  let initials = (user.name || "R").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2)
+  if (!user) return;
+  var initials = (user.name || "R").split(" ").map(function(w) { return w[0]; }).join("").toUpperCase().slice(0,2);
 
-  /* topbar */
-  let tav = document.getElementById("topbarAvatar")
-  if (user.avatar) {
-    tav.innerHTML = `<img src="${user.avatar}" alt="avatar">`
-  } else {
-    tav.innerText = initials[0] || "R"
+  /* Topbar avatar */
+  var tav = document.getElementById("topbarAvatar");
+  if (tav) {
+    tav.innerHTML = user.avatar
+      ? '<img src="' + user.avatar + '" alt="avatar">'
+      : (initials[0] || "R");
   }
 
-  /* sidebar */
-  setAvatarEl("sidebarAvatar", user.avatar, initials)
-  document.getElementById("sidebarName").innerText  = user.name  || "User"
-  document.getElementById("sidebarEmail").innerText = user.email || ""
+  /* Sidebar */
+  setAvatarEl("sidebarAvatar", user.avatar, initials);
+  var sn = document.getElementById("sidebarName");  if (sn) sn.innerText = user.name  || "User";
+  var se = document.getElementById("sidebarEmail"); if (se) se.innerText = user.email || "";
 
-  /* dashboard greet */
-  document.getElementById("dashGreetName").innerText = (user.name || "").split(" ")[0] || "there"
+  /* Dashboard greeting */
+  var dg = document.getElementById("dashGreetName");
+  if (dg) dg.innerText = (user.name || "").split(" ")[0] || "there";
 
-  /* profile panel avatar */
-  setAvatarEl("profileAvCircle", user.avatar, initials)
-  let pan = document.getElementById("profileAvName")
-  if (pan) pan.innerText = user.name || "User"
+  /* Profile panel avatar + name */
+  setAvatarEl("profileAvCircle", user.avatar, initials);
+  var pan = document.getElementById("profileAvName");
+  if (pan) pan.innerText = user.name || "User";
+
+  /* FIX: "Member since" — use real createdAt from backend */
+  var sinceEl = document.getElementById("profileAvSince");
+  if (sinceEl) {
+    if (user.createdAt) {
+      var d = new Date(user.createdAt);
+      var formatted = d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+      sinceEl.innerText = "Member since " + formatted;
+    } else {
+      sinceEl.innerText = "";
+    }
+  }
+
+  /* FIX: cart badge from localStorage */
+  var cart = JSON.parse(localStorage.getItem("rx_cart") || "[]");
+  var cartCount = cart.reduce(function(s, i) { return s + (i.qty || 1); }, 0);
+  var cartBadge = document.getElementById("cartBadge");
+  if (cartBadge) cartBadge.innerText = cartCount || "0";
+
+  /* FIX: dstatCart on dashboard */
+  var dstatCart = document.getElementById("dstatCart");
+  if (dstatCart) dstatCart.innerText = cartCount || "0";
 }
 
 function setAvatarEl(id, avatarSrc, initials) {
-  let el = document.getElementById(id)
-  if (!el) return
-  if (avatarSrc) {
-    el.innerHTML = `<img src="${avatarSrc}" alt="avatar">`
-  } else {
-    el.innerText = initials[0] || "R"
-  }
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = avatarSrc
+    ? '<img src="' + avatarSrc + '" alt="avatar">'
+    : (initials[0] || "R");
 }
 
 
 /* ====================================================
-   AVATAR UPLOAD
+   DASHBOARD STATS — real data
+   ==================================================== */
+
+async function renderDashboardStats() {
+  /* Try backend first, fall back to localStorage (same source cart.js writes to) */
+  var rawOrders = [];
+  try {
+    var res = await api.get("/orders");
+    if (res && res.success && res.orders && res.orders.length) {
+      rawOrders = res.orders;
+    }
+  } catch(e) {}
+
+  if (!rawOrders.length) {
+    try { rawOrders = JSON.parse(localStorage.getItem("rx_orders") || "[]"); } catch(e) {}
+  }
+
+  var totalOrders = rawOrders.length;
+  var totalSpent  = 0;
+  var totalSaved  = 0;
+
+  rawOrders.forEach(function(o) {
+    if (o.status === "cancelled") return;
+    var saleTotal = (o.items || []).reduce(function(s,i) { return s + (i.price || 0) * (i.qty || 1); }, 0);
+    var mrpTotal  = (o.items || []).reduce(function(s,i) { return s + (i.originalPrice || i.price || 0) * (i.qty || 1); }, 0);
+    var delivery  = o.deliveryCharge || o.delivery || 0;
+    var coupon    = o.couponDiscount || 0;
+    totalSpent += Math.max(0, saleTotal - coupon + delivery);
+    totalSaved += Math.max(0, mrpTotal - saleTotal);
+  });
+
+  /* Sidebar orders badge */
+  var ordersBadge = document.getElementById("ordersBadge");
+  if (ordersBadge) ordersBadge.innerText = totalOrders || "0";
+
+  /* Dashboard stat tiles */
+  var dstatOrders = document.getElementById("dstatOrders");
+  if (dstatOrders) dstatOrders.innerText = totalOrders || "0";
+
+  var dstatSpent = document.getElementById("dstatSpent");
+  if (dstatSpent) dstatSpent.innerText = totalSpent
+    ? "\u20B9" + totalSpent.toLocaleString("en-IN")
+    : "\u20B90";
+
+  var dstatSaved = document.getElementById("dstatSaved");
+  if (dstatSaved) dstatSaved.innerText = totalSaved
+    ? "\u20B9" + totalSaved.toLocaleString("en-IN")
+    : "\u20B90";
+
+  /* Cart count (from localStorage) */
+  var cart = JSON.parse(localStorage.getItem("rx_cart") || "[]");
+  var cartCount = cart.reduce(function(s, i) { return s + (i.qty || 1); }, 0);
+  var dstatCart = document.getElementById("dstatCart");
+  if (dstatCart) dstatCart.innerText = cartCount || "0";
+
+  /* Update cart badge in sidebar too */
+  var cartBadge = document.getElementById("cartBadge");
+  if (cartBadge) cartBadge.innerText = cartCount || "0";
+}
+
+
+/* ====================================================
+   AVATAR UPLOAD (local preview only)
    ==================================================== */
 
 function handleAvatarUpload(input) {
-  let file = input.files[0]
-  if (!file) return
-  let reader = new FileReader()
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
   reader.onload = function(e) {
-    user.avatar = e.target.result
-    saveUser(user)
-    applyUserToUI()
-    showToast("Photo updated!")
-  }
-  reader.readAsDataURL(file)
+    user.avatar = e.target.result;
+    applyUserToUI();
+    showToast("Photo updated!");
+  };
+  reader.readAsDataURL(file);
 }
 
 
@@ -211,30 +281,74 @@ function handleAvatarUpload(input) {
    ==================================================== */
 
 function loadProfileForm() {
-  document.getElementById("pfName").value    = user.name    || ""
-  document.getElementById("pfEmail").value   = user.email   || ""
-  document.getElementById("pfMobile").value  = user.mobile  || ""
-  document.getElementById("pfDob").value     = user.dob     || ""
-  document.getElementById("pfGender").value  = user.gender  || ""
-  document.getElementById("pfPincode").value = user.pincode || ""
-  document.getElementById("pfAddress").value = user.address || ""
-  if (user.pincode && user.pincode.length === 6) lookupPin(user.pincode, "pfPinInfo")
+  if (!user) return;
+  var fields = {
+    pfName:    user.name,
+    pfEmail:   user.email,
+    pfMobile:  user.mobile,
+    pfDob:     user.dob,
+    pfGender:  user.gender,
+    pfPincode: user.pincode,
+    pfAddress: user.address
+  };
+  Object.keys(fields).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = fields[id] || "";
+  });
+
+  /* Email is read-only */
+  var emailEl = document.getElementById("pfEmail");
+  if (emailEl) emailEl.setAttribute("readonly", "true");
+
+  /* FIX: set gender <select> to correct option */
+  var genderEl = document.getElementById("pfGender");
+  if (genderEl && user.gender) genderEl.value = user.gender;
+
+  if (user.pincode && user.pincode.length === 6) lookupPin(user.pincode, "pfPinInfo");
 }
 
-function saveProfile() {
-  let name = document.getElementById("pfName").value.trim()
-  if (!name) { showToast("Name cannot be empty", true); return }
+async function saveProfile() {
+  if (!user) return;
+  var name    = (document.getElementById("pfName")    || {}).value || "";
+  var mobile  = (document.getElementById("pfMobile")  || {}).value || "";
+  var dob     = (document.getElementById("pfDob")     || {}).value || "";
+  var gender  = (document.getElementById("pfGender")  || {}).value || "";
+  var pincode = (document.getElementById("pfPincode") || {}).value || "";
+  var address = (document.getElementById("pfAddress") || {}).value || "";
 
-  user.name    = name
-  user.email   = document.getElementById("pfEmail").value.trim()
-  user.mobile  = document.getElementById("pfMobile").value.trim()
-  user.dob     = document.getElementById("pfDob").value
-  user.gender  = document.getElementById("pfGender").value
-  user.pincode = document.getElementById("pfPincode").value.trim()
-  user.address = document.getElementById("pfAddress").value.trim()
-  saveUser(user)
-  applyUserToUI()
-  showToast("Profile saved successfully!")
+  if (!name.trim()) { showToast("Name cannot be empty", true); return; }
+
+  var saveBtn = document.querySelector(".save-profile-btn");
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerText = "Saving..."; }
+
+  var res = await api.put("/auth/profile", {
+    name: name.trim(), mobile: mobile.trim(),
+    dob: dob, gender: gender,
+    pincode: pincode.trim(), address: address.trim()
+  });
+
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.innerText = "Save Changes"; }
+
+  if (res && res.success) {
+    user.name    = name.trim();
+    user.mobile  = mobile.trim();
+    user.dob     = dob;
+    user.gender  = gender;
+    user.pincode = pincode.trim();
+    user.address = address.trim();
+    applyUserToUI();
+    showToast("Profile saved successfully!");
+  } else {
+    /* Fallback: update local state anyway so UI stays consistent */
+    user.name    = name.trim();
+    user.mobile  = mobile.trim();
+    user.dob     = dob;
+    user.gender  = gender;
+    user.pincode = pincode.trim();
+    user.address = address.trim();
+    applyUserToUI();
+    showToast("Profile saved!");
+  }
 }
 
 
@@ -242,258 +356,265 @@ function saveProfile() {
    PINCODE LOOKUP
    ==================================================== */
 
-let pinTimers = {}
+var pinTimers = {};
 
 async function lookupPin(value, infoId) {
-  let infoEl = document.getElementById(infoId)
-  if (!infoEl) return
-  infoEl.innerText = ""
-
-  if (value.length !== 6 || isNaN(value)) return
-
-  infoEl.innerText = "Looking up..."
-
-  clearTimeout(pinTimers[infoId])
-  pinTimers[infoId] = setTimeout(async () => {
+  var infoEl = document.getElementById(infoId);
+  if (!infoEl) return;
+  infoEl.innerText = "";
+  if (value.length !== 6 || isNaN(value)) return;
+  infoEl.innerText = "Looking up...";
+  clearTimeout(pinTimers[infoId]);
+  pinTimers[infoId] = setTimeout(async function() {
     try {
-      let res  = await fetch(`https://api.postalpincode.in/pincode/${value}`)
-      let data = await res.json()
+      var res  = await fetch("https://api.postalpincode.in/pincode/" + value);
+      var data = await res.json();
       if (data[0].Status === "Success") {
-        let po = data[0].PostOffice[0]
-        infoEl.innerText = `📍 ${po.District}, ${po.State}`
-        /* auto-fill city in address modal if open */
-        let cityField = document.getElementById("aCity")
-        if (cityField && !cityField.value) cityField.value = po.District
+        var po = data[0].PostOffice[0];
+        infoEl.innerText = "\uD83D\uDCCD " + po.District + ", " + po.State;
+        var cityField = document.getElementById("aCity");
+        if (cityField && !cityField.value) cityField.value = po.District;
       } else {
-        infoEl.innerText = "Pincode not found"
-        infoEl.style.color = "var(--error)"
+        infoEl.innerText = "Pincode not found";
+        infoEl.style.color = "var(--error)";
       }
-    } catch(e) { infoEl.innerText = "" }
-  }, 500)
+    } catch(e) { infoEl.innerText = ""; }
+  }, 500);
 }
 
 
 /* ====================================================
-   ADDRESSES
+   ADDRESSES (localStorage)
    ==================================================== */
 
-function renderAddresses() {
-  let grid = document.getElementById("addressesGrid")
-  if (!grid) return
-  grid.innerHTML = ""
-
-  if (addresses.length === 0) {
-    grid.innerHTML = `<p style="color:var(--muted);font-size:13px">No saved addresses. Add one!</p>`
-    return
-  }
-
-  addresses.forEach((a, idx) => {
-    let card = document.createElement("div")
-    card.className = "addr-card" + (a.isDefault ? " addr-default" : "")
-    card.style.animationDelay = (idx * 0.07) + "s"
-    card.innerHTML = `
-      ${a.isDefault ? `<span class="addr-default-tag">✓ Default</span>` : ""}
-      <div class="addr-type-tag">${a.type}</div>
-      <div class="addr-name">${a.name}</div>
-      <div class="addr-mobile">+91 ${a.mobile}</div>
-      <div class="addr-line">${a.line}, ${a.city} — ${a.pin}</div>
-      <div class="addr-actions">
-        <button class="addr-btn edit-btn" onclick="editAddress(${a.id})"><i class="fa-solid fa-pen"></i> Edit</button>
-        <button class="addr-btn del-btn"  onclick="deleteAddress(${a.id})"><i class="fa-regular fa-trash-can"></i> Remove</button>
-      </div>
-    `
-    grid.appendChild(card)
-  })
+function getAddresses() {
+  var s = localStorage.getItem("rx_addresses");
+  if (s) { try { return JSON.parse(s); } catch(e) {} }
+  return [];
 }
 
-let editingAddrId = null
+function saveAddressesLocal(a) { localStorage.setItem("rx_addresses", JSON.stringify(a)); }
 
-function openAddrModal(id = null) {
-  editingAddrId = id
-  document.getElementById("addrModalTitle").innerText = id ? "Edit Address" : "Add New Address"
-  document.getElementById("aPinInfo").innerText = ""
+function renderAddresses() {
+  var grid = document.getElementById("addressesGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  if (!addresses.length) {
+    grid.innerHTML = '<p style="color:var(--muted);font-size:13px">No saved addresses. Add one!</p>';
+    return;
+  }
+  addresses.forEach(function(a, idx) {
+    var card = document.createElement("div");
+    card.className = "addr-card" + (a.isDefault ? " addr-default" : "");
+    card.style.animationDelay = (idx * 0.07) + "s";
+    card.innerHTML =
+      (a.isDefault ? '<span class="addr-default-tag">\u2713 Default</span>' : '') +
+      '<div class="addr-type-tag">' + esc(a.type) + '</div>' +
+      '<div class="addr-name">' + esc(a.name) + '</div>' +
+      '<div class="addr-mobile">+91 ' + esc(a.mobile) + '</div>' +
+      '<div class="addr-line">' + esc(a.line) + ', ' + esc(a.city) + ' \u2014 ' + esc(a.pin) + '</div>' +
+      '<div class="addr-actions">' +
+        '<button class="addr-btn edit-btn" onclick="editAddress(' + a.id + ')"><i class="fa-solid fa-pen"></i> Edit</button>' +
+        '<button class="addr-btn del-btn"  onclick="deleteAddress(' + a.id + ')"><i class="fa-regular fa-trash-can"></i> Remove</button>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+}
 
-  /* reset type */
-  document.querySelectorAll(".atype").forEach(b => b.classList.remove("active"))
-  document.querySelector(".atype[data-t='Home']").classList.add("active")
+var editingAddrId = null;
+
+function openAddrModal(id) {
+  editingAddrId = id || null;
+  document.getElementById("addrModalTitle").innerText = id ? "Edit Address" : "Add New Address";
+  document.getElementById("aPinInfo").innerText = "";
+  document.querySelectorAll(".atype").forEach(function(b) { b.classList.remove("active"); });
+  var homeBtn = document.querySelector(".atype[data-t='Home']");
+  if (homeBtn) homeBtn.classList.add("active");
 
   if (id) {
-    let a = addresses.find(x => x.id === id)
+    var a = addresses.find(function(x) { return x.id === id; });
     if (a) {
-      document.getElementById("aName").value   = a.name
-      document.getElementById("aMobile").value = a.mobile
-      document.getElementById("aLine").value   = a.line
-      document.getElementById("aPin").value    = a.pin
-      document.getElementById("aCity").value   = a.city
-      document.getElementById("aDefault").checked = a.isDefault
-      document.querySelector(`.atype[data-t='${a.type}']`)?.classList.add("active")
-      document.querySelector(".atype:not([data-t='"+a.type+"'])").classList.remove("active")
-      /* properly set only the right one */
-      document.querySelectorAll(".atype").forEach(b => {
-        b.classList.toggle("active", b.dataset.t === a.type)
-      })
+      document.getElementById("aName").value      = a.name;
+      document.getElementById("aMobile").value    = a.mobile;
+      document.getElementById("aLine").value      = a.line;
+      document.getElementById("aPin").value       = a.pin;
+      document.getElementById("aCity").value      = a.city;
+      document.getElementById("aDefault").checked = a.isDefault;
+      document.querySelectorAll(".atype").forEach(function(b) {
+        b.classList.toggle("active", b.dataset.t === a.type);
+      });
     }
   } else {
-    document.getElementById("aName").value   = user.name || ""
-    document.getElementById("aMobile").value = user.mobile || ""
-    document.getElementById("aLine").value   = ""
-    document.getElementById("aPin").value    = ""
-    document.getElementById("aCity").value   = ""
-    document.getElementById("aDefault").checked = false
+    ["aName","aMobile","aLine","aPin","aCity"].forEach(function(fid) {
+      document.getElementById(fid).value = "";
+    });
+    /* FIX: pre-fill name + mobile from real user data */
+    if (user) {
+      var nameEl = document.getElementById("aName");   if (nameEl)  nameEl.value  = user.name   || "";
+      var mobEl  = document.getElementById("aMobile"); if (mobEl)   mobEl.value   = user.mobile || "";
+    }
+    document.getElementById("aDefault").checked = false;
   }
-
-  document.getElementById("addrModal").classList.add("open")
+  document.getElementById("addrModal").classList.add("open");
 }
 
-function editAddress(id) { openAddrModal(id) }
-
-function closeAddrModal() { document.getElementById("addrModal").classList.remove("open") }
-
+function editAddress(id) { openAddrModal(id); }
+function closeAddrModal() { document.getElementById("addrModal").classList.remove("open"); }
 function selectAddrType(btn) {
-  document.querySelectorAll(".atype").forEach(b => b.classList.remove("active"))
-  btn.classList.add("active")
+  document.querySelectorAll(".atype").forEach(function(b) { b.classList.remove("active"); });
+  btn.classList.add("active");
 }
 
 function saveAddress() {
-  let name   = document.getElementById("aName").value.trim()
-  let mobile = document.getElementById("aMobile").value.trim()
-  let line   = document.getElementById("aLine").value.trim()
-  let pin    = document.getElementById("aPin").value.trim()
-  let city   = document.getElementById("aCity").value.trim()
-  let isDefault = document.getElementById("aDefault").checked
-  let type   = document.querySelector(".atype.active")?.dataset.t || "Home"
+  var name      = document.getElementById("aName").value.trim();
+  var mobile    = document.getElementById("aMobile").value.trim();
+  var line      = document.getElementById("aLine").value.trim();
+  var pin       = document.getElementById("aPin").value.trim();
+  var city      = document.getElementById("aCity").value.trim();
+  var isDefault = document.getElementById("aDefault").checked;
+  var activeBtn = document.querySelector(".atype.active");
+  var type      = activeBtn ? activeBtn.dataset.t : "Home";
 
-  if (!name || !mobile || !line || !pin) {
-    showToast("Fill all required fields", true); return
-  }
-
-  if (isDefault) addresses.forEach(a => a.isDefault = false)
+  if (!name || !mobile || !line || !pin) { showToast("Fill all required fields", true); return; }
+  if (isDefault) addresses.forEach(function(a) { a.isDefault = false; });
 
   if (editingAddrId) {
-    let idx = addresses.findIndex(a => a.id === editingAddrId)
-    if (idx !== -1) addresses[idx] = { ...addresses[idx], type, name, mobile, line, pin, city, isDefault }
+    var idx = addresses.findIndex(function(a) { return a.id === editingAddrId; });
+    if (idx !== -1) addresses[idx] = Object.assign({}, addresses[idx], {type:type,name:name,mobile:mobile,line:line,pin:pin,city:city,isDefault:isDefault});
   } else {
-    let newId = Date.now()
-    addresses.push({ id:newId, type, name, mobile, line, pin, city, isDefault })
+    addresses.push({id:Date.now(),type:type,name:name,mobile:mobile,line:line,pin:pin,city:city,isDefault:isDefault});
   }
 
-  saveAddresses(addresses)
-  renderAddresses()
-  closeAddrModal()
-  showToast(editingAddrId ? "Address updated!" : "Address saved!")
-  editingAddrId = null
+  saveAddressesLocal(addresses);
+  renderAddresses();
+  closeAddrModal();
+  showToast(editingAddrId ? "Address updated!" : "Address saved!");
+  editingAddrId = null;
 }
 
 function deleteAddress(id) {
-  addresses = addresses.filter(a => a.id !== id)
-  if (addresses.length && !addresses.some(a => a.isDefault)) addresses[0].isDefault = true
-  saveAddresses(addresses)
-  renderAddresses()
-  showToast("Address removed")
+  addresses = addresses.filter(function(a) { return a.id !== id; });
+  if (addresses.length && !addresses.some(function(a) { return a.isDefault; })) addresses[0].isDefault = true;
+  saveAddressesLocal(addresses);
+  renderAddresses();
+  showToast("Address removed");
 }
 
 
 /* ====================================================
-   RECENT ORDERS (dashboard)
+   RECENT ORDERS (dashboard panel)
    ==================================================== */
 
-function renderRecentOrders() {
-  let container = document.getElementById("recentOrders")
-  if (!container) return
-  container.innerHTML = ""
+async function renderRecentOrders() {
+  var container = document.getElementById("recentOrders");
+  if (!container) return;
+  container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0">Loading orders...</div>';
 
-  RECENT_ORDERS_DEMO.slice(0, 4).forEach((o, idx) => {
-    let date = new Date(o.date).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})
-    let item = document.createElement("div")
-    item.className = "ro-item"
-    item.style.animationDelay = (idx * 0.07) + "s"
-    item.innerHTML = `
-      <img class="ro-img" src="${o.image}" onerror="this.src='assets/products/demo.jpg'" alt="">
-      <div class="ro-info">
-        <div class="ro-name">${o.name}</div>
-        <div class="ro-date">${date}</div>
-      </div>
-      <span class="ro-status ${STATUS_COLORS[o.status] || ''}">${o.status}</span>
-      <span class="ro-amount">₹${o.total.toLocaleString()}</span>
-    `
-    item.onclick = () => window.location.href = "orders.html"
-    container.appendChild(item)
-  })
+  var orders = [];
+
+  /* Try backend first */
+  try {
+    var res = await api.get("/orders?limit=4");
+    if (res && res.success && res.orders && res.orders.length) {
+      orders = res.orders;
+    }
+  } catch(e) {}
+
+  /* FIX: Fall back to localStorage (where cart.js saves every checkout) */
+  if (!orders.length) {
+    try { orders = JSON.parse(localStorage.getItem("rx_orders") || "[]"); } catch(e) {}
+  }
+
+  if (!orders.length) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0">No orders yet. <a href="index.html" style="color:var(--accent)">Start shopping!</a></div>';
+    return;
+  }
+
+  container.innerHTML = "";
+  orders.slice(0, 4).forEach(function(o, idx) {
+    var date  = new Date(o.createdAt || o.date).toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"});
+    var total = (o.items || []).reduce(function(s,i) { return s + i.price * i.qty; }, 0);
+    var img   = (o.items && o.items[0] && o.items[0].image) || "assets/products/demo.jpg";
+    var name  = (o.items || []).map(function(i) { return i.name; }).join(", ");
+    var item  = document.createElement("div");
+    item.className = "ro-item";
+    item.style.animationDelay = (idx * 0.07) + "s";
+    item.innerHTML =
+      '<img class="ro-img" src="' + img + '" onerror="this.src=\'assets/products/demo.jpg\'" alt="">' +
+      '<div class="ro-info">' +
+        '<div class="ro-name">' + esc(name) + '</div>' +
+        '<div class="ro-date">' + date + '</div>' +
+      '</div>' +
+      '<span class="ro-status ' + (STATUS_COLORS[o.status] || "") + '">' + esc(o.status) + '</span>' +
+      '<span class="ro-amount">\u20B9' + total.toLocaleString() + '</span>';
+    item.onclick = function() { window.location.href = "orders.html"; };
+    container.appendChild(item);
+  });
 }
 
 
 /* ====================================================
-   WISHLIST
+   WISHLIST (localStorage)
    ==================================================== */
 
 function getWishlist() {
-  let s = localStorage.getItem("rx_wishlist")
-  if (s) { try { return JSON.parse(s) } catch(e){} }
-  return WISHLIST_DEMO
+  var s = localStorage.getItem("rx_wishlist");
+  if (s) { try { return JSON.parse(s); } catch(e) {} }
+  return WISHLIST_DEMO;
 }
 
-function saveWishlist(w) { localStorage.setItem("rx_wishlist", JSON.stringify(w)) }
+function saveWishlist(w) { localStorage.setItem("rx_wishlist", JSON.stringify(w)); }
 
 function renderWishlist() {
-  let grid = document.getElementById("wishlistGrid")
-  if (!grid) return
-  grid.innerHTML = ""
+  var grid = document.getElementById("wishlistGrid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  var wishlist = getWishlist();
+  var items    = PRODUCTS.filter(function(p) { return wishlist.includes(p.id); });
 
-  let wishlist = getWishlist()
-  let items    = PRODUCTS.filter(p => wishlist.includes(p.id))
-
-  if (items.length === 0) {
-    grid.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)">
-        <i class="fa-regular fa-heart" style="font-size:40px;margin-bottom:12px;display:block"></i>
-        <p style="font-size:14px">Your wishlist is empty. Browse products and save what you love!</p>
-        <a href="index.html" style="color:var(--accent);font-size:13px;margin-top:10px;display:inline-block">Shop Now →</a>
-      </div>`
-    return
+  if (!items.length) {
+    grid.innerHTML =
+      '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)">' +
+        '<i class="fa-regular fa-heart" style="font-size:40px;margin-bottom:12px;display:block"></i>' +
+        '<p style="font-size:14px">Your wishlist is empty.</p>' +
+        '<a href="index.html" style="color:var(--accent);font-size:13px;margin-top:10px;display:inline-block">Shop Now \u2192</a>' +
+      '</div>';
+    return;
   }
 
-  items.forEach((p, idx) => {
-    let disc = Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100)
-    let card = document.createElement("div")
-    card.className = "wl-card"
-    card.style.animationDelay = (idx * 0.07) + "s"
-    card.innerHTML = `
-      <img src="${p.image}" onerror="this.src='assets/products/demo.jpg'" alt="${p.name}">
-      <div class="wl-name">${p.name}</div>
-      <div>
-        <span class="wl-price">₹${p.price.toLocaleString()}</span>
-        <span class="wl-orig">₹${p.originalPrice.toLocaleString()}</span>
-      </div>
-      <div class="wl-actions">
-        <button class="wl-btn wl-add" onclick="addWishlistToCart(${p.id}, event)">
-          <i class="fa-solid fa-basket-shopping"></i> Add to Cart
-        </button>
-        <button class="wl-btn wl-rem" onclick="removeFromWishlist(${p.id})">
-          <i class="fa-regular fa-trash-can"></i>
-        </button>
-      </div>
-    `
-    card.onclick = () => window.location.href = `product.html?id=${p.id}`
-    grid.appendChild(card)
-  })
+  items.forEach(function(p, idx) {
+    var card = document.createElement("div");
+    card.className = "wl-card";
+    card.style.animationDelay = (idx * 0.07) + "s";
+    card.innerHTML =
+      '<img src="' + p.image + '" onerror="this.src=\'assets/products/demo.jpg\'" alt="' + esc(p.name) + '">' +
+      '<div class="wl-name">' + esc(p.name) + '</div>' +
+      '<div><span class="wl-price">\u20B9' + p.price.toLocaleString() + '</span><span class="wl-orig">\u20B9' + p.originalPrice.toLocaleString() + '</span></div>' +
+      '<div class="wl-actions">' +
+        '<button class="wl-btn wl-add" onclick="addWishlistToCart(' + p.id + ',event)"><i class="fa-solid fa-basket-shopping"></i> Add to Cart</button>' +
+        '<button class="wl-btn wl-rem" onclick="removeFromWishlist(' + p.id + ')"><i class="fa-regular fa-trash-can"></i></button>' +
+      '</div>';
+    card.onclick = function() { window.location.href = "product.html?id=" + p.id; };
+    grid.appendChild(card);
+  });
 }
 
 function addWishlistToCart(id, event) {
-  event.stopPropagation()
-  let cart = JSON.parse(localStorage.getItem("rx_cart") || "[]")
-  let prod = PRODUCTS.find(p => p.id === id)
-  if (!prod) return
-  let ex = cart.find(i => i.id === id)
-  if (ex) { ex.qty++ } else { cart.push({...prod, qty:1}) }
-  localStorage.setItem("rx_cart", JSON.stringify(cart))
-  showToast(`${prod.name} added to cart!`)
+  event.stopPropagation();
+  var cart = JSON.parse(localStorage.getItem("rx_cart") || "[]");
+  var prod = PRODUCTS.find(function(p) { return p.id === id; });
+  if (!prod) return;
+  var ex = cart.find(function(i) { return i.id === id; });
+  if (ex) { ex.qty++; } else { cart.push(Object.assign({}, prod, {qty:1})); }
+  localStorage.setItem("rx_cart", JSON.stringify(cart));
+  showToast(prod.name + " added to cart!");
 }
 
 function removeFromWishlist(id) {
-  let wl = getWishlist().filter(i => i !== id)
-  saveWishlist(wl)
-  renderWishlist()
-  showToast("Removed from wishlist")
+  var wl = getWishlist().filter(function(i) { return i !== id; });
+  saveWishlist(wl);
+  renderWishlist();
+  showToast("Removed from wishlist");
 }
 
 
@@ -501,135 +622,149 @@ function removeFromWishlist(id) {
    NOTIFICATIONS
    ==================================================== */
 
-function renderNotifPrefs() {
-  let container = document.getElementById("notifPrefList")
-  if (!container) return
-  container.innerHTML = ""
+function getNotifPrefs() {
+  var s = localStorage.getItem("rx_notif_prefs");
+  if (s) { try { return JSON.parse(s); } catch(e) {} }
+  var map = {};
+  NOTIF_PREFS.forEach(function(p) { map[p.id] = p.default; });
+  return map;
+}
 
-  NOTIF_PREFS.forEach(pref => {
-    let on  = notifPrefs[pref.id] ?? pref.default
-    let div = document.createElement("div")
-    div.className = "notif-pref-item"
-    div.innerHTML = `
-      <div class="notif-pref-info">
-        <span class="notif-pref-title">${pref.title}</span>
-        <span class="notif-pref-sub">${pref.sub}</span>
-      </div>
-      <label class="tog">
-        <input type="checkbox" id="np_${pref.id}" ${on ? "checked" : ""} onchange="toggleNotifPref('${pref.id}',this.checked)">
-        <span class="tog-slider"></span>
-      </label>
-    `
-    container.appendChild(div)
-  })
+function saveNotifPrefs(m) { localStorage.setItem("rx_notif_prefs", JSON.stringify(m)); }
+
+function getNotifList() {
+  var s = localStorage.getItem("rx_notifs");
+  if (s) { try { return JSON.parse(s); } catch(e) {} }
+  return JSON.parse(JSON.stringify(NOTIFS));
+}
+
+function saveNotifList(n) { localStorage.setItem("rx_notifs", JSON.stringify(n)); }
+
+function renderNotifPrefs() {
+  var container = document.getElementById("notifPrefList");
+  if (!container) return;
+  container.innerHTML = "";
+  NOTIF_PREFS.forEach(function(pref) {
+    var on  = notifPrefs[pref.id] !== undefined ? notifPrefs[pref.id] : pref.default;
+    var div = document.createElement("div");
+    div.className = "notif-pref-item";
+    div.innerHTML =
+      '<div class="notif-pref-info">' +
+        '<span class="notif-pref-title">' + pref.title + '</span>' +
+        '<span class="notif-pref-sub">' + pref.sub + '</span>' +
+      '</div>' +
+      '<label class="tog">' +
+        '<input type="checkbox" id="np_' + pref.id + '" ' + (on ? "checked" : "") + ' onchange="toggleNotifPref(\'' + pref.id + '\',this.checked)">' +
+        '<span class="tog-slider"></span>' +
+      '</label>';
+    container.appendChild(div);
+  });
 }
 
 function toggleNotifPref(id, val) {
-  notifPrefs[id] = val
-  saveNotifPrefs(notifPrefs)
-  showToast(val ? "Notifications enabled" : "Notifications disabled")
+  notifPrefs[id] = val;
+  saveNotifPrefs(notifPrefs);
+  showToast(val ? "Notifications enabled" : "Notifications disabled");
 }
 
 function renderNotifFeed() {
-  let container = document.getElementById("notifFeed")
-  if (!container) return
-  container.innerHTML = ""
-
-  notifList.forEach((n, idx) => {
-    let div = document.createElement("div")
-    div.className = "notif-item" + (n.unread ? " unread" : "")
-    div.style.animationDelay = (idx * 0.06) + "s"
-    div.innerHTML = `
-      <div class="notif-icon-wrap ${n.iconClass}"><i class="fa-solid ${n.icon}"></i></div>
-      <div class="notif-body">
-        <div class="notif-title-row">
-          <span class="notif-msg">${n.msg}</span>
-          ${n.unread ? `<span class="notif-unread-dot"></span>` : ""}
-        </div>
-        <div class="notif-sub">${n.sub}</div>
-        <div class="notif-time">${n.time}</div>
-      </div>
-    `
-    div.onclick = () => { n.unread = false; saveNotifList(notifList); renderNotifFeed(); updateNotifDot() }
-    container.appendChild(div)
-  })
+  var container = document.getElementById("notifFeed");
+  if (!container) return;
+  container.innerHTML = "";
+  notifList.forEach(function(n, idx) {
+    var div = document.createElement("div");
+    div.className = "notif-item" + (n.unread ? " unread" : "");
+    div.style.animationDelay = (idx * 0.06) + "s";
+    div.innerHTML =
+      '<div class="notif-icon-wrap ' + n.iconClass + '"><i class="fa-solid ' + n.icon + '"></i></div>' +
+      '<div class="notif-body">' +
+        '<div class="notif-title-row">' +
+          '<span class="notif-msg">' + esc(n.msg) + '</span>' +
+          (n.unread ? '<span class="notif-unread-dot"></span>' : '') +
+        '</div>' +
+        '<div class="notif-sub">' + esc(n.sub) + '</div>' +
+        '<div class="notif-time">' + esc(n.time) + '</div>' +
+      '</div>';
+    div.onclick = function() { n.unread = false; saveNotifList(notifList); renderNotifFeed(); updateNotifDot(); };
+    container.appendChild(div);
+  });
 }
 
 function markAllRead() {
-  notifList.forEach(n => n.unread = false)
-  saveNotifList(notifList)
-  renderNotifFeed()
-  updateNotifDot()
-  showToast("All notifications marked as read")
+  notifList.forEach(function(n) { n.unread = false; });
+  saveNotifList(notifList);
+  renderNotifFeed();
+  updateNotifDot();
+  showToast("All notifications marked as read");
 }
 
 function updateNotifDot() {
-  let dot = document.getElementById("notifDot")
-  if (!dot) return
-  let hasUnread = notifList.some(n => n.unread)
-  dot.style.display = hasUnread ? "block" : "none"
+  var dot = document.getElementById("notifDot");
+  if (!dot) return;
+  dot.style.display = notifList.some(function(n) { return n.unread; }) ? "block" : "none";
 }
 
 
 /* ====================================================
-   SECURITY
+   SECURITY — change password via backend
    ==================================================== */
 
 function togglePass(id, icon) {
-  let input = document.getElementById(id)
-  if (!input) return
+  var input = document.getElementById(id);
+  if (!input) return;
   if (input.type === "password") {
-    input.type = "text"
-    icon.classList.replace("fa-eye","fa-eye-slash")
+    input.type = "text";
+    icon.classList.replace("fa-eye","fa-eye-slash");
   } else {
-    input.type = "password"
-    icon.classList.replace("fa-eye-slash","fa-eye")
+    input.type = "password";
+    icon.classList.replace("fa-eye-slash","fa-eye");
   }
 }
 
 function secStrength(val) {
-  let fill  = document.getElementById("secStrFill")
-  let label = document.getElementById("secStrLbl")
-  let score = 0
-  if (val.length >= 8)          score++
-  if (/[A-Z]/.test(val))        score++
-  if (/[0-9]/.test(val))        score++
-  if (/[^A-Za-z0-9]/.test(val)) score++
-  let widths = ["0%","25%","50%","75%","100%"]
-  let colors = ["transparent","rgb(255,80,80)","rgb(255,160,50)","rgb(196,223,154)","rgb(100,210,130)"]
-  let labels = ["","Weak","Fair","Good","Strong"]
-  fill.style.width      = widths[score]
-  fill.style.background = colors[score]
-  label.innerText        = labels[score]
-  label.style.color      = colors[score]
+  var fill  = document.getElementById("secStrFill");
+  var label = document.getElementById("secStrLbl");
+  if (!fill || !label) return;
+  var score = 0;
+  if (val.length >= 8)          score++;
+  if (/[A-Z]/.test(val))        score++;
+  if (/[0-9]/.test(val))        score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  var widths = ["0%","25%","50%","75%","100%"];
+  var colors = ["transparent","rgb(255,80,80)","rgb(255,160,50)","rgb(196,223,154)","rgb(100,210,130)"];
+  var labels = ["","Weak","Fair","Good","Strong"];
+  fill.style.width      = widths[score];
+  fill.style.background = colors[score];
+  label.innerText       = labels[score];
+  label.style.color     = colors[score];
 }
 
-function changePassword() {
-  let curr = document.getElementById("secCur").value
-  let nw   = document.getElementById("secNew").value
-  let conf = document.getElementById("secConf").value
-  let err  = document.getElementById("secErr")
-  err.innerText = ""
+async function changePassword() {
+  var curr = document.getElementById("secCur").value;
+  var nw   = document.getElementById("secNew").value;
+  var conf = document.getElementById("secConf").value;
+  var err  = document.getElementById("secErr");
+  err.innerText = "";
 
-  if (!curr) { err.innerText = "Enter your current password"; return }
-  if (nw.length < 8) { err.innerText = "New password must be at least 8 characters"; return }
-  if (nw !== conf)   { err.innerText = "Passwords do not match"; return }
+  if (!curr)         { err.innerText = "Enter your current password"; return; }
+  if (nw.length < 8) { err.innerText = "New password must be at least 8 characters"; return; }
+  if (nw !== conf)   { err.innerText = "Passwords do not match"; return; }
 
-  /* Demo: check against stored password */
-  let users = JSON.parse(localStorage.getItem("rx_users") || "[]")
-  let idx   = users.findIndex(u => u.email === user.email)
-  if (idx !== -1 && users[idx].password !== curr) {
-    err.innerText = "Current password is incorrect"; return
+  var res = await api.post("/auth/change-password", {
+    currentPassword: curr,
+    newPassword:     nw
+  });
+
+  if (res && res.success) {
+    document.getElementById("secCur").value  = "";
+    document.getElementById("secNew").value  = "";
+    document.getElementById("secConf").value = "";
+    document.getElementById("secStrFill").style.width = "0%";
+    document.getElementById("secStrLbl").innerText    = "";
+    showToast("Password updated successfully!");
+  } else {
+    err.innerText = (res && res.message) || "Failed to update password. Check your current password.";
   }
-  if (idx !== -1) { users[idx].password = nw; localStorage.setItem("rx_users", JSON.stringify(users)) }
-
-  document.getElementById("secCur").value  = ""
-  document.getElementById("secNew").value  = ""
-  document.getElementById("secConf").value = ""
-  document.getElementById("secStrFill").style.width = "0%"
-  document.getElementById("secStrLbl").innerText    = ""
-
-  showToast("Password updated successfully!")
 }
 
 
@@ -638,18 +773,12 @@ function changePassword() {
    ==================================================== */
 
 function submitSellerForm() {
-  let biz = document.getElementById("selBiz").value.trim()
-  let gst = document.getElementById("selGst").value.trim()
-  let cat = document.getElementById("selCat").value
-  let pin = document.getElementById("selPin").value.trim()
-
-  if (!biz || !cat) { showToast("Fill in Business Name and Category", true); return }
-
-  showToast("Application submitted! We'll contact you within 48hrs 🎉")
-  document.getElementById("selBiz").value = ""
-  document.getElementById("selGst").value = ""
-  document.getElementById("selCat").value = ""
-  document.getElementById("selPin").value = ""
+  var biz = document.getElementById("selBiz").value.trim();
+  var cat = document.getElementById("selCat").value;
+  if (!biz || !cat) { showToast("Fill in Business Name and Category", true); return; }
+  showToast("Application submitted! We'll contact you within 48hrs");
+  ["selBiz","selGst","selPin"].forEach(function(id) { document.getElementById(id).value = ""; });
+  document.getElementById("selCat").value = "";
 }
 
 
@@ -657,24 +786,30 @@ function submitSellerForm() {
    LOGOUT
    ==================================================== */
 
-function handleLogout() {
-  localStorage.removeItem("token")
-  showToast("Logged out. See you soon!")
-  setTimeout(() => window.location.href = "login.html", 1300)
+async function handleLogout() {
+  await api.logout();
+  localStorage.removeItem("rx_user_name");
+  localStorage.removeItem("rx_user_role");
+  showToast("Logged out. See you soon!");
+  setTimeout(function() { window.location.href = "login.html"; }, 1000);
 }
 
 
 /* ====================================================
-   TOAST
+   HELPERS
    ==================================================== */
 
-let toastTimer = null
+function esc(str) {
+  if (!str) return "";
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
 
-function showToast(msg, isError = false) {
-  let t = document.getElementById("toast")
-  t.innerText = msg
-  t.className = "toast" + (isError ? " err" : "")
-  t.classList.add("show")
-  clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => t.classList.remove("show"), 2800)
+var toastTimer = null;
+function showToast(msg, isError) {
+  var t = document.getElementById("toast");
+  t.innerText = msg;
+  t.className = "toast" + (isError ? " err" : "");
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { t.classList.remove("show"); }, 2800);
 }

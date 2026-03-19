@@ -21,13 +21,11 @@ function toggleTheme() {
   var moon    = document.getElementById("themeIconMoon");
   var isLight = body.classList.toggle("light-mode");
 
-  /* Swap logos */
   var logoSrc = isLight ? "assets/logo/logo-light.png" : "assets/logo/logo.png";
   document.querySelectorAll(".logo img, .footer img").forEach(function (img) {
     img.src = logoSrc;
   });
 
-  /* Swap icon + persist */
   if (isLight) {
     sun.style.display  = "none";
     moon.style.display = "";
@@ -38,11 +36,9 @@ function toggleTheme() {
     localStorage.setItem("rx_theme", "dark");
   }
 
-  /* Re-build banner slider with correct images */
   initBannerSlider();
 }
 
-/* Apply saved theme immediately -- before first paint to avoid flash */
 (function () {
   if (localStorage.getItem("rx_theme") === "light") {
     document.body.classList.add("light-mode");
@@ -51,7 +47,6 @@ function toggleTheme() {
 
 /* -- boot -- */
 window.onload = function () {
-  /* Apply logo swap if light theme was already set */
   if (document.body.classList.contains("light-mode")) {
     document.querySelectorAll(".logo img, .footer img").forEach(function (img) {
       img.src = "assets/logo/logo-light.png";
@@ -69,10 +64,7 @@ window.onload = function () {
 
 
 /* ================================================================
-   GEOLOCATION -- 4-layer fallback
-   Navbar label format: "Colony, City, State - Pincode"
-   Full address stored in window.rxUserAddress and
-   localStorage("rx_full_address") for delivery pages.
+   GEOLOCATION
    ================================================================ */
 
 var userLat = null;
@@ -80,7 +72,7 @@ var userLon = null;
 window.rxUserAddress = null;
 
 /* ================================================================
-   ADDRESS DROPDOWN -- open / close / toggle
+   ADDRESS DROPDOWN
    ================================================================ */
 
 function openAddrDropdown() {
@@ -237,8 +229,8 @@ function saveManualAddress(e) {
     .forEach(function(id){ document.getElementById(id).classList.remove("error"); });
 
   var errors = [];
-  if (!name)                      errors.push("af-name");
-  if (!city)                      errors.push("af-city");
+  if (!name)                        errors.push("af-name");
+  if (!city)                        errors.push("af-city");
   if (!pin || !/^\d{6}$/.test(pin)) errors.push("af-pin");
 
   if (errors.length) {
@@ -251,18 +243,10 @@ function saveManualAddress(e) {
   }
 
   var newAddr = {
-    id     : "addr_" + Date.now(),
-    name   : name,
-    phone  : phone,
-    house  : house,
-    street : street,
-    colony : colony,
-    city   : city,
-    state  : state,
-    pin    : pin,
-    source : "manual",
-    lat    : userLat || 0,
-    lon    : userLon || 0
+    id: "addr_" + Date.now(), name: name, phone: phone,
+    house: house, street: street, colony: colony,
+    city: city, state: state, pin: pin,
+    source: "manual", lat: userLat || 0, lon: userLon || 0
   };
 
   var list = getSavedAddresses();
@@ -309,28 +293,11 @@ async function detectLocation() {
   );
 }
 
-
-/* -- Build structured address from Nominatim response --
-   For Indian addresses Nominatim returns:
-     neighbourhood  -> colony/locality name  (e.g. "Govind Nagar", "Scheme 54")
-     suburb         -> broader ward/area
-     county         -> district
-     city/town      -> city
-     state          -> state
-     postcode       -> pincode
-
-   Road codes like "MD4513", "SH31", "NH52" are highway refs, NOT locality
-   names -- we strip them using isRoadCode() and never show them as colony.
-*/
-
-/* Returns true if string looks like a highway/road code, not a place name */
 function isRoadCode(s) {
   if (!s) return false;
-  /* matches: MD4513, SH31, NH52, MH48, MP12, IN-MP-1 etc. */
   return /^[A-Z]{1,3}[-\s]?[0-9]{1,5}$/i.test(s.trim());
 }
 
-/* Pick first valid locality name from a list, skipping road codes */
 function firstLocality() {
   for (var i = 0; i < arguments.length; i++) {
     var v = arguments[i];
@@ -340,46 +307,25 @@ function firstLocality() {
 }
 
 function buildAddr(a, lat, lon, source) {
-  /* Colony: most specific named locality -- never a road code */
-  var colony = firstLocality(
-    a.neighbourhood, a.quarter, a.hamlet,
-    a.residential,   a.village, a.suburb
-  );
-
-  /* Area: broader ward (suburb), only if different from colony */
+  var colony = firstLocality(a.neighbourhood, a.quarter, a.hamlet, a.residential, a.village, a.suburb);
   var area = "";
-  if (a.suburb && a.suburb !== colony && !isRoadCode(a.suburb)) {
-    area = a.suburb;
-  }
-
-  /* Road: named road only -- skip highway codes */
+  if (a.suburb && a.suburb !== colony && !isRoadCode(a.suburb)) area = a.suburb;
   var road = "";
   var roadCandidates = [a.road, a.pedestrian, a.footway, a.path, a.street];
   for (var j = 0; j < roadCandidates.length; j++) {
-    if (roadCandidates[j] && !isRoadCode(roadCandidates[j])) {
-      road = roadCandidates[j];
-      break;
-    }
+    if (roadCandidates[j] && !isRoadCode(roadCandidates[j])) { road = roadCandidates[j]; break; }
   }
-
   return {
-    houseNo  : a["addr:housenumber"] || a.house_number || "",
-    road     : road,
-    colony   : colony,
-    area     : area,
-    city     : a.city || a.town || a.municipality || a.city_district || "",
-    district : a.county || a.state_district || "",
-    state    : a.state || "",
-    postcode : a.postcode || "",
-    country  : a.country || "",
-    cc       : (a.country_code || "").toUpperCase(),
-    lat      : lat,
-    lon      : lon,
-    source   : source || "gps"
+    houseNo: a["addr:housenumber"] || a.house_number || "",
+    road: road, colony: colony, area: area,
+    city: a.city || a.town || a.municipality || a.city_district || "",
+    district: a.county || a.state_district || "",
+    state: a.state || "", postcode: a.postcode || "",
+    country: a.country || "", cc: (a.country_code || "").toUpperCase(),
+    lat: lat, lon: lon, source: source || "gps"
   };
 }
 
-/* -- Navbar label: "Colony, City, State - Pincode" -- */
 function navLabel(addr) {
   var parts = [];
   if (addr.colony) parts.push(addr.colony);
@@ -391,7 +337,6 @@ function navLabel(addr) {
   return label || "Location found";
 }
 
-/* -- Apply address to all UI elements -- */
 function applyAddress(addr, save) {
   if (save === undefined) save = true;
   document.getElementById("locationText").innerText = navLabel(addr);
@@ -401,77 +346,37 @@ function applyAddress(addr, save) {
   if (save) localStorage.setItem("rx_full_address", JSON.stringify(addr));
 }
 
-/* -- Render the hover popup card -- */
 function renderAddrCard(addr) {
   var body = document.getElementById("lfcBody");
   if (!body) return;
-
   var isGPS = (addr.source === "gps" || addr.source === "gps-backup");
   var srcBadge = isGPS
     ? '<span class="lfc-source gps"><i class="fa-solid fa-satellite-dish"></i> GPS</span>'
     : '<span class="lfc-source ip"><i class="fa-solid fa-wifi"></i> IP</span>';
-
   var street   = [addr.houseNo, addr.road].filter(Boolean).join(", ");
   var cityLine = [addr.city || addr.district, addr.state].filter(Boolean).join(", ");
   var rows = [];
-
-  if (addr.colony)
-    rows.push(addrRow("fa-house-flag", addr.colony));
-  if (addr.area && addr.area !== addr.colony)
-    rows.push(addrRow("fa-location-dot", addr.area));
-  if (street)
-    rows.push(addrRow("fa-road", street));
-  if (cityLine)
-    rows.push(addrRow("fa-city", cityLine));
-  if (addr.postcode)
-    rows.push(addrRow("fa-envelope", addr.postcode));
-  if (addr.country)
-    rows.push(addrRow("fa-globe", addr.country + (addr.cc ? " (" + addr.cc + ")" : "")));
-
-  if (!rows.length)
-    rows.push('<div class="lfc-row"><span class="lfc-value empty">Address unavailable</span></div>');
-
-  body.innerHTML =
-    rows.join("") +
-    '<div class="lfc-coords">' +
-      addr.lat.toFixed(6) + ", " + addr.lon.toFixed(6) + " " + srcBadge +
-    "</div>";
+  if (addr.colony)                          rows.push(addrRow("fa-house-flag",   addr.colony));
+  if (addr.area && addr.area !== addr.colony) rows.push(addrRow("fa-location-dot", addr.area));
+  if (street)                               rows.push(addrRow("fa-road",         street));
+  if (cityLine)                             rows.push(addrRow("fa-city",         cityLine));
+  if (addr.postcode)                        rows.push(addrRow("fa-envelope",     addr.postcode));
+  if (addr.country)                         rows.push(addrRow("fa-globe",        addr.country + (addr.cc ? " (" + addr.cc + ")" : "")));
+  if (!rows.length) rows.push('<div class="lfc-row"><span class="lfc-value empty">Address unavailable</span></div>');
+  body.innerHTML = rows.join("") + '<div class="lfc-coords">' + addr.lat.toFixed(6) + ", " + addr.lon.toFixed(6) + " " + srcBadge + "</div>";
 }
 
 function addrRow(icon, text) {
-  return '<div class="lfc-row">' +
-           '<i class="fa-solid ' + icon + ' lfc-icon"></i>' +
-           '<span class="lfc-value">' + text + '</span>' +
-         '</div>';
+  return '<div class="lfc-row"><i class="fa-solid ' + icon + ' lfc-icon"></i><span class="lfc-value">' + text + '</span></div>';
 }
 
-
 /* ================================================================
-   GEOCODING -- 5-layer approach for best Indian address quality
-   Layer 1 : Nominatim zoom=14 (admin/suburb level -- most reliable colony)
-   Layer 1b: Nominatim zoom=18 (street level -- road name)
-   Layer 2 : BigDataCloud (good locality data, free, no key)
-   Layer 3 : India Post pincode lookup (pincode -> locality names)
-   Layer 4+: IP fallback (ip-api.com, ipwho.is)
+   GEOCODING -- 5-layer
    ================================================================ */
 
-/* -- Extract the best possible locality name from Nominatim address block.
-   Tries every field that could hold a named area in Indian OSM data.
-   Returns empty string if nothing useful found.
-*/
 function extractLocality(a) {
   if (!a) return "";
-  /* ordered by specificity for Indian addresses */
-  var candidates = [
-    a.neighbourhood,   /* most specific -- housing society, colony */
-    a.quarter,         /* area within suburb */
-    a.hamlet,          /* small area */
-    a.residential,     /* residential area name */
-    a.village,         /* village (peri-urban) */
-    a.suburb,          /* ward / large locality */
-    a.city_district,   /* taluk / zone */
-    a.town             /* town (if no city) */
-  ];
+  var candidates = [a.neighbourhood, a.quarter, a.hamlet, a.residential, a.village, a.suburb, a.city_district, a.town];
   for (var i = 0; i < candidates.length; i++) {
     var v = candidates[i];
     if (v && !isRoadCode(v) && v.length > 2) return v;
@@ -479,157 +384,80 @@ function extractLocality(a) {
   return "";
 }
 
-/* -- Layer 1: Nominatim -- calls zoom=14 AND zoom=18 in parallel -- */
 async function geocodeNominatim(lat, lon) {
   try {
-    var base = "https://nominatim.openstreetmap.org/reverse" +
-               "?lat=" + lat + "&lon=" + lon + "&format=json&addressdetails=1";
+    var base = "https://nominatim.openstreetmap.org/reverse?lat=" + lat + "&lon=" + lon + "&format=json&addressdetails=1";
     var hdrs = { headers: { "Accept-Language": "en-US,en;q=0.9" } };
-
-    /* zoom=14 = admin/suburb level (best for Indian locality names)
-       zoom=18 = street level (best for road names) */
     var results = await Promise.allSettled([
       fetchTO(base + "&zoom=14", hdrs, 8000).then(function(r){ return r.json(); }),
       fetchTO(base + "&zoom=18", hdrs, 8000).then(function(r){ return r.json(); })
     ]);
-
-    var a14 = (results[0].status === "fulfilled" && results[0].value && results[0].value.address)
-              ? results[0].value.address : null;
-    var a18 = (results[1].status === "fulfilled" && results[1].value && results[1].value.address)
-              ? results[1].value.address : null;
-
+    var a14 = (results[0].status === "fulfilled" && results[0].value && results[0].value.address) ? results[0].value.address : null;
+    var a18 = (results[1].status === "fulfilled" && results[1].value && results[1].value.address) ? results[1].value.address : null;
     if (!a14 && !a18) return false;
-
-    /* Debug: log everything so we can see what Nominatim actually returns */
-    console.log("[RadiusX] Nominatim zoom=14:", JSON.stringify(a14));
-    console.log("[RadiusX] Nominatim zoom=18:", JSON.stringify(a18));
-
-    /* Merge: take the best locality from zoom=14, road from zoom=18 */
     var merged = Object.assign({}, a14 || a18);
     if (a18) {
-      /* Take road-level fields from zoom=18 */
       if (a18.road && !isRoadCode(a18.road))         merged.road          = a18.road;
       if (a18["addr:housenumber"])                    merged["addr:housenumber"] = a18["addr:housenumber"];
-      /* If zoom=14 has no neighbourhood but zoom=18 does, use it */
       if (!merged.neighbourhood && a18.neighbourhood) merged.neighbourhood = a18.neighbourhood;
-      /* Zoom=18 suburb may be more specific than zoom=14 */
       if (a18.suburb && !merged.neighbourhood)        merged.suburb        = a18.suburb;
     }
-
     var addr = buildAddr(merged, lat, lon, "gps");
-    console.log("[RadiusX] Built addr:", JSON.stringify(addr));
-
-    /* If we got no useful colony from Nominatim, try BigDataCloud before giving up */
     if (!addr.colony) {
       var bdcOk = await geocodeBigData(lat, lon);
-      /* BigDataCloud will call applyAddress itself if it succeeds */
       if (bdcOk) return true;
     }
-
     applyAddress(addr);
-
-    /* If postcode found, enrich with India Post locality names */
-    if (addr.postcode && addr.postcode.length === 6) {
-      enrichWithIndiaPost(addr);
-    }
-
+    if (addr.postcode && addr.postcode.length === 6) enrichWithIndiaPost(addr);
     return true;
-  } catch (e) {
-    console.error("[RadiusX] Nominatim error:", e);
-    return false;
-  }
+  } catch (e) { return false; }
 }
 
-/* -- India Post API: given a valid 6-digit pincode, returns
-   the list of locality/Post Office names for that pin.
-   We use the first result to fill in colony if still empty. -- */
 async function enrichWithIndiaPost(addr) {
   try {
-    var res = await fetchTO(
-      "https://api.postalpincode.in/pincode/" + addr.postcode,
-      {}, 6000
-    );
+    var res  = await fetchTO("https://api.postalpincode.in/pincode/" + addr.postcode, {}, 6000);
     var data = await res.json();
-    /* Response: [{Status:"Success", PostOffice:[{Name, Block, District, State,...}]}] */
     if (!data || !data[0] || data[0].Status !== "Success") return;
     var posts = data[0].PostOffice || [];
     if (!posts.length) return;
-
-    console.log("[RadiusX] IndiaPost:", JSON.stringify(posts.slice(0,3)));
-
-    /* If addr still has no colony, use the Block / Area from India Post */
     var updated = Object.assign({}, addr);
     if (!updated.colony) {
-      /* Block is usually the area/locality name in Indian postal data */
       var block = posts[0].Block || posts[0].Name || "";
-      if (block && block !== "NA" && block !== updated.city) {
-        updated.colony = block;
-      }
+      if (block && block !== "NA" && block !== updated.city) updated.colony = block;
     }
-    /* India Post gives authoritative district / state */
     if (!updated.district && posts[0].District) updated.district = posts[0].District;
     if (!updated.state    && posts[0].State)    updated.state    = posts[0].State;
     if (!updated.city     && posts[0].Division) updated.city     = posts[0].Division;
-
     applyAddress(updated);
-    console.log("[RadiusX] Enriched addr:", JSON.stringify(updated));
-  } catch (e) {
-    console.warn("[RadiusX] IndiaPost enrichment failed:", e);
-  }
+  } catch (e) {}
 }
 
-/* -- Layer 2: BigDataCloud reverse geocode (GPS, no API key) -- */
 async function geocodeBigData(lat, lon) {
   try {
-    var url = "https://api.bigdatacloud.net/data/reverse-geocode-client" +
-              "?latitude=" + lat + "&longitude=" + lon + "&localityLanguage=en";
+    var url = "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat + "&longitude=" + lon + "&localityLanguage=en";
     var res = await fetchTO(url, {}, 8000);
     if (!res.ok) return false;
-    var d = await res.json();
-
-    console.log("[RadiusX] BigDataCloud:", JSON.stringify(d));
-
-    /* localityInfo.administrative is an array sorted coarsest-to-finest
-       Typical Indian levels: 0=country, 1=state, 2=district, 3=tehsil, 4=city, 5=locality */
-    var adm    = (d.localityInfo && d.localityInfo.administrative) || [];
-    var inf    = (d.localityInfo && d.localityInfo.informational)  || [];
-
-    /* Try to find a meaningful colony from the finest admin levels */
+    var d   = await res.json();
+    var adm = (d.localityInfo && d.localityInfo.administrative) || [];
+    var inf = (d.localityInfo && d.localityInfo.informational)  || [];
     var colony = "";
-    /* informational levels often have ward/neighbourhood names */
     for (var i = inf.length - 1; i >= 0; i--) {
-      if (inf[i].name && !isRoadCode(inf[i].name) && inf[i].name.length > 2) {
-        colony = inf[i].name; break;
-      }
+      if (inf[i].name && !isRoadCode(inf[i].name) && inf[i].name.length > 2) { colony = inf[i].name; break; }
     }
     if (!colony) {
-      /* Fall back to locality or finest admin level */
       colony = d.locality || (adm[5] && adm[5].name) || (adm[4] && adm[4].name) || "";
       if (isRoadCode(colony)) colony = "";
     }
-
     var city  = d.city || (adm[3] && adm[3].name) || (adm[2] && adm[2].name) || "";
     var state = d.principalSubdivision || (adm[1] && adm[1].name) || "";
-
-    var addr = {
-      houseNo  : "", road : "", colony : colony, area : "",
-      city     : city,
-      district : (adm[2] && adm[2].name) || "",
-      state    : state,
-      postcode : d.postcode    || "",
-      country  : d.countryName || "",
-      cc       : (d.countryCode || "").toUpperCase(),
-      lat      : lat, lon : lon, source : "gps-backup"
+    var addr  = {
+      houseNo: "", road: "", colony: colony, area: "", city: city,
+      district: (adm[2] && adm[2].name) || "", state: state,
+      postcode: d.postcode || "", country: d.countryName || "",
+      cc: (d.countryCode || "").toUpperCase(), lat: lat, lon: lon, source: "gps-backup"
     };
-
-    console.log("[RadiusX] BDC addr:", JSON.stringify(addr));
     applyAddress(addr);
-
-    /* Also try IndiaPost enrichment if we have a pincode */
-    if (addr.postcode && addr.postcode.length === 6) {
-      enrichWithIndiaPost(addr);
-    }
-
+    if (addr.postcode && addr.postcode.length === 6) enrichWithIndiaPost(addr);
     return true;
   } catch (e) {
     document.getElementById("locationText").innerText = lat.toFixed(4) + ", " + lon.toFixed(4);
@@ -638,65 +466,48 @@ async function geocodeBigData(lat, lon) {
   }
 }
 
-/* -- Layer 3+: IP-based fallback (GPS denied / unavailable) -- */
 async function ipFallback() {
   var el = document.getElementById("locationText");
-
   try {
-    var res  = await fetchTO(
-      "http://ip-api.com/json/?fields=status,city,regionName,district,zip,country,countryCode,lat,lon",
-      {}, 6000
-    );
+    var res  = await fetchTO("http://ip-api.com/json/?fields=status,city,regionName,district,zip,country,countryCode,lat,lon", {}, 6000);
     var data = await res.json();
     if (data.status === "success") {
-      userLat = parseFloat(data.lat);
-      userLon = parseFloat(data.lon);
+      userLat = parseFloat(data.lat); userLon = parseFloat(data.lon);
       var addr = {
-        houseNo  : "", road : "", colony : "", area : "",
-        city     : data.city       || "",
-        district : data.district   || data.regionName || "",
-        state    : data.regionName || "",
-        postcode : data.zip        || "",
-        country  : data.country    || "",
-        cc       : (data.countryCode || "").toUpperCase(),
-        lat      : userLat, lon : userLon, source : "ip"
+        houseNo: "", road: "", colony: "", area: "",
+        city: data.city || "", district: data.district || data.regionName || "",
+        state: data.regionName || "", postcode: data.zip || "",
+        country: data.country || "", cc: (data.countryCode || "").toUpperCase(),
+        lat: userLat, lon: userLon, source: "ip"
       };
       applyAddress(addr);
       if (userLat && userLon) loadNearbyShops(userLat, userLon);
       if (addr.postcode && addr.postcode.length === 6) enrichWithIndiaPost(addr);
       return;
     }
-  } catch (e) { /* try next */ }
-
-  /* -- Layer 4: ipwho.is -- */
+  } catch (e) {}
   try {
     var res2  = await fetchTO("https://ipwho.is/", {}, 6000);
     var data2 = await res2.json();
     if (data2.success !== false) {
-      userLat = parseFloat(data2.latitude);
-      userLon = parseFloat(data2.longitude);
+      userLat = parseFloat(data2.latitude); userLon = parseFloat(data2.longitude);
       var addr2 = {
-        houseNo  : "", road : "", colony : "", area : "",
-        city     : data2.city    || "",
-        district : data2.region  || "",
-        state    : data2.region  || "",
-        postcode : data2.postal  || "",
-        country  : data2.country || "",
-        cc       : (data2.country_code || "").toUpperCase(),
-        lat      : userLat, lon : userLon, source : "ip-fallback"
+        houseNo: "", road: "", colony: "", area: "",
+        city: data2.city || "", district: data2.region || "",
+        state: data2.region || "", postcode: data2.postal || "",
+        country: data2.country || "", cc: (data2.country_code || "").toUpperCase(),
+        lat: userLat, lon: userLon, source: "ip-fallback"
       };
       applyAddress(addr2);
       if (userLat && userLon) loadNearbyShops(userLat, userLon);
       if (addr2.postcode && addr2.postcode.length === 6) enrichWithIndiaPost(addr2);
       return;
     }
-  } catch (e) { /* all failed */ }
-
+  } catch (e) {}
   el.innerText = "Location unavailable";
   showShopsError("Could not detect your location. Please allow location access.");
 }
 
-/* -- Fetch with abort timeout -- */
 function fetchTO(url, opts, ms) {
   var ctrl  = new AbortController();
   var timer = setTimeout(function () { ctrl.abort(); }, ms);
@@ -713,27 +524,12 @@ function setShopsCity(city) {
 
 
 /* ================================================================
-   NEARBY SHOPS -- OpenStreetMap Overpass API
+   NEARBY SHOPS
    ================================================================ */
-
-var SHOP_EMOJI = {
-  supermarket:"[store]",  convenience:"[shop]",    electronics:"[elec]",
-  clothes:"[cloth]",      mobile_phone:"[phone]",  shoes:"[shoes]",
-  furniture:"[furn]",     hardware:"[tool]",       bakery:"[bake]",
-  butcher:"[meat]",       pharmacy:"[med]",        books:"[book]",
-  jewelry:"[jewel]",      sports:"[sport]",        toys:"[toy]",
-  bicycle:"[bike]",       optician:"[eye]",        cosmetics:"[cosm]",
-  hairdresser:"[salon]",  beauty:"[beauty]",       department_store:"[dept]",
-  mall:"[mall]",          marketplace:"[market]",  general:"[shop]",
-  car_repair:"[auto]",    florist:"[flower]",      pet:"[pet]",
-  restaurant:"[food]",    cafe:"[cafe]",           bank:"[bank]",
-  hospital:"[hosp]",      school:"[school]",       gym:"[gym]",
-  cinema:"[cinema]"
-};
 
 var SHOP_EMOJI_UNICODE = {
   supermarket:"\uD83D\uDED2", convenience:"\uD83C\uDFEA", electronics:"\uD83D\uDDA5\uFE0F",
-  clothes:"\uD83D\uDC57",     mobile_phone:"\uD83D\uDCF1",shoes:"\uD83D\uDC5F",
+  clothes:"\uD83D\uDC57",     mobile_phone:"\uD83D\uDCF1", shoes:"\uD83D\uDC5F",
   furniture:"\uD83D\uDECB\uFE0F", hardware:"\uD83D\uDD27", bakery:"\uD83E\uDD50",
   butcher:"\uD83E\uDD69",     pharmacy:"\uD83D\uDC8A",    books:"\uD83D\uDCDA",
   jewelry:"\uD83D\uDC8D",     sports:"\uD83C\uDFCF",      toys:"\uD83E\uDE80",
@@ -745,6 +541,45 @@ var SHOP_EMOJI_UNICODE = {
   hospital:"\uD83C\uDFE5",    school:"\uD83C\uDFEB",      gym:"\uD83D\uDCAA",
   cinema:"\uD83C\uDFAC"
 };
+
+/* ---- Per-type gradient + SVG icon for beautiful fallback covers ---- */
+var SHOP_COVER_STYLE = {
+  supermarket:    { g: ["#f7971e","#ffd200"], icon: '<path d="M8 20h16l-2-10H10L8 20zm0 0H5m19 0h3M10 20v2m8-2v2" stroke="#fff" stroke-width="1.8" stroke-linecap="round" fill="none"/><rect x="11" y="13" width="3" height="4" rx="0.5" fill="rgba(255,255,255,0.5)"/><rect x="16" y="13" width="3" height="4" rx="0.5" fill="rgba(255,255,255,0.5)"/>' },
+  convenience:    { g: ["#f953c6","#b91d73"], icon: '<rect x="5" y="12" width="22" height="12" rx="2" fill="rgba(255,255,255,0.2)"/><path d="M5 12l4-7h14l4 7" stroke="#fff" stroke-width="1.8" fill="none" stroke-linejoin="round"/><rect x="13" y="16" width="6" height="8" rx="1" fill="rgba(255,255,255,0.45)"/>' },
+  electronics:    { g: ["#4776e6","#8e54e9"], icon: '<rect x="4" y="8" width="24" height="16" rx="2" stroke="#fff" stroke-width="1.8" fill="rgba(255,255,255,0.15)"/><rect x="12" y="24" width="8" height="3" rx="1" fill="rgba(255,255,255,0.4)"/><circle cx="16" cy="16" r="4" fill="rgba(255,255,255,0.5)"/>' },
+  clothes:        { g: ["#c471ed","#f64f59"], icon: '<path d="M4 10l5-5 3 3 4 0 3-3 5 5-3 2v11H7V12L4 10z" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>' },
+  mobile_phone:   { g: ["#00b4db","#0083b0"], icon: '<rect x="9" y="4" width="14" height="24" rx="3" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.8"/><rect x="11" y="7" width="10" height="16" rx="1.5" fill="rgba(255,255,255,0.35)"/><circle cx="16" cy="25" r="1.2" fill="white"/>' },
+  shoes:          { g: ["#f7971e","#e05d5d"], icon: '<path d="M4 22c0 0 2-8 5-10 2-1.5 4-1 6 0l7 4c1.5 1 2 2 2 3H4z" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="1.6"/><path d="M6 22c2-1 4-1 6 0" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>' },
+  furniture:      { g: ["#834d9b","#d04ed6"], icon: '<rect x="5" y="14" width="22" height="6" rx="2" fill="rgba(255,255,255,0.3)"/><rect x="7" y="20" width="3" height="5" rx="1" fill="rgba(255,255,255,0.4)"/><rect x="22" y="20" width="3" height="5" rx="1" fill="rgba(255,255,255,0.4)"/><rect x="8" y="8" width="16" height="7" rx="1.5" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.4"/>' },
+  hardware:       { g: ["#636363","#a2ab58"], icon: '<path d="M8 24L20 8" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="21" cy="9" r="4" fill="rgba(255,255,255,0.35)" stroke="#fff" stroke-width="1.6"/><circle cx="9" cy="23" r="3" fill="rgba(255,255,255,0.35)" stroke="#fff" stroke-width="1.6"/>' },
+  bakery:         { g: ["#f7971e","#f45c43"], icon: '<ellipse cx="16" cy="18" rx="10" ry="7" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.8"/><path d="M9 16 Q16 8 23 16" stroke="#fff" stroke-width="1.6" fill="none"/><circle cx="13" cy="19" r="1.5" fill="rgba(255,255,255,0.6)"/><circle cx="19" cy="19" r="1.5" fill="rgba(255,255,255,0.6)"/>' },
+  pharmacy:       { g: ["#11998e","#38ef7d"], icon: '<rect x="13" y="7" width="6" height="18" rx="2" fill="rgba(255,255,255,0.4)"/><rect x="7" y="13" width="18" height="6" rx="2" fill="rgba(255,255,255,0.4)"/>' },
+  books:          { g: ["#1a1a2e","#16213e"], icon: '<rect x="5" y="6" width="7" height="20" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="14" y="6" width="7" height="20" rx="1" fill="rgba(255,255,255,0.2)"/><rect x="9" y="9" width="5" height="20" rx="1" fill="rgba(255,255,255,0.4)" transform="rotate(-5 9 9)"/>' },
+  jewelry:        { g: ["#b06ab3","#4568dc"], icon: '<path d="M8 12l8-7 8 7-8 13-8-13z" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 12h16M12 12l4-7 4 7" stroke="#fff" stroke-width="1.3" fill="none"/>' },
+  sports:         { g: ["#00c6ff","#0072ff"], icon: '<circle cx="16" cy="16" r="10" stroke="#fff" stroke-width="1.8" fill="rgba(255,255,255,0.15)"/><path d="M6 16 Q11 10 16 16 Q21 22 26 16" stroke="#fff" stroke-width="1.4" fill="none"/><path d="M16 6 Q10 11 16 16 Q22 21 16 26" stroke="#fff" stroke-width="1.4" fill="none"/>' },
+  cosmetics:      { g: ["#e96c9a","#c86dd8"], icon: '<rect x="12" y="5" width="8" height="16" rx="3" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="1.6"/><ellipse cx="16" cy="5" rx="4" ry="2" fill="rgba(255,255,255,0.4)"/><rect x="14" y="21" width="4" height="5" rx="1" fill="rgba(255,255,255,0.3)"/>' },
+  hairdresser:    { g: ["#ee9ca7","#ffdde1"], icon: '<path d="M10 8 Q16 4 22 8 L22 20 Q16 24 10 20 Z" fill="rgba(255,255,255,0.15)" stroke="#fff" stroke-width="1.5"/><circle cx="13" cy="12" r="2" fill="rgba(255,255,255,0.5)"/><circle cx="19" cy="12" r="2" fill="rgba(255,255,255,0.5)"/><path d="M13 14 Q16 20 19 14" stroke="#fff" stroke-width="1.4" fill="none"/>' },
+  restaurant:     { g: ["#f12711","#f5af19"], icon: '<path d="M10 6v8a4 4 0 004 4v8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><path d="M14 6v20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><path d="M22 6c0 0 0 8-4 8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>' },
+  cafe:           { g: ["#4e342e","#a1887f"], icon: '<path d="M7 12h14v10a3 3 0 01-3 3H10a3 3 0 01-3-3V12z" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.6"/><path d="M21 14h2a2 2 0 010 4h-2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M11 8 Q13 4 15 8" stroke="#fff" stroke-width="1.4" fill="none"/>' },
+  florist:        { g: ["#f953c6","#7fd173"], icon: '<circle cx="16" cy="14" r="4" fill="rgba(255,255,255,0.35)"/><circle cx="10" cy="12" r="3" fill="rgba(255,255,255,0.25)"/><circle cx="22" cy="12" r="3" fill="rgba(255,255,255,0.25)"/><circle cx="16" cy="8" r="3" fill="rgba(255,255,255,0.25)"/><path d="M16 18v8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>' },
+  pet:            { g: ["#f7971e","#c471ed"], icon: '<circle cx="12" cy="10" r="3" fill="rgba(255,255,255,0.35)"/><circle cx="20" cy="10" r="3" fill="rgba(255,255,255,0.35)"/><ellipse cx="16" cy="18" rx="7" ry="6" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.6"/><circle cx="13" cy="17" r="1.2" fill="#fff" opacity="0.7"/><circle cx="19" cy="17" r="1.2" fill="#fff" opacity="0.7"/>' },
+  bank:           { g: ["#2c3e50","#4ca1af"], icon: '<rect x="5" y="14" width="22" height="12" rx="1" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.5"/><path d="M5 14l11-9 11 9" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><rect x="9" y="18" width="3" height="8" fill="rgba(255,255,255,0.45)"/><rect x="15" y="18" width="3" height="8" fill="rgba(255,255,255,0.45)"/><rect x="21" y="18" width="3" height="8" fill="rgba(255,255,255,0.45)"/>' },
+  gym:            { g: ["#1a1a2e","#16213e"], icon: '<rect x="3" y="14" width="4" height="5" rx="1" fill="rgba(255,255,255,0.4)"/><rect x="25" y="14" width="4" height="5" rx="1" fill="rgba(255,255,255,0.4)"/><rect x="7" y="12" width="4" height="9" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="21" y="12" width="4" height="9" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="11" y="15" width="10" height="3" rx="1.5" fill="rgba(255,255,255,0.5)"/>' },
+  general:        { g: ["#373b44","#4286f4"], icon: '<rect x="5" y="13" width="22" height="14" rx="2" fill="rgba(255,255,255,0.18)" stroke="#fff" stroke-width="1.6"/><path d="M3 13l5-8h18l5 8" stroke="#fff" stroke-width="1.6" fill="rgba(255,255,255,0.12)" stroke-linejoin="round"/><rect x="13" y="18" width="6" height="9" rx="1" fill="rgba(255,255,255,0.4)"/>' }
+};
+
+function shopCoverSVG(type) {
+  var s = SHOP_COVER_STYLE[type] || SHOP_COVER_STYLE["general"];
+  var g1 = s.g[0], g2 = s.g[1];
+  var uid = "sg_" + Math.random().toString(36).slice(2, 8);
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid slice">' +
+    '<defs><linearGradient id="' + uid + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
+    '<stop offset="0%" stop-color="' + g1 + '"/><stop offset="100%" stop-color="' + g2 + '"/></linearGradient></defs>' +
+    '<rect width="32" height="32" fill="url(#' + uid + ')"/>' +
+    '<g opacity="0.18"><rect width="32" height="32" fill="none" stroke="white" stroke-width="0.4" style="stroke-dasharray:4 4"/></g>' +
+    s.icon +
+    '</svg>';
+}
 
 var SHOP_LABEL = {
   supermarket:"Supermarket",      convenience:"Convenience Store",
@@ -771,12 +606,10 @@ async function loadNearbyShops(lat, lon) {
   var errorEl = document.getElementById("shopsError");
   var wrap    = document.getElementById("shopsScrollWrap");
   var grid    = document.getElementById("shopsGrid");
-
   loading.classList.remove("hidden");
   errorEl.classList.add("hidden");
   wrap.classList.add("hidden");
   grid.innerHTML = "";
-
   try {
     var r = 1500;
     var q = "[out:json][timeout:20];\n(\n" +
@@ -784,12 +617,7 @@ async function loadNearbyShops(lat, lon) {
             "way[\"shop\"](around:"  + r + "," + lat + "," + lon + ");\n" +
             "node[\"amenity\"~\"marketplace|mall\"](around:" + r + "," + lat + "," + lon + ");\n" +
             ");\nout center 40;";
-
-    var eps = [
-      "https://overpass-api.de/api/interpreter",
-      "https://overpass.kumi.systems/api/interpreter"
-    ];
-
+    var eps = ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
     var data = null;
     for (var i = 0; i < eps.length; i++) {
       try {
@@ -798,35 +626,23 @@ async function loadNearbyShops(lat, lon) {
         if (data && data.elements) break;
       } catch (e) { continue; }
     }
-
-    if (!data || !data.elements || !data.elements.length) {
-      showShopsError("No shops found within 1.5 km. Try again later."); return;
-    }
-
+    if (!data || !data.elements || !data.elements.length) { showShopsError("No shops found within 1.5 km. Try again later."); return; }
     var shops = processShops(data.elements, lat, lon);
-    if (!shops.length) {
-      showShopsError("No named shops nearby. OSM data may be limited here."); return;
-    }
-
+    if (!shops.length) { showShopsError("No named shops nearby. OSM data may be limited here."); return; }
     renderShops(shops, grid);
-
     var attr = document.createElement("p");
     attr.className = "osm-attribution";
     attr.innerHTML = "Shop data &copy; <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors";
     document.querySelector(".shops-section").appendChild(attr);
-
     loading.classList.add("hidden");
     wrap.classList.remove("hidden");
-
   } catch (e) {
-    console.error("Overpass error:", e);
     showShopsError("Could not load nearby shops. Check your internet connection.");
   }
 }
 
 function processShops(elements, uLat, uLon) {
-  var seen  = {};
-  var shops = [];
+  var seen = {}, shops = [];
   elements.forEach(function (el) {
     var tags = el.tags || {};
     var name = tags.name || tags["name:en"] || "";
@@ -834,26 +650,20 @@ function processShops(elements, uLat, uLon) {
     var key = name.toLowerCase();
     if (seen[key]) return;
     seen[key] = true;
-
     var lat = el.lat || (el.center && el.center.lat);
     var lon = el.lon || (el.center && el.center.lon);
     if (!lat || !lon) return;
-
-    var type  = tags.shop || tags.amenity || "general";
-    var dist  = haversine(uLat, uLon, lat, lon);
-
+    var type = tags.shop || tags.amenity || "general";
+    var dist = haversine(uLat, uLon, lat, lon);
     shops.push({
-      id        : el.id,
-      name      : name,
-      type      : type,
-      typeLabel : SHOP_LABEL[type] || cap(type.replace(/_/g, " ")),
-      emoji     : SHOP_EMOJI_UNICODE[type] || "\uD83D\uDECD\uFE0F",
-      address   : osmAddr(tags),
-      distance  : dist,
-      distLabel : dist < 1000 ? Math.round(dist) + " m" : (dist / 1000).toFixed(1) + " km",
-      open      : openNow(tags.opening_hours),
-      phone     : tags.phone || tags["contact:phone"] || "",
-      website   : tags.website || tags["contact:website"] || "",
+      id: el.id, name: name, type: type,
+      typeLabel: SHOP_LABEL[type] || cap(type.replace(/_/g, " ")),
+      emoji: SHOP_EMOJI_UNICODE[type] || "\uD83D\uDECD\uFE0F",
+      address: osmAddr(tags), distance: dist,
+      distLabel: dist < 1000 ? Math.round(dist) + " m" : (dist / 1000).toFixed(1) + " km",
+      open: openNow(tags.opening_hours),
+      phone: tags.phone || tags["contact:phone"] || "",
+      website: tags.website || tags["contact:website"] || "",
       lat: lat, lon: lon
     });
   });
@@ -869,45 +679,41 @@ function renderShops(shops, grid) {
 
     var bc   = s.open === false ? "closed" : "open";
     var bt   = s.open === false ? "Closed"  : "Open";
-    var mUrl = "https://www.google.com/maps/search/?api=1&query=" +
-               encodeURIComponent(s.name) + "&query_place_id=" + s.lat + "," + s.lon;
+    var mUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(s.name) + "&query_place_id=" + s.lat + "," + s.lon;
+    var addrHTML   = s.address ? '<div class="shop-address"><i class="fa-solid fa-location-dot" style="font-size:10px;margin-right:4px"></i>' + s.address + '</div>' : "";
+    var phoneHTML  = s.phone   ? '<span><i class="fa-solid fa-phone"></i> ' + s.phone + '</span>' : "";
+    var phoneBadge = s.phone   ? '<span class="shop-tag"><i class="fa-solid fa-phone" style="font-size:9px"></i> Call</span>'   : "";
+    var webBadge   = s.website ? '<span class="shop-tag"><i class="fa-solid fa-globe" style="font-size:9px"></i> Website</span>' : "";
 
-    var addrHTML = s.address
-      ? '<div class="shop-address"><i class="fa-solid fa-location-dot" style="color:rgb(196,223,154);font-size:10px;margin-right:4px"></i>' + s.address + '</div>'
-      : "";
-    var phoneHTML = s.phone
-      ? '<span><i class="fa-solid fa-phone"></i> ' + s.phone + '</span>'
-      : "";
-    var phoneBadge  = s.phone   ? '<span class="shop-tag">Has phone</span>'   : "";
-    var websiteBadge= s.website ? '<span class="shop-tag">Has website</span>' : "";
+    /* Street View cover — loads real photo; falls back to SVG illustration */
+    var svUrl = "https://maps.googleapis.com/maps/api/streetview?size=400x160&location=" +
+                s.lat + "," + s.lon + "&fov=90&pitch=5&source=outdoor";
 
-    card.innerHTML =
-      '<div class="shop-cover-emoji">' + s.emoji + '</div>' +
-      '<div class="shop-body">' +
-        '<div class="shop-top-row">' +
-          '<div class="shop-name">' + s.name + '</div>' +
-          '<span class="shop-badge ' + bc + '">' + bt + '</span>' +
+    var coverHTML =
+      '<div class="shop-cover-wrap">' +
+        /* real photo attempt */
+        '<img class="shop-cover-photo" src="' + svUrl + '" alt="' + s.name + '" ' +
+          'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" ' +
+          'onload="this.nextElementSibling.style.display=\'none\'">' +
+        /* SVG illustrated fallback */
+        '<div class="shop-cover-svg" style="display:none">' + shopCoverSVG(s.type) + '</div>' +
+        /* type badge overlay */
+        '<div class="shop-cover-badge">' +
+          '<span class="shop-cover-type-pill">' + s.typeLabel + '</span>' +
         '</div>' +
-        '<div class="shop-type">' + s.typeLabel + '</div>' +
-        addrHTML +
-        '<div class="shop-meta">' +
-          '<span><i class="fa-solid fa-location-dot"></i> ' + s.distLabel + ' away</span>' +
-          phoneHTML +
-        '</div>' +
-        '<div class="shop-tags">' +
-          '<span class="shop-tag">' + s.typeLabel + '</span>' +
-          phoneBadge + websiteBadge +
-        '</div>' +
-        '<button class="shop-order-btn" onclick="openShopMap(\'' +
-          encodeURIComponent(s.name) + '\',' + s.lat + ',' + s.lon + ',event)">' +
-          '<i class="fa-solid fa-map-location-dot"></i> View on Map' +
-        '</button>' +
       '</div>';
 
-    card.onclick = function (e) {
-      if (e.target.closest(".shop-order-btn")) return;
-      window.open(mUrl, "_blank");
-    };
+    card.innerHTML =
+      coverHTML +
+      '<div class="shop-body">' +
+        '<div class="shop-top-row"><div class="shop-name">' + s.name + '</div><span class="shop-badge ' + bc + '">' + bt + '</span></div>' +
+        addrHTML +
+        '<div class="shop-meta"><span><i class="fa-solid fa-location-dot"></i> ' + s.distLabel + ' away</span>' + phoneHTML + '</div>' +
+        '<div class="shop-tags">' + phoneBadge + webBadge + '</div>' +
+        '<button class="shop-order-btn" onclick="openShopMap(\'' + encodeURIComponent(s.name) + '\',' + s.lat + ',' + s.lon + ',event)"><i class="fa-solid fa-map-location-dot"></i> View on Map</button>' +
+      '</div>';
+
+    card.onclick = function (e) { if (e.target.closest(".shop-order-btn")) return; window.open(mUrl, "_blank"); };
     grid.appendChild(card);
   });
   window._osmShops = shops;
@@ -926,11 +732,10 @@ function showShopsError(msg) {
 }
 
 function haversine(la1, lo1, la2, lo2) {
-  var R = 6371000;
-  var p1 = la1 * Math.PI / 180, p2 = la2 * Math.PI / 180;
-  var dp = (la2 - la1) * Math.PI / 180, dl = (lo2 - lo1) * Math.PI / 180;
-  var a  = Math.sin(dp/2)*Math.sin(dp/2) + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  var R = 6371000, p1 = la1*Math.PI/180, p2 = la2*Math.PI/180,
+      dp = (la2-la1)*Math.PI/180, dl = (lo2-lo1)*Math.PI/180,
+      a  = Math.sin(dp/2)*Math.sin(dp/2) + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
 function osmAddr(tags) {
@@ -942,9 +747,7 @@ function osmAddr(tags) {
   return p.slice(0, 3).join(", ");
 }
 
-function cap(s) {
-  return s.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
-}
+function cap(s) { return s.replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
 
 function openNow(s) {
   if (!s) return null;
@@ -996,12 +799,12 @@ var products = [
   {id:4,  name:"Tshirt",         price:400,   originalPrice:600,   category:"fashion",     image:"assets/products/tshirt.jpg",     rating:3.8, reviews:42},
   {id:5,  name:"Chair",          price:1500,  originalPrice:2000,  category:"home",        image:"assets/products/chair.jpg",      rating:4.3, reviews:34},
   {id:6,  name:"Lamp",           price:700,   originalPrice:950,   category:"home",        image:"assets/products/lamp.jpg",       rating:4.1, reviews:27},
-  {id:7,  name:"Samsung Mobile", price:65000, originalPrice:75000, category:"electronics", image:"assets/products/mobile1.jpg",    rating:4.1, reviews:27},
+  {id:7,  name:"Samsung Mobile", price:65000, originalPrice:75000, category:"electronics", image:"assets/products/S26.jpg",    rating:4.1, reviews:27},
   {id:8,  name:"Jeans",          price:700,   originalPrice:950,   category:"fashion",     image:"assets/products/jeans.jpg",      rating:4.1, reviews:27},
-  {id:9,  name:"Oneplus Mobile", price:700,   originalPrice:950,   category:"electronics", image:"assets/products/mobile2.jpg",    rating:4.1, reviews:27},
+  {id:9,  name:"Oneplus Mobile", price:700,   originalPrice:950,   category:"electronics", image:"assets/products/15r.jpg",    rating:4.1, reviews:27},
   {id:10, name:"Camera",         price:85000, originalPrice:95000, category:"electronics", image:"assets/products/camera.jpg",     rating:4.1, reviews:27},
   {id:17, name:"Tablet",         price:18000, originalPrice:21000, category:"electronics", image:"assets/products/tablet.jpg",     rating:4.2, reviews:54},
-  {id:18, name:"Smartwatch",     price:3500,  originalPrice:4200,  category:"electronics", image:"assets/products/watch.jpg",      rating:4.3, reviews:66},
+  {id:18, name:"Smartwatch",     price:3500,  originalPrice:4200,  category:"electronics", image:"assets/products/smartwatch.jpg",      rating:4.3, reviews:66},
   {id:19, name:"Keyboard",       price:800,   originalPrice:1100,  category:"electronics", image:"assets/products/keyboard.jpg",   rating:4.0, reviews:33},
   {id:20, name:"Mouse",          price:500,   originalPrice:700,   category:"electronics", image:"assets/products/mouse.jpg",      rating:4.1, reviews:41},
   {id:21, name:"Jacket",         price:1600,  originalPrice:2200,  category:"fashion",     image:"assets/products/jacket.jpg",     rating:4.2, reviews:58},
@@ -1018,7 +821,7 @@ var products = [
   {id:32, name:"Powerbank",      price:1200,  originalPrice:1600,  category:"electronics", image:"assets/products/powerbank.jpg",  rating:4.2, reviews:53},
   {id:33, name:"Dress",          price:1300,  originalPrice:1700,  category:"fashion",     image:"assets/products/dress.jpg",      rating:4.1, reviews:36},
   {id:34, name:"Scarf",          price:300,   originalPrice:450,   category:"fashion",     image:"assets/products/scarf.jpg",      rating:3.7, reviews:18},
-  {id:35, name:"Sunglasses",     price:600,   originalPrice:900,   category:"fashion",     image:"assets/products/glasses.jpg",    rating:4.0, reviews:27},
+  {id:35, name:"Sunglasses",     price:600,   originalPrice:900,   category:"fashion",     image:"assets/products/sunglasses.jpg",    rating:4.0, reviews:27},
   {id:36, name:"Belt",           price:350,   originalPrice:500,   category:"fashion",     image:"assets/products/belt.jpg",       rating:3.9, reviews:20},
   {id:37, name:"Curtains",       price:1100,  originalPrice:1500,  category:"home",        image:"assets/products/curtain.jpg",    rating:4.1, reviews:29},
   {id:38, name:"Carpet",         price:2000,  originalPrice:2600,  category:"home",        image:"assets/products/carpet.jpg",     rating:4.2, reviews:34},
@@ -1030,7 +833,7 @@ var products = [
   {id:44, name:"Projector",      price:8500,  originalPrice:10000, category:"electronics", image:"assets/products/projector.jpg",  rating:4.2, reviews:31},
   {id:45, name:"Backpack",       price:1200,  originalPrice:1600,  category:"fashion",     image:"assets/products/backpack.jpg",   rating:4.1, reviews:35},
   {id:46, name:"Wallet",         price:500,   originalPrice:750,   category:"fashion",     image:"assets/products/wallet.jpg",     rating:3.9, reviews:24},
-  {id:47, name:"Sandals",        price:700,   originalPrice:950,   category:"fashion",     image:"assets/products/sandals.jpg",    rating:4.0, reviews:26},
+  {id:47, name:"Sandals",        price:700,   originalPrice:950,   category:"fashion",     image:"assets/products/sandal.jpg",    rating:4.0, reviews:26},
   {id:48, name:"Bottle",         price:300,   originalPrice:450,   category:"home",        image:"assets/products/bottle.jpg",     rating:3.8, reviews:19},
   {id:49, name:"Lunchbox",       price:450,   originalPrice:650,   category:"home",        image:"assets/products/lunchbox.jpg",   rating:3.9, reviews:21},
   {id:50, name:"Plant",          price:350,   originalPrice:500,   category:"home",        image:"assets/products/plant.jpg",      rating:4.2, reviews:23}
@@ -1099,37 +902,83 @@ function filterProducts(cat) {
 
 
 /* ================================================================
-   USER LOGIN
+   USER LOGIN -- wired to backend JWT via api.js
    ================================================================ */
-function checkUserLogin() {
-  var tok = localStorage.getItem("token");
-  var su  = document.getElementById("signupOption");
-  var lo  = document.getElementById("logoutOption");
-  if (tok) { su.style.display = "none";  lo.style.display = "block"; }
-  else      { su.style.display = "block"; lo.style.display = "none"; }
+async function checkUserLogin() {
+  var loggedIn = await api.init();
+
+  var signInOpt  = document.getElementById("signInOption");
+  var signUpOpt  = document.getElementById("signUpOption");
+  var profileOpt = document.getElementById("profileOption");
+  var forgotOpt  = document.getElementById("forgotOption");
+  var logoutOpt  = document.getElementById("logoutOption");
+
+  if (!loggedIn) {
+    if (signInOpt)  signInOpt.style.display  = "";
+    if (signUpOpt)  signUpOpt.style.display  = "";
+    if (profileOpt) profileOpt.style.display = "none";
+    if (forgotOpt)  forgotOpt.style.display  = "";
+    if (logoutOpt)  logoutOpt.style.display  = "none";
+    return;
+  }
+
+  var res = await api.get("/auth/me");
+  if (!res.success) {
+    api.clearToken();
+    return;
+  }
+
+  var user = res.user;
+  localStorage.setItem("rx_user_name", user.name);
+  localStorage.setItem("rx_user_role", user.role);
+  window.rxCurrentUser = user;
+
+  if (signInOpt)  signInOpt.style.display  = "none";
+  if (signUpOpt)  signUpOpt.style.display  = "none";
+  if (forgotOpt)  forgotOpt.style.display  = "none";
+  if (profileOpt) profileOpt.style.display = "";
+  if (logoutOpt)  logoutOpt.style.display  = "";
+
+  /* Show dashboard link in navbar for admin/seller */
+  var dashLink = document.getElementById("dashboardOption");
+  if (dashLink) {
+    dashLink.style.display = "";
+    if (user.role === "admin") {
+      dashLink.querySelector("a").href = "admin-dashboard.html";
+      dashLink.querySelector("a").innerText = "Admin Dashboard";
+    } else if (user.role === "seller") {
+      dashLink.querySelector("a").href = "seller-dashboard.html";
+      dashLink.querySelector("a").innerText = "Seller Dashboard";
+    }
+  }
 }
 
-function logoutUser() { localStorage.removeItem("token"); location.reload(); }
+async function logoutUser() {
+  await api.logout();
+  localStorage.removeItem("rx_user_name");
+  localStorage.removeItem("rx_user_role");
+  window.rxCurrentUser = null;
+  window.location.href = "login.html";
+}
 
 
 /* ================================================================
    BANNER SLIDER
    ================================================================ */
-/* Dark and light banner sets */
 var BANNERS_DARK = [
-  {image:"",                      title:'<img src="assets/banners/logo.png" alt="Banner" class="subtitle-img"><br>Smart Shopping Platform', subtitle:"Find products around your location"},
-  {image:"assets/banners/b2.jpg", title:"Best Deals Near You",          subtitle:"Exclusive offers updated daily"},
-  {image:"assets/banners/b3.jpg", title:"",                             subtitle:""},
-  {image:"assets/banners/b4.jpg", title:"Fashion That Fits Your Style", subtitle:"Trending looks delivered fast"},
-  {image:"assets/banners/b5.jpg", title:"Transform Your Home",          subtitle:"Beautiful furniture & decor nearby"}
+  {image:"",                           title:'<img src="assets/banners/logo.png" alt="Banner" class="subtitle-img"><br>Smart Shopping Platform', subtitle:"Find products around your location"},
+  {image:"assets/banners/b2.jpg",      title:"Best Deals Near You",          subtitle:"Exclusive offers updated daily"},
+  {image:"assets/banners/b3.jpg",      title:"",                             subtitle:""},
+  {image:"assets/banners/b4.jpg",      title:"Fashion That Fits Your Style", subtitle:"Trending looks delivered fast"},
+  {image:"assets/banners/b5.jpg",      title:"Transform Your Home",          subtitle:"Beautiful furniture & decor nearby"}
 ];
 
 var BANNERS_LIGHT = [
-  {image:"",                      title:'<img src="assets/banners/logo-light.png" alt="Banner" class="subtitle-img"><br>Smart Shopping Platform', subtitle:"Find products around your location"},
-  {image:"assets/banners/b2-light.jpg", title:"Best Deals Near You",          subtitle:"Exclusive offers updated daily"},
-  {image:"assets/banners/b3-light.jpg", title:"",                             subtitle:""},
-  {image:"assets/banners/b4-light.jpg", title:"Fashion That Fits Your Style", subtitle:"Trending looks delivered fast"},
-  {image:"assets/banners/b5-light.jpg", title:"Transform Your Home",          subtitle:"Beautiful furniture & decor nearby"}
+  {image:"",                                title:'<img src="assets/banners/logo-light.png" alt="Banner" class="subtitle-img"><br>Smart Shopping Platform', subtitle:"Find products around your location"},
+  {image:"assets/banners/b2-light.jpg",     title:"Best Deals Near You",          subtitle:"Exclusive offers updated daily"},
+  {image:"assets/banners/b3-light.jpg",     title:"",                             subtitle:""},
+  {image:"assets/banners/b4-light.jpg",     title:"Fashion That Fits Your Style", subtitle:"Trending looks delivered fast"},
+  {image:"assets/banners/b5-light.jpg",     title:"Transform Your Home",          subtitle:"Beautiful furniture & decor nearby"}
 ];
 
 var banners = BANNERS_DARK;
@@ -1137,16 +986,13 @@ var currentSlide = 0;
 var bannerSliderInterval = null;
 
 function initBannerSlider() {
-  /* Pick correct set based on current theme */
   banners = document.body.classList.contains("light-mode") ? BANNERS_LIGHT : BANNERS_DARK;
-
   var track = document.getElementById("bannerTrack");
   var dots  = document.getElementById("bannerDots");
   if (!track) return;
   track.innerHTML = "";
   dots.innerHTML  = "";
   currentSlide = 0;
-
   banners.forEach(function (b, i) {
     var slide = document.createElement("div");
     slide.className = "banner-slide" + (i === 0 ? " active" : "");
@@ -1158,7 +1004,6 @@ function initBannerSlider() {
     dot.onclick = (function (idx) { return function () { goToSlide(idx); }; })(i);
     dots.appendChild(dot);
   });
-
   if (bannerSliderInterval) clearInterval(bannerSliderInterval);
   bannerSliderInterval = setInterval(nextSlide, 3000);
 }
@@ -1221,10 +1066,7 @@ function renderSovProducts(q, c) {
   var m = products.filter(function (p) {
     return p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
   });
-  if (!m.length) {
-    c.innerHTML = '<div class="sov-no-results">No products found for <strong>"' + q + '"</strong></div>';
-    return;
-  }
+  if (!m.length) { c.innerHTML = '<div class="sov-no-results">No products found for <strong>"' + q + '"</strong></div>'; return; }
   var lbl = document.createElement("div");
   lbl.className = "sov-label";
   lbl.innerText = "Products (" + m.length + ")";
@@ -1235,10 +1077,8 @@ function renderSovProducts(q, c) {
     r.className = "sov-item";
     r.innerHTML =
       '<img class="sov-item-img" src="' + p.image + '" onerror="this.src=\'assets/products/demo.jpg\'" alt="' + p.name + '">' +
-      '<div class="sov-item-info">' +
-        '<div class="sov-item-name">' + hl(p.name, q) + '</div>' +
-        '<div class="sov-item-meta">' + p.category + ' &middot; ' + disc + '% off &middot; &#11088; ' + p.rating + '</div>' +
-      '</div>' +
+      '<div class="sov-item-info"><div class="sov-item-name">' + hl(p.name, q) + '</div>' +
+      '<div class="sov-item-meta">' + p.category + ' &middot; ' + disc + '% off &middot; &#11088; ' + p.rating + '</div></div>' +
       '<div class="sov-item-right">&#8377;' + p.price.toLocaleString() + '</div>';
     r.onclick = function () { closeSearchOverlay(); window.location.href = "product.html?id=" + p.id; };
     c.appendChild(r);
@@ -1268,10 +1108,8 @@ function renderSovShops(q, c) {
       : '<span style="color:rgb(100,215,130)">Open</span>';
     r.innerHTML =
       '<div class="sov-item-icon">' + s.emoji + '</div>' +
-      '<div class="sov-item-info">' +
-        '<div class="sov-item-name">' + hl(s.name, q) + '</div>' +
-        '<div class="sov-item-meta">' + s.typeLabel + ' &middot; ' + s.distLabel + ' &middot; ' + st + '</div>' +
-      '</div>' +
+      '<div class="sov-item-info"><div class="sov-item-name">' + hl(s.name, q) + '</div>' +
+      '<div class="sov-item-meta">' + s.typeLabel + ' &middot; ' + s.distLabel + ' &middot; ' + st + '</div></div>' +
       '<div class="sov-item-right" style="font-size:12px;color:rgb(130,148,162)">' + s.distLabel + '</div>';
     r.onclick = function () {
       closeSearchOverlay();

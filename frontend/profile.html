@@ -11,19 +11,44 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="css/profile.css">
 <script src="js/api.js"></script>
+
+<!-- Apply saved theme immediately to prevent flash -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.documentElement.style.background = "rgb(255,246,232)";
+  }
+})();
+</script>
 </head>
 <body>
+
+<!-- Apply theme class before first paint -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.body.classList.add("light-mode");
+  }
+})();
+</script>
 
 <!-- ===== TOP NAVBAR ===== -->
 <div class="topbar">
   <a href="index.html" class="topbar-logo">
-    <img src="assets/logo/logo.png" alt="RadiusX">
+    <img src="assets/logo/logo.png" alt="RadiusX" id="profileLogo">
   </a>
   <div class="topbar-right">
-    <a href="index.html" class="topbar-link"><i class="fa-solid fa-house"></i><span> Home</span></a>
-    <a href="cart.html"  class="topbar-link"><i class="fa-solid fa-basket-shopping"></i><span> Cart</span></a>
+    <a href="index.html"  class="topbar-link"><i class="fa-solid fa-house"></i><span> Home</span></a>
+    <a href="cart.html"   class="topbar-link"><i class="fa-solid fa-basket-shopping"></i><span> Cart</span></a>
     <a href="orders.html" class="topbar-link"><i class="fa-solid fa-box-open"></i><span> Orders</span></a>
-    <div class="topbar-avatar" id="topbarAvatar">R</div>
+
+    <!-- THEME TOGGLE -->
+    <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode">
+      <i class="fa-solid fa-sun"  id="themeIconSun"></i>
+      <i class="fa-solid fa-moon" id="themeIconMoon" style="display:none"></i>
+    </button>
+
+    <div class="topbar-avatar" id="topbarAvatar"></div>
   </div>
 </div>
 
@@ -38,15 +63,15 @@
     <!-- User Card in sidebar -->
     <div class="sidebar-user-card">
       <div class="avatar-ring">
-        <div class="avatar-circle" id="sidebarAvatar">R</div>
+        <div class="avatar-circle" id="sidebarAvatar"></div>
         <button class="avatar-cam-btn" onclick="document.getElementById('avatarUpload').click()" title="Change photo">
           <i class="fa-solid fa-camera"></i>
         </button>
         <input type="file" id="avatarUpload" accept="image/*" style="display:none" onchange="handleAvatarUpload(this)">
       </div>
       <div class="sidebar-user-info">
-        <span class="sidebar-name" id="sidebarName">Ravi Kumar</span>
-        <span class="sidebar-email" id="sidebarEmail">ravi@gmail.com</span>
+        <span class="sidebar-name" id="sidebarName"></span>
+        <span class="sidebar-email" id="sidebarEmail"></span>
         <span class="sidebar-badge"><i class="fa-solid fa-circle-check"></i> Verified</span>
       </div>
     </div>
@@ -73,12 +98,12 @@
 
       <button class="nav-item" data-panel="orders" onclick="switchPanel(this,'orders')">
         <i class="fa-solid fa-box-open"></i><span>My Orders</span>
-        <span class="nbadge" id="ordersBadge">24</span>
+        <span class="nbadge" id="ordersBadge">0</span>
         <i class="fa-solid fa-chevron-right nav-arr"></i>
       </button>
       <button class="nav-item" data-panel="cart" onclick="switchPanel(this,'cart')">
         <i class="fa-solid fa-basket-shopping"></i><span>Cart</span>
-        <span class="nbadge" id="cartBadge">3</span>
+        <span class="nbadge" id="cartBadge">0</span>
         <i class="fa-solid fa-chevron-right nav-arr"></i>
       </button>
       <button class="nav-item" data-panel="wishlist" onclick="switchPanel(this,'wishlist')">
@@ -127,28 +152,28 @@
     <div class="panel active" id="panel-dashboard">
       <div class="panel-header">
         <h2>Dashboard</h2>
-        <p>Welcome back, <span id="dashGreetName">Ravi</span> 👋</p>
+        <p>Welcome back, <span id="dashGreetName"></span> 👋</p>
       </div>
 
       <div class="dash-stats" id="dashStats">
         <div class="dstat" style="--d:0s">
           <div class="dstat-icon"><i class="fa-solid fa-box-open"></i></div>
-          <span class="dstat-val" id="dstatOrders">24</span>
+          <span class="dstat-val" id="dstatOrders">—</span>
           <span class="dstat-lbl">Total Orders</span>
         </div>
         <div class="dstat" style="--d:.07s">
           <div class="dstat-icon"><i class="fa-solid fa-Indian-rupee-sign"></i></div>
-          <span class="dstat-val" id="dstatSpent">₹1,24,800</span>
+          <span class="dstat-val" id="dstatSpent">—</span>
           <span class="dstat-lbl">Total Spent</span>
         </div>
         <div class="dstat" style="--d:.14s">
           <div class="dstat-icon"><i class="fa-solid fa-basket-shopping"></i></div>
-          <span class="dstat-val" id="dstatCart">3</span>
+          <span class="dstat-val" id="dstatCart">—</span>
           <span class="dstat-lbl">In Cart</span>
         </div>
         <div class="dstat" style="--d:.21s">
           <div class="dstat-icon"><i class="fa-solid fa-piggy-bank"></i></div>
-          <span class="dstat-val" id="dstatSaved">₹18,200</span>
+          <span class="dstat-val" id="dstatSaved">—</span>
           <span class="dstat-lbl">Total Saved</span>
         </div>
       </div>
@@ -197,14 +222,14 @@
 
       <div class="profile-avatar-row">
         <div class="pav-ring">
-          <div class="pav-circle" id="profileAvCircle">R</div>
+          <div class="pav-circle" id="profileAvCircle"></div>
           <button class="pav-edit-btn" onclick="document.getElementById('avatarUpload').click()">
             <i class="fa-solid fa-camera"></i>
           </button>
         </div>
         <div>
-          <div class="pav-name" id="profileAvName">Ravi Kumar</div>
-          <div class="pav-since">Member since Jan 2024</div>
+          <div class="pav-name" id="profileAvName"></div>
+          <div class="pav-since" id="profileAvSince"></div>
           <button class="pav-upload-btn" onclick="document.getElementById('avatarUpload').click()">
             <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload Photo
           </button>
@@ -388,7 +413,7 @@
       <div class="help-contact">
         <h3>Contact Us</h3>
         <div class="help-contact-grid">
-          <div class="hc-tile"><i class="fa-regular fa-envelope"></i><span>support.radiusx@gmail.com</span></div>
+          <div class="hc-tile"><i class="fa-regular fa-envelope"></i><span>support@radiusx.in</span></div>
           <div class="hc-tile"><i class="fa-solid fa-phone"></i><span>1800-XXX-XXXX (9AM–9PM)</span></div>
           <div class="hc-tile"><i class="fa-brands fa-whatsapp"></i><span>Chat on WhatsApp</span></div>
           <div class="hc-tile"><i class="fa-solid fa-headset"></i><span>Live Chat (App only)</span></div>
@@ -490,5 +515,42 @@
 <div class="toast" id="toast"></div>
 
 <script src="js/profile.js"></script>
+
+<!-- THEME TOGGLE LOGIC (self-contained, no external file) -->
+<script>
+(function () {
+  /* Boot: sync icon + logo on load */
+  var isLight = document.body.classList.contains("light-mode");
+  var sun  = document.getElementById("themeIconSun");
+  var moon = document.getElementById("themeIconMoon");
+  var logo = document.getElementById("profileLogo");
+
+  if (isLight) {
+    if (sun)  sun.style.display  = "none";
+    if (moon) moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+  }
+})();
+
+function toggleTheme() {
+  var body    = document.body;
+  var sun     = document.getElementById("themeIconSun");
+  var moon    = document.getElementById("themeIconMoon");
+  var logo    = document.getElementById("profileLogo");
+  var isLight = body.classList.toggle("light-mode");
+
+  if (isLight) {
+    sun.style.display  = "none";
+    moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+    localStorage.setItem("rx_theme", "light");
+  } else {
+    sun.style.display  = "";
+    moon.style.display = "none";
+    if (logo) logo.src = "assets/logo/logo.png";
+    localStorage.setItem("rx_theme", "dark");
+  }
+}
+</script>
 </body>
 </html>

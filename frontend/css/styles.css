@@ -1010,6 +1010,65 @@ body.light-mode mark.sov-match { background: rgba(74,140,40,0.15); color: rgb(50
 }
 
 /* cover */
+.shop-cover-wrap {
+  position: relative;
+  width: 100%;
+  height: 130px;
+  overflow: hidden;
+  background: rgb(14,20,28);
+  display: block;
+}
+
+.shop-cover-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+.shop-card:hover .shop-cover-photo {
+  transform: scale(1.06);
+}
+
+.shop-cover-svg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: transform 0.35s ease;
+}
+.shop-card:hover .shop-cover-svg {
+  transform: scale(1.04);
+}
+.shop-cover-svg svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* type pill badge overlay on cover */
+.shop-cover-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  z-index: 3;
+}
+.shop-cover-type-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(0,0,0,0.55);
+  color: rgba(255,255,255,0.9);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.15);
+  text-transform: uppercase;
+}
+
 .shop-cover {
   width: 100%; height: 116px; object-fit: cover;
   display: block; background: rgb(20,26,32);
@@ -1260,3 +1319,691 @@ mark.sov-match {
   background: rgba(196,223,154,0.2); color: rgb(196,223,154);
   border-radius: 2px; padding: 0 1px;
 }
+
+/* ============================================
+   HERO / ABOUT SECTION
+   ============================================ */
+.hero-about {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 0;
+  padding: 80px 60px 0;
+  overflow: hidden;
+  background: rgb(8,12,16);
+  min-height: 620px;
+}
+
+/* Animated dotted grid background */
+.hero-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(196,223,154,0.12) 1px, transparent 1px);
+  background-size: 36px 36px;
+  animation: heroGridDrift 20s linear infinite;
+  pointer-events: none;
+}
+@keyframes heroGridDrift {
+  from { background-position: 0 0; }
+  to   { background-position: 36px 36px; }
+}
+
+/* Glowing orbs */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: orbFloat 8s ease-in-out infinite alternate;
+}
+.hero-orb-1 {
+  width: 420px; height: 420px;
+  background: rgba(196,223,154,0.07);
+  top: -100px; left: -60px;
+  animation-duration: 9s;
+}
+.hero-orb-2 {
+  width: 300px; height: 300px;
+  background: rgba(100,200,255,0.05);
+  top: 100px; right: 50px;
+  animation-duration: 11s; animation-delay: -3s;
+}
+.hero-orb-3 {
+  width: 200px; height: 200px;
+  background: rgba(255,160,80,0.04);
+  bottom: 0; left: 40%;
+  animation-duration: 7s; animation-delay: -5s;
+}
+@keyframes orbFloat {
+  from { transform: translateY(0) scale(1); }
+  to   { transform: translateY(30px) scale(1.06); }
+}
+
+/* ---- LEFT: Content ---- */
+.hero-content {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 40px;
+  padding-bottom: 60px;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(196,223,154);
+  margin-bottom: 24px;
+}
+.hero-eyebrow-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgb(196,223,154);
+  box-shadow: 0 0 8px rgb(196,223,154);
+  animation: dotBlink 2s ease-in-out infinite;
+}
+@keyframes dotBlink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+.hero-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 600;
+  line-height: 1.1;
+  color: white;
+  margin-bottom: 22px;
+}
+.hero-headline-accent {
+  color: rgb(196,223,154);
+  position: relative;
+  display: inline-block;
+}
+.hero-headline-accent::after {
+  content: "";
+  position: absolute;
+  bottom: 2px; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, rgb(196,223,154), transparent);
+  border-radius: 2px;
+  animation: underlineGrow 1.2s ease 0.4s both;
+}
+@keyframes underlineGrow {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); transform-origin: left; }
+}
+
+.hero-sub {
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgb(165,185,200);
+  max-width: 460px;
+  margin-bottom: 34px;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.hero-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 28px;
+  background: rgb(196,223,154);
+  color: rgb(8,12,16);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.22s, transform 0.18s, box-shadow 0.22s;
+  box-shadow: 0 4px 18px rgba(196,223,154,0.25);
+}
+.hero-btn-primary:hover {
+  background: rgb(214,235,175);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(196,223,154,0.4);
+}
+
+.hero-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 28px;
+  background: rgba(196,223,154,0.08);
+  color: rgb(196,223,154);
+  border: 1px solid rgba(196,223,154,0.3);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.22s, border-color 0.22s, transform 0.18s;
+}
+.hero-btn-secondary:hover {
+  background: rgba(196,223,154,0.14);
+  border-color: rgba(196,223,154,0.6);
+  transform: translateY(-2px);
+}
+
+/* Trust bar */
+.hero-trust-bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.hero-trust-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hero-trust-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  font-family: 'Playfair Display', serif;
+}
+.hero-trust-label {
+  font-size: 11px;
+  color: rgb(100,120,138);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.hero-trust-sep {
+  width: 1px;
+  height: 36px;
+  background: rgba(255,255,255,0.08);
+}
+
+/* ---- RIGHT: Phone visual ---- */
+.hero-visual {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 40px;
+}
+
+/* Phone frame */
+.hero-phone {
+  position: relative;
+  width: 220px;
+  height: 440px;
+  background: rgb(14,20,28);
+  border-radius: 36px;
+  border: 2px solid rgba(196,223,154,0.22);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.8),
+    0 24px 60px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  overflow: hidden;
+  animation: phoneFloat 5s ease-in-out infinite alternate;
+}
+@keyframes phoneFloat {
+  from { transform: translateY(0) rotate(-1deg); }
+  to   { transform: translateY(-14px) rotate(1deg); }
+}
+
+.hero-phone-notch {
+  position: absolute;
+  top: 12px; left: 50%;
+  transform: translateX(-50%);
+  width: 60px; height: 12px;
+  background: rgb(8,12,16);
+  border-radius: 10px;
+  z-index: 10;
+}
+
+.hero-phone-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Mini navbar inside phone */
+.phone-mini-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 16px 10px;
+  background: rgba(196,223,154,0.07);
+  border-bottom: 1px solid rgba(196,223,154,0.1);
+  flex-shrink: 0;
+}
+.phone-mini-logo {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgb(196,223,154);
+  font-family: 'Playfair Display', serif;
+}
+.phone-mini-loc {
+  font-size: 10px;
+  color: rgb(140,160,175);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.phone-mini-loc .fa-location-dot { color: rgb(196,223,154); font-size: 9px; }
+
+/* Scrolling cards inside phone */
+.phone-cards-wrap {
+  flex: 1;
+  overflow: hidden;
+  padding: 12px 10px 0;
+}
+.phone-cards-track {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: phoneScroll 8s linear infinite;
+}
+@keyframes phoneScroll {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-50%); }
+}
+
+.phone-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 8px 10px;
+  flex-shrink: 0;
+}
+.phone-card-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.phone-card-body { flex: 1; min-width: 0; }
+.phone-card-tag {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgb(196,223,154);
+  margin-bottom: 2px;
+}
+.phone-card-name {
+  font-size: 11px;
+  color: white;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phone-card-price {
+  font-size: 11px;
+  color: rgb(196,223,154);
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+/* Notification popup inside phone */
+.phone-notif {
+  position: absolute;
+  bottom: 18px; left: 10px; right: 10px;
+  background: rgba(196,223,154,0.12);
+  border: 1px solid rgba(196,223,154,0.25);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: notifPulse 3s ease-in-out infinite;
+  backdrop-filter: blur(6px);
+}
+@keyframes notifPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%     { opacity: 0.75; transform: scale(0.98); }
+}
+.phone-notif-icon {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(196,223,154,0.2);
+  display: flex; align-items: center; justify-content: center;
+  color: rgb(196,223,154); font-size: 11px; flex-shrink: 0;
+}
+.phone-notif-text {
+  display: flex; flex-direction: column; gap: 1px;
+}
+.phone-notif-text strong {
+  font-size: 10px; color: rgb(196,223,154); font-weight: 700;
+}
+.phone-notif-text span {
+  font-size: 9px; color: rgb(130,150,165);
+}
+
+/* Floating pills */
+.hero-pill {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: rgba(18,26,36,0.9);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgb(200,215,228);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  white-space: nowrap;
+  animation: pillDrift 6s ease-in-out infinite alternate;
+}
+.hero-pill-1 { top: 60px; left: -30px; animation-delay: 0s; }
+.hero-pill-2 { top: 200px; right: -30px; animation-delay: -2s; }
+.hero-pill-3 { bottom: 90px; left: -20px; animation-delay: -4s; }
+@keyframes pillDrift {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-8px); }
+}
+
+/* ---- FEATURE CARDS row (spans full width) ---- */
+.hero-features {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.05);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  margin: 0 -60px;
+}
+
+.hero-feat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 30px 28px;
+  background: rgb(10,14,18);
+  transition: background 0.2s;
+}
+.hero-feat-card:hover { background: rgb(14,20,28); }
+
+.hero-feat-icon {
+  flex-shrink: 0;
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: rgba(196,223,154,0.08);
+  border: 1px solid rgba(196,223,154,0.15);
+  display: flex; align-items: center; justify-content: center;
+  color: rgb(196,223,154);
+  transition: background 0.2s, border-color 0.2s;
+}
+.hero-feat-card:hover .hero-feat-icon {
+  background: rgba(196,223,154,0.14);
+  border-color: rgba(196,223,154,0.3);
+}
+
+.hero-feat-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 5px;
+}
+.hero-feat-desc {
+  font-size: 12px;
+  color: rgb(95,115,130);
+  line-height: 1.55;
+}
+
+/* ============================================
+   HERO: LIGHT MODE OVERRIDES
+   ============================================ */
+body.light-mode .hero-about {
+  background: linear-gradient(160deg, rgb(255,248,238) 0%, rgb(255,243,225) 50%, rgb(254,235,200) 100%);
+}
+body.light-mode .hero-bg-grid {
+  background-image: radial-gradient(circle, rgba(210,120,30,0.1) 1px, transparent 1px);
+}
+body.light-mode .hero-orb-1 { background: rgba(255,140,30,0.08); }
+body.light-mode .hero-orb-2 { background: rgba(255,90,30,0.05); }
+body.light-mode .hero-orb-3 { background: rgba(255,200,50,0.07); }
+body.light-mode .hero-eyebrow { color: rgb(190,80,15); }
+body.light-mode .hero-eyebrow-dot { background: rgb(220,90,15); box-shadow: 0 0 8px rgba(220,90,15,0.5); }
+body.light-mode .hero-headline { color: rgb(40,22,8); }
+body.light-mode .hero-headline-accent { color: rgb(200,75,15); }
+body.light-mode .hero-headline-accent::after { background: linear-gradient(90deg, rgb(220,90,15), transparent); }
+body.light-mode .hero-sub { color: rgb(120,80,45); }
+body.light-mode .hero-btn-primary {
+  background: rgb(210,80,15);
+  color: white;
+  box-shadow: 0 4px 18px rgba(210,80,15,0.3);
+}
+body.light-mode .hero-btn-primary:hover {
+  background: rgb(185,65,10);
+  box-shadow: 0 8px 28px rgba(210,80,15,0.45);
+}
+body.light-mode .hero-btn-secondary {
+  background: rgba(210,80,15,0.07);
+  color: rgb(190,65,10);
+  border-color: rgba(210,80,15,0.3);
+}
+body.light-mode .hero-btn-secondary:hover {
+  background: rgba(210,80,15,0.13);
+  border-color: rgba(210,80,15,0.55);
+}
+body.light-mode .hero-trust-num { color: rgb(40,22,8); }
+body.light-mode .hero-trust-label { color: rgb(160,110,65); }
+body.light-mode .hero-trust-sep { background: rgba(100,55,15,0.15); }
+
+body.light-mode .hero-phone {
+  background: rgb(255,248,238);
+  border-color: rgba(210,80,15,0.25);
+  box-shadow: 0 0 0 1px rgba(200,100,20,0.1), 0 24px 60px rgba(150,60,10,0.18);
+}
+body.light-mode .hero-phone-notch { background: rgb(255,248,238); }
+body.light-mode .phone-mini-nav { background: rgba(210,80,15,0.06); border-bottom-color: rgba(210,80,15,0.1); }
+body.light-mode .phone-mini-logo { color: rgb(190,65,10); }
+body.light-mode .phone-mini-loc { color: rgb(160,100,55); }
+body.light-mode .phone-mini-loc .fa-location-dot { color: rgb(190,65,10); }
+body.light-mode .phone-card { background: rgba(210,80,15,0.05); border-color: rgba(210,80,15,0.1); }
+body.light-mode .phone-card-tag { color: rgb(190,65,10); }
+body.light-mode .phone-card-name { color: rgb(40,22,8); }
+body.light-mode .phone-card-price { color: rgb(190,65,10); }
+body.light-mode .phone-notif { background: rgba(210,80,15,0.08); border-color: rgba(210,80,15,0.2); }
+body.light-mode .phone-notif-icon { background: rgba(210,80,15,0.15); color: rgb(190,65,10); }
+body.light-mode .phone-notif-text strong { color: rgb(190,65,10); }
+body.light-mode .phone-notif-text span { color: rgb(160,100,55); }
+body.light-mode .hero-pill { background: rgba(255,245,232,0.95); border-color: rgba(200,100,20,0.18); color: rgb(100,55,15); }
+
+body.light-mode .hero-features { background: rgba(200,100,20,0.06); border-top-color: rgba(200,100,20,0.12); }
+body.light-mode .hero-feat-card { background: rgb(255,248,238); }
+body.light-mode .hero-feat-card:hover { background: rgb(255,242,224); }
+body.light-mode .hero-feat-icon { background: rgba(210,80,15,0.08); border-color: rgba(210,80,15,0.18); color: rgb(190,65,10); }
+body.light-mode .hero-feat-card:hover .hero-feat-icon { background: rgba(210,80,15,0.14); border-color: rgba(210,80,15,0.32); }
+body.light-mode .hero-feat-title { color: rgb(40,22,8); }
+body.light-mode .hero-feat-desc { color: rgb(140,90,45); }
+
+/* ============================================
+   WARM LIGHT MODE — full palette upgrade
+   ============================================ */
+body.light-mode {
+  background: rgb(255,246,232);
+  color: rgb(40,22,8);
+}
+body.light-mode .header-wrapper,
+body.light-mode .navbar {
+  background: rgb(255,252,244);
+  border-bottom-color: rgb(235,215,190);
+  box-shadow: 0 2px 12px rgba(150,80,20,0.08);
+}
+body.light-mode .location-box { color: rgb(90,55,20); }
+body.light-mode .location-box:hover { color: rgb(200,75,15); }
+body.light-mode .location-box .fa-location-dot { color: rgb(200,75,15); }
+body.light-mode .loc-chevron { color: rgb(175,135,90); }
+body.light-mode .location-box.open .loc-chevron { color: rgb(200,75,15); }
+
+body.light-mode .addr-dropdown {
+  background: rgb(255,252,244);
+  border-color: rgba(200,75,15,0.22);
+  box-shadow: 0 12px 40px rgba(120,50,10,0.15);
+}
+body.light-mode .addr-dropdown::before { background: rgb(255,252,244); border-color: rgba(200,75,15,0.22); }
+body.light-mode .addr-dd-header { background: rgba(200,75,15,0.06); border-bottom-color: rgba(200,75,15,0.1); }
+body.light-mode .addr-dd-header i, body.light-mode .addr-dd-header span { color: rgb(180,60,10); }
+body.light-mode .addr-dd-close { color: rgb(190,155,110); }
+body.light-mode .addr-dd-close:hover { color: rgb(60,35,10); }
+body.light-mode .addr-dd-gps { border-bottom-color: rgba(0,0,0,0.05); }
+body.light-mode .addr-dd-gps:hover { background: rgba(200,75,15,0.05); }
+body.light-mode .addr-gps-icon { background: rgba(200,75,15,0.1); color: rgb(180,60,10); }
+body.light-mode .addr-gps-label { color: rgb(180,60,10); }
+body.light-mode .addr-gps-sub { color: rgb(170,130,85); }
+body.light-mode .addr-dd-section-label { color: rgb(180,145,100); }
+body.light-mode .addr-saved-card:hover { background: rgba(200,75,15,0.05); }
+body.light-mode .addr-saved-card.active-addr { background: rgba(200,75,15,0.08); }
+body.light-mode .addr-saved-card.active-addr .addr-card-name { color: rgb(180,60,10); }
+body.light-mode .addr-card-icon { background: rgba(100,55,10,0.07); color: rgb(170,120,65); }
+body.light-mode .addr-saved-card.active-addr .addr-card-icon { background: rgba(200,75,15,0.1); color: rgb(180,60,10); }
+body.light-mode .addr-card-name { color: rgb(50,28,8); }
+body.light-mode .addr-card-line { color: rgb(175,135,90); }
+body.light-mode .addr-active-badge { background: rgba(200,75,15,0.1); color: rgb(180,60,10); }
+body.light-mode .addr-no-saved { color: rgb(195,160,115); }
+body.light-mode .addr-dd-divider { background: rgba(150,80,20,0.08); }
+body.light-mode .addr-add-btn { background: rgba(200,75,15,0.06); border-color: rgba(200,75,15,0.28); color: rgb(180,60,10); }
+body.light-mode .addr-add-btn:hover { background: rgba(200,75,15,0.12); border-color: rgba(200,75,15,0.48); }
+body.light-mode .addr-form-wrap { border-top-color: rgba(150,80,20,0.08); }
+body.light-mode .addr-form-title { color: rgb(130,80,35); }
+body.light-mode .addr-input { background: rgb(255,248,236); border-color: rgb(230,205,170); color: rgb(50,28,8); }
+body.light-mode .addr-input::placeholder { color: rgb(205,170,125); }
+body.light-mode .addr-input:focus { border-color: rgba(200,75,15,0.5); }
+body.light-mode .addr-form-cancel { background: rgba(150,80,20,0.05); border-color: rgb(230,205,170); color: rgb(155,100,50); }
+body.light-mode .addr-form-save { background: rgb(200,75,15); color: white; }
+body.light-mode .addr-form-save:hover { background: rgb(175,60,10); }
+body.light-mode .addr-current-card { border-color: rgba(200,75,15,0.15); background: rgba(200,75,15,0.03); }
+body.light-mode .addr-current-label { color: rgb(160,80,20); }
+body.light-mode .lfc-icon { color: rgb(195,160,115); }
+body.light-mode .lfc-value { color: rgb(60,35,10); }
+body.light-mode .lfc-coords { color: rgb(195,160,115); border-top-color: rgba(150,80,20,0.08); }
+
+body.light-mode .search-box { background: rgb(255,245,228); border-color: rgb(230,200,160); }
+body.light-mode .search-box:hover { border-color: rgba(200,75,15,0.4); }
+body.light-mode .search-box input { color: rgb(50,28,8); }
+body.light-mode .search-box input::placeholder { color: rgb(200,165,115); }
+body.light-mode .search-box i { color: rgb(175,130,75); }
+
+body.light-mode .filter-panel { background: rgb(255,252,244); border-color: rgb(230,200,160); box-shadow: 0 8px 24px rgba(120,50,10,0.1); }
+body.light-mode .filter-panel h4 { color: rgb(180,60,10); }
+body.light-mode .filter-panel select { background: rgb(255,245,228); color: rgb(50,28,8); border: 1px solid rgb(230,200,160); }
+body.light-mode .filter-panel button { background: rgb(200,75,15); color: white; }
+
+body.light-mode .nav-icon-link { color: rgb(80,45,15); }
+body.light-mode .nav-icon-link:hover { color: rgb(200,75,15); }
+body.light-mode .theme-toggle-btn { color: rgb(80,45,15); }
+body.light-mode .theme-toggle-btn:hover { color: rgb(200,75,15); background: rgba(200,75,15,0.1); }
+body.light-mode .profile-menu { color: rgb(80,45,15); }
+body.light-mode .profile-menu > .fa-user { color: rgb(80,45,15); }
+body.light-mode .dropdown-icon { color: rgb(80,45,15); }
+body.light-mode .dropdown-icon > .fa-angle-down { color: rgb(80,45,15); }
+body.light-mode .profile-dropdown,
+body.light-mode .dropdown-menu { background: rgb(255,252,244); border-color: rgb(230,200,160); box-shadow: 0 8px 24px rgba(120,50,10,0.12); }
+body.light-mode .profile-dropdown div a,
+body.light-mode .dropdown-menu div a { color: rgb(60,35,10); }
+body.light-mode .profile-dropdown div:hover,
+body.light-mode .dropdown-menu div:hover { background: rgb(255,242,218); }
+
+body.light-mode .categories { background: rgb(255,252,244); border-bottom-color: rgb(235,210,175); }
+body.light-mode .category { color: rgb(155,105,55); }
+body.light-mode .category.active { color: rgb(200,75,15); border-bottom-color: rgb(200,75,15); }
+
+body.light-mode .banner { background: rgb(255,240,215); }
+body.light-mode .banner-slide .banner-text h2 { color: rgb(180,55,10); }
+body.light-mode .banner-slide .banner-text p { color: rgb(100,60,20); }
+body.light-mode .banner-arrow { background: rgba(255,252,244,0.9); color: rgb(180,55,10); }
+body.light-mode .banner-arrow:hover { background: rgba(200,75,15,0.12); }
+body.light-mode .banner-dot { background: rgba(200,75,15,0.22); }
+body.light-mode .banner-dot.active { background: rgb(200,75,15); }
+
+body.light-mode .section-title { color: rgb(180,55,10); }
+
+body.light-mode .shops-section { border-bottom-color: rgb(230,205,170); }
+body.light-mode .shops-location-pill { color: rgb(180,55,10); background: rgba(200,75,15,0.07); border-color: rgba(200,75,15,0.2); }
+body.light-mode .shops-scroll-hint { color: rgb(195,155,105); }
+body.light-mode .shops-loading p { color: rgb(165,115,60); }
+body.light-mode .shops-loader-dots span { background: rgb(200,75,15); }
+body.light-mode .shops-error i { color: rgb(200,50,20); }
+body.light-mode .shops-error p { color: rgb(130,80,35); }
+body.light-mode .shops-scroll-wrap { scrollbar-color: rgb(225,195,155) transparent; }
+body.light-mode .shops-scroll-wrap::-webkit-scrollbar-thumb { background: rgb(225,195,155); }
+
+body.light-mode .shop-card { background: rgb(255,252,244); border-color: rgb(230,205,170); box-shadow: 0 2px 10px rgba(120,50,10,0.07); }
+body.light-mode .shop-card:hover { border-color: rgba(200,75,15,0.35); box-shadow: 0 8px 28px rgba(120,50,10,0.14); }
+body.light-mode .shop-cover-wrap { background: rgb(245,235,220); }
+body.light-mode .shop-cover-emoji { background: linear-gradient(135deg, rgb(255,242,218), rgb(255,228,190)); }
+body.light-mode .shop-name { color: rgb(40,22,8); }
+body.light-mode .shop-type { color: rgb(180,60,10); }
+body.light-mode .shop-address { color: rgb(175,135,90); }
+body.light-mode .shop-meta { color: rgb(165,120,70); }
+body.light-mode .shop-meta i { color: rgb(200,75,15); }
+body.light-mode .shop-tag { background: rgb(255,245,228); border-color: rgb(230,205,165); color: rgb(145,90,40); }
+body.light-mode .shop-badge.open { background: rgba(60,160,80,0.1); color: rgb(30,130,60); border-color: rgba(60,160,80,0.2); }
+body.light-mode .shop-badge.closed { background: rgba(200,50,30,0.08); color: rgb(185,40,20); border-color: rgba(200,50,30,0.18); }
+body.light-mode .shop-order-btn { background: rgb(200,75,15); color: white; }
+body.light-mode .shop-order-btn:hover { background: rgb(175,60,10); }
+body.light-mode .osm-attribution { color: rgb(195,158,115); }
+body.light-mode .osm-attribution a { color: rgb(170,130,80); }
+
+body.light-mode .product-card { background: rgb(255,252,244); border: 1px solid rgb(230,205,170); box-shadow: 0 2px 8px rgba(120,50,10,0.07); }
+body.light-mode .product-card h4 { color: rgb(40,22,8); }
+body.light-mode .price-current { color: rgb(180,60,10); }
+body.light-mode .price-original { color: rgb(195,158,115); }
+body.light-mode .price-discount { color: rgb(40,150,70); }
+body.light-mode .review-count { color: rgb(190,150,100); }
+body.light-mode .btn-cart { background: rgb(255,245,228); color: rgb(180,60,10); border-color: rgb(200,75,15); }
+body.light-mode .btn-cart:hover { background: rgba(200,75,15,0.1); }
+body.light-mode .btn-buy { background: rgb(200,75,15); color: white; }
+body.light-mode .btn-buy:hover { background: rgb(175,60,10); }
+
+body.light-mode .footer { background: rgb(255,240,212); border-top: 1px solid rgb(230,200,160); }
+body.light-mode .footer h4 { color: rgb(60,35,10); }
+body.light-mode .footer p { color: rgb(155,105,55); }
+body.light-mode .copyright { color: rgb(175,135,85); }
+
+body.light-mode .search-overlay { background: rgba(180,120,50,0.35); backdrop-filter: blur(8px); }
+body.light-mode .sov-box { background: rgb(255,252,244); border-color: rgb(230,200,160); box-shadow: 0 24px 64px rgba(120,50,10,0.2); }
+body.light-mode .sov-header { background: rgb(255,248,234); border-bottom-color: rgb(230,200,160); }
+body.light-mode .sov-header input { color: rgb(50,28,8); }
+body.light-mode .sov-header input::placeholder { color: rgb(205,168,115); }
+body.light-mode .sov-search-icon { color: rgb(200,75,15); }
+body.light-mode .sov-close { color: rgb(195,155,105); }
+body.light-mode .sov-close:hover { color: rgb(50,28,8); }
+body.light-mode .sov-tabs { background: rgb(255,252,244); border-bottom-color: rgb(230,200,160); }
+body.light-mode .sov-tab { color: rgb(175,135,85); }
+body.light-mode .sov-tab.active { color: rgb(180,60,10); border-bottom-color: rgb(180,60,10); }
+body.light-mode .sov-item:hover { background: rgb(255,242,218); }
+body.light-mode .sov-item-name { color: rgb(50,28,8); }
+body.light-mode .sov-item-meta { color: rgb(175,135,85); }
+body.light-mode .sov-item-right { color: rgb(180,60,10); }
+body.light-mode .sov-item-img,
+body.light-mode .sov-item-icon { background: rgb(255,242,218); }
+body.light-mode .sov-label { color: rgb(195,155,105); }
+body.light-mode .sov-empty-state { color: rgb(200,160,110); }
+body.light-mode .sov-no-results { color: rgb(195,155,105); }
+body.light-mode .sov-no-results strong { color: rgb(180,60,10); }
+body.light-mode mark.sov-match { background: rgba(200,75,15,0.14); color: rgb(180,60,10); }

@@ -43,6 +43,27 @@ body {
 }
 .back-home:hover { color: var(--accent); }
 
+/* ===== THEME TOGGLE ===== */
+.theme-toggle-btn {
+  position: fixed;
+  top: 16px; right: 22px;
+  z-index: 200;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 16px;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+}
+.theme-toggle-btn:hover {
+  color: var(--accent);
+  background: rgba(196,223,154,0.08);
+  border-color: rgba(196,223,154,0.3);
+}
+
 /* ===== BACKGROUND PARTICLES ===== */
 .bg-particles {
   position: fixed;
@@ -67,9 +88,9 @@ body {
 .bg-particles span:nth-child(6) { width:80px;  height:80px;  top:60%;   left:10%;    animation-duration:14s; animation-delay:-12s; }
 
 @keyframes float-particle {
-  0%   { transform: translateY(0) scale(1);   opacity: 0.5; }
+  0%   { transform: translateY(0) scale(1);       opacity: 0.5; }
   50%  { transform: translateY(-40px) scale(1.1); opacity: 0.8; }
-  100% { transform: translateY(0) scale(1);   opacity: 0.5; }
+  100% { transform: translateY(0) scale(1);       opacity: 0.5; }
 }
 
 /* ===== WRAPPER ===== */
@@ -85,10 +106,7 @@ body {
 }
 
 /* ===== LOGO ===== */
-.fp-logo img {
-  width: 130px;
-  filter: brightness(1.05);
-}
+.fp-logo img { width: 130px; filter: brightness(1.05); }
 
 /* ===== STEP TRACK ===== */
 .steps-track {
@@ -137,7 +155,6 @@ body {
   color: rgb(8,12,16);
   box-shadow: 0 0 18px rgba(196,223,154,0.35);
 }
-
 .step.active .step-label { color: var(--accent); }
 
 .step.done .step-num {
@@ -145,7 +162,6 @@ body {
   border-color: var(--accent);
   color: var(--accent);
 }
-
 .step.done .step-label { color: var(--accent); }
 
 .step-line {
@@ -157,7 +173,6 @@ body {
   transition: background 0.5s;
   min-width: 40px;
 }
-
 .step-line.done { background: var(--accent); }
 
 /* ===== CARD ===== */
@@ -177,7 +192,6 @@ body {
   align-items: stretch;
   animation: step-in 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) both;
 }
-
 .fp-step.hidden { display: none; }
 
 @keyframes step-in {
@@ -231,7 +245,6 @@ body {
   line-height: 1.7;
   margin-bottom: 28px;
 }
-
 .fp-desc strong { color: var(--text); }
 
 /* ===== FIELD GROUP ===== */
@@ -260,19 +273,12 @@ body {
   padding: 11px 14px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .input-wrap:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(196,223,154,0.07);
 }
-
 .input-wrap.error { border-color: var(--error); }
-
-.input-wrap i {
-  color: var(--muted);
-  font-size: 14px;
-  flex-shrink: 0;
-}
+.input-wrap i { color: var(--muted); font-size: 14px; flex-shrink: 0; }
 
 .input-wrap input {
   flex: 1;
@@ -283,22 +289,12 @@ body {
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
 }
-
 .input-wrap input::placeholder { color: rgb(65, 80, 90); }
 
-.toggle-pass {
-  cursor: pointer !important;
-  color: var(--muted) !important;
-  transition: color 0.2s;
-}
+.toggle-pass { cursor: pointer !important; color: var(--muted) !important; transition: color 0.2s; }
 .toggle-pass:hover { color: var(--accent) !important; }
 
-.field-error {
-  font-size: 11px;
-  color: var(--error);
-  margin-top: 5px;
-  min-height: 16px;
-}
+.field-error { font-size: 11px; color: var(--error); margin-top: 5px; min-height: 16px; }
 
 /* ===== STRENGTH BAR ===== */
 .strength-bar {
@@ -308,7 +304,6 @@ body {
   margin-top: 8px;
   overflow: hidden;
 }
-
 .strength-bar span {
   display: block;
   height: 100%;
@@ -316,13 +311,7 @@ body {
   border-radius: 2px;
   transition: width 0.4s ease, background 0.4s ease;
 }
-
-.strength-label {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 4px;
-  min-height: 16px;
-}
+.strength-label { font-size: 11px; color: var(--muted); margin-top: 4px; min-height: 16px; }
 
 /* ===== SENT CONFIRM ===== */
 .sent-confirm {
@@ -336,28 +325,10 @@ body {
   margin-bottom: 22px;
   animation: step-in 0.3s ease both;
 }
-
 .sent-confirm.hidden { display: none; }
-
-.sent-confirm > i {
-  color: var(--success);
-  font-size: 22px;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.sent-confirm strong {
-  display: block;
-  color: var(--success);
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.sent-confirm p {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.6;
-}
+.sent-confirm > i { color: var(--success); font-size: 22px; margin-top: 2px; flex-shrink: 0; }
+.sent-confirm strong { display: block; color: var(--success); font-size: 14px; margin-bottom: 4px; }
+.sent-confirm p { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
 /* ===== BUTTON ===== */
 .fp-btn {
@@ -378,14 +349,8 @@ body {
   transition: background 0.2s, transform 0.15s;
   margin-bottom: 20px;
 }
-
-.fp-btn:hover {
-  background: var(--accent2);
-  transform: translateY(-1px);
-}
-
+.fp-btn:hover { background: var(--accent2); transform: translateY(-1px); }
 .fp-btn:active { transform: translateY(0); }
-
 .fp-btn i { font-size: 14px; transition: transform 0.2s; }
 .fp-btn:hover i { transform: translateX(3px); }
 
@@ -411,18 +376,15 @@ body {
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
   caret-color: var(--accent);
 }
-
 .otp-box:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(196,223,154,0.1);
   transform: translateY(-2px);
 }
-
 .otp-box.filled {
   border-color: rgba(196,223,154,0.5);
   background: rgba(196,223,154,0.06);
 }
-
 .otp-box.error-box {
   border-color: var(--error);
   animation: shake 0.4s ease;
@@ -437,12 +399,7 @@ body {
 }
 
 /* ===== OTP TIMER ===== */
-.otp-timer {
-  font-weight: 600;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-
+.otp-timer { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
 .otp-timer.expired { color: var(--error); }
 
 /* ===== BOTTOM LINKS ===== */
@@ -454,21 +411,14 @@ body {
   gap: 8px;
   font-size: 13px;
 }
-
-.fp-links a {
-  color: var(--muted);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
+.fp-links a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
 .fp-links a:hover { color: var(--accent); }
 .fp-links span { color: var(--border); }
 
 /* ===== TOAST ===== */
 .toast {
   position: fixed;
-  bottom: 28px;
-  left: 50%;
+  bottom: 28px; left: 50%;
   transform: translateX(-50%) translateY(20px);
   background: var(--surface);
   border: 1px solid var(--accent);
@@ -476,22 +426,12 @@ body {
   padding: 12px 28px;
   border-radius: 50px;
   font-size: 14px;
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0; pointer-events: none;
   transition: opacity 0.3s, transform 0.3s;
-  z-index: 999;
-  white-space: nowrap;
+  z-index: 999; white-space: nowrap;
 }
-
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-.toast.error-toast {
-  border-color: var(--error);
-  color: var(--error);
-}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error-toast { border-color: var(--error); color: var(--error); }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 560px) {
@@ -500,3 +440,146 @@ body {
   .otp-inputs { gap: 8px; }
   .fp-title { font-size: 22px; }
 }
+
+/* ============================================================
+   LIGHT MODE — forgot / reset password page
+   Accent: burnt orange  rgb(200,75,15)
+   ============================================================ */
+body.light-mode {
+  background: rgb(255,246,232);
+  color: rgb(40,22,8);
+}
+
+/* Back link */
+body.light-mode .back-home { color: rgb(155,105,55); }
+body.light-mode .back-home:hover { color: rgb(200,75,15); }
+
+/* Theme toggle */
+body.light-mode .theme-toggle-btn { color: rgb(80,45,15); border-color: rgb(230,205,170); }
+body.light-mode .theme-toggle-btn:hover {
+  color: rgb(200,75,15);
+  background: rgba(200,75,15,0.08);
+  border-color: rgba(200,75,15,0.35);
+}
+
+/* Background particles — orange tint */
+body.light-mode .bg-particles span {
+  background: radial-gradient(circle, rgba(200,75,15,0.08), transparent 70%);
+}
+
+/* Step track */
+body.light-mode .step-num {
+  background: rgb(255,240,215);
+  border-color: rgb(230,205,170);
+  color: rgb(155,105,55);
+}
+body.light-mode .step-label { color: rgb(175,135,90); }
+
+body.light-mode .step.active .step-num {
+  background: rgb(200,75,15);
+  border-color: rgb(200,75,15);
+  color: white;
+  box-shadow: 0 0 18px rgba(200,75,15,0.3);
+}
+body.light-mode .step.active .step-label { color: rgb(200,75,15); }
+
+body.light-mode .step.done .step-num {
+  background: rgba(200,75,15,0.1);
+  border-color: rgb(200,75,15);
+  color: rgb(200,75,15);
+}
+body.light-mode .step.done .step-label { color: rgb(200,75,15); }
+
+body.light-mode .step-line { background: rgb(230,205,170); }
+body.light-mode .step-line.done { background: rgb(200,75,15); }
+
+/* Card */
+body.light-mode .fp-card {
+  background: rgb(255,252,244);
+  border-color: rgb(230,205,170);
+  box-shadow: 0 8px 48px rgba(120,50,10,0.14);
+}
+
+/* Icon wraps */
+body.light-mode .fp-icon-wrap {
+  background: rgba(200,75,15,0.07);
+  border-color: rgba(200,75,15,0.2);
+  color: rgb(200,75,15);
+}
+body.light-mode .fp-icon-wrap.pulse {
+  animation: icon-pulse-light 1.8s ease-in-out infinite;
+}
+@keyframes icon-pulse-light {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(200,75,15,0.25); }
+  50%       { box-shadow: 0 0 0 10px rgba(200,75,15,0); }
+}
+body.light-mode .fp-icon-wrap.success-icon {
+  background: rgba(40,150,70,0.09);
+  border-color: rgba(40,150,70,0.25);
+  color: rgb(40,150,70);
+}
+
+/* Titles & descriptions */
+body.light-mode .fp-title { color: rgb(40,22,8); }
+body.light-mode .fp-desc { color: rgb(155,105,55); }
+body.light-mode .fp-desc strong { color: rgb(40,22,8); }
+
+/* Field groups */
+body.light-mode .field-group label { color: rgb(155,105,55); }
+body.light-mode .input-wrap {
+  background: rgb(255,245,228);
+  border-color: rgb(230,205,170);
+}
+body.light-mode .input-wrap:focus-within {
+  border-color: rgba(200,75,15,0.5);
+  box-shadow: 0 0 0 3px rgba(200,75,15,0.07);
+}
+body.light-mode .input-wrap i { color: rgb(175,130,75); }
+body.light-mode .input-wrap input { color: rgb(40,22,8); }
+body.light-mode .input-wrap input::placeholder { color: rgb(200,165,115); }
+
+body.light-mode .toggle-pass { color: rgb(175,130,75) !important; }
+body.light-mode .toggle-pass:hover { color: rgb(200,75,15) !important; }
+
+body.light-mode .strength-bar { background: rgb(230,205,170); }
+body.light-mode .strength-label { color: rgb(155,105,55); }
+
+/* Sent confirm box */
+body.light-mode .sent-confirm {
+  background: rgba(40,150,70,0.06);
+  border-color: rgba(40,150,70,0.2);
+}
+body.light-mode .sent-confirm > i { color: rgb(40,150,70); }
+body.light-mode .sent-confirm strong { color: rgb(40,150,70); }
+body.light-mode .sent-confirm p { color: rgb(155,105,55); }
+
+/* Button */
+body.light-mode .fp-btn { background: rgb(200,75,15); color: white; }
+body.light-mode .fp-btn:hover { background: rgb(175,60,10); }
+
+/* OTP boxes */
+body.light-mode .otp-box {
+  background: rgb(255,245,228);
+  border-color: rgb(220,195,155);
+  color: rgb(180,60,10);
+  caret-color: rgb(200,75,15);
+}
+body.light-mode .otp-box:focus {
+  border-color: rgb(200,75,15);
+  box-shadow: 0 0 0 3px rgba(200,75,15,0.1);
+}
+body.light-mode .otp-box.filled {
+  border-color: rgba(200,75,15,0.5);
+  background: rgba(200,75,15,0.06);
+}
+body.light-mode .otp-timer { color: rgb(200,75,15); }
+body.light-mode .otp-timer.expired { color: rgb(200,50,20); }
+
+/* Links */
+body.light-mode .fp-links a { color: rgb(155,105,55); }
+body.light-mode .fp-links a:hover { color: rgb(200,75,15); }
+body.light-mode .fp-links span { color: rgb(215,190,155); }
+
+/* Toast */
+body.light-mode .toast { background: rgb(255,252,244); border-color: rgb(200,75,15); color: rgb(200,75,15); }
+body.light-mode .toast.error-toast { border-color: rgb(200,50,20); color: rgb(200,50,20); }

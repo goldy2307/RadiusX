@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadiusX &mdash; Seller Dashboard</title>
+<link rel="icon" href="assets/favicon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="css/dashboard.css">
+
+<!-- Apply saved theme immediately to prevent flash -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.documentElement.style.background = "rgb(255,246,232)";
+  }
+})();
+</script>
+</head>
+<body>
+
+<!-- Apply theme class before first paint -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.body.classList.add("light-mode");
+  }
+})();
+</script>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="assets/logo/logo.png" alt="RadiusX" id="sidebarLogo">
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Overview</div>
+    <a href="#" class="nav-item active" data-page="overview" onclick="showPage('overview',this)">
+      <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+    </a>
+
+    <div class="nav-section-label">Store</div>
+    <a href="#" class="nav-item" data-page="products" onclick="showPage('products',this)">
+      <i class="fa-solid fa-box"></i><span>My Products</span>
+    </a>
+    <a href="#" class="nav-item" data-page="add-product" onclick="showPage('add-product',this)">
+      <i class="fa-solid fa-plus"></i><span>Add Product</span>
+    </a>
+    <a href="#" class="nav-item" data-page="store" onclick="showPage('store',this)">
+      <i class="fa-solid fa-store"></i><span>Store Profile</span>
+    </a>
+
+    <div class="nav-section-label">Account</div>
+    <a href="help.html" class="nav-item">
+      <i class="fa-solid fa-circle-question"></i><span>Help</span>
+    </a>
+    <a href="index.html" class="nav-item">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i><span>View Site</span>
+    </a>
+    <a href="#" class="nav-item" onclick="handleLogout()">
+      <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-user" id="sidebarUser">
+    <div class="su-avatar seller-avatar"><i class="fa-solid fa-store"></i></div>
+    <div class="su-info">
+      <div class="su-name" id="sellerName">Seller</div>
+      <div class="su-role">Seller Account</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main-wrap">
+
+  <header class="topbar">
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <div class="topbar-right">
+      <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+        <i class="fa-solid fa-sun" id="themeIconSun"></i>
+        <i class="fa-solid fa-moon" id="themeIconMoon" style="display:none"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- PENDING APPROVAL BANNER -->
+  <div class="approval-banner hidden" id="approvalBanner">
+    <i class="fa-solid fa-clock"></i>
+    <div>
+      <strong>Application Under Review</strong>
+      <p>Your seller application is being reviewed. You'll receive an email within 24-48 hours.</p>
+    </div>
+  </div>
+
+  <!-- PAGE: OVERVIEW -->
+  <section class="page active" id="page-overview">
+    <div class="page-header">
+      <h2>Welcome back, <span id="welcomeName">Seller</span>!</h2>
+      <p>Here's a summary of your store performance.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-box"></i></div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-total">--</div>
+          <div class="stat-label">Total Products</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-active">--</div>
+          <div class="stat-label">Active Listings</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-out">--</div>
+          <div class="stat-label">Out of Stock</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-row">
+      <div class="panel" style="flex:1">
+        <div class="panel-header">
+          <span>Recent Products</span>
+          <button class="panel-btn" onclick="showPage('products', document.querySelector('[data-page=products]'))">View All</button>
+        </div>
+        <div class="panel-body" id="recentProducts">
+          <div class="loading-row"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: MY PRODUCTS -->
+  <section class="page" id="page-products">
+    <div class="page-header">
+      <h2>My Products</h2>
+      <p>Manage your product listings.</p>
+      <button class="btn-primary" onclick="showPage('add-product', document.querySelector('[data-page=add-product]'))">
+        <i class="fa-solid fa-plus"></i> Add New Product
+      </button>
+    </div>
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <input class="table-search" type="text" placeholder="Search your products..." oninput="filterTable('seller-products-table', this.value)">
+      </div>
+      <table class="data-table" id="seller-products-table">
+        <thead>
+          <tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="sellerProductsBody">
+          <tr><td colspan="6" class="table-empty"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PAGE: ADD PRODUCT -->
+  <section class="page" id="page-add-product">
+    <div class="page-header">
+      <h2>Add New Product</h2>
+      <p>List a new product in your store.</p>
+    </div>
+    <div class="form-card">
+      <div class="fields-grid">
+        <div class="field-group full-width">
+          <label>Product Name</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-tag"></i>
+            <input type="text" id="pName" placeholder="e.g. Wireless Bluetooth Headphones">
+          </div>
+          <span class="field-error" id="pNameErr"></span>
+        </div>
+        <div class="field-group full-width">
+          <label>Description</label>
+          <div class="input-wrap input-wrap-textarea">
+            <i class="fa-solid fa-align-left"></i>
+            <textarea id="pDesc" rows="3" placeholder="Describe your product in detail..."></textarea>
+          </div>
+          <span class="field-error" id="pDescErr"></span>
+        </div>
+        <div class="field-group">
+          <label>Category</label>
+          <div class="input-wrap input-wrap-select">
+            <i class="fa-solid fa-list"></i>
+            <select id="pCategory">
+              <option value="">Select category</option>
+              <option value="electronics">Electronics</option>
+              <option value="fashion">Fashion</option>
+              <option value="home">Home</option>
+              <option value="food">Food</option>
+              <option value="health">Health</option>
+              <option value="sports">Sports</option>
+              <option value="books">Books</option>
+              <option value="toys">Toys</option>
+              <option value="auto">Auto</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <span class="field-error" id="pCategoryErr"></span>
+        </div>
+        <div class="field-group">
+          <label>Pincode (delivery area)</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-map-pin"></i>
+            <input type="text" id="pPincode" placeholder="452001" maxlength="6">
+          </div>
+          <span class="field-error" id="pPincodeErr"></span>
+        </div>
+        <div class="field-group">
+          <label>Selling Price (Rs.)</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+            <input type="number" id="pPrice" placeholder="999" min="0">
+          </div>
+          <span class="field-error" id="pPriceErr"></span>
+        </div>
+        <div class="field-group">
+          <label>Original / MRP (Rs.)</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+            <input type="number" id="pOriginal" placeholder="1299" min="0">
+          </div>
+          <span class="field-error" id="pOriginalErr"></span>
+        </div>
+        <div class="field-group">
+          <label>Stock Quantity</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-cubes"></i>
+            <input type="number" id="pStock" placeholder="50" min="0">
+          </div>
+          <span class="field-error" id="pStockErr"></span>
+        </div>
+        <div class="field-group">
+          <label>Product Images <span class="label-opt">(up to 5)</span></label>
+          <div class="upload-box" onclick="document.getElementById('pImages').click()">
+            <i class="fa-solid fa-images"></i>
+            <span id="pImagesLabel">Click to select images (JPG, PNG, WEBP)</span>
+          </div>
+          <input type="file" id="pImages" accept=".jpg,.jpeg,.png,.webp" multiple style="display:none"
+                 onchange="handleImageSelect(this)">
+          <span class="field-error" id="pImagesErr"></span>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="showPage('products', document.querySelector('[data-page=products]'))">Cancel</button>
+        <button class="btn-primary" onclick="submitProduct()">
+          <i class="fa-solid fa-floppy-disk"></i> Save Product
+        </button>
+      </div>
+      <div class="form-msg" id="productFormMsg"></div>
+    </div>
+  </section>
+
+  <!-- PAGE: STORE PROFILE -->
+  <section class="page" id="page-store">
+    <div class="page-header">
+      <h2>Store Profile</h2>
+      <p>Your store details as registered with RadiusX.</p>
+    </div>
+    <div class="form-card" id="storeProfileCard">
+      <div class="loading-row"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading store details...</div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/seller-dashboard.js"></script>
+
+<!-- THEME TOGGLE LOGIC (self-contained, no external file) -->
+<script>
+(function () {
+  var isLight = document.body.classList.contains("light-mode");
+  var sun  = document.getElementById("themeIconSun");
+  var moon = document.getElementById("themeIconMoon");
+  var logo = document.getElementById("sidebarLogo");
+  if (isLight) {
+    if (sun)  sun.style.display  = "none";
+    if (moon) moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+  }
+})();
+
+function toggleTheme() {
+  var body    = document.body;
+  var sun     = document.getElementById("themeIconSun");
+  var moon    = document.getElementById("themeIconMoon");
+  var logo    = document.getElementById("sidebarLogo");
+  var isLight = body.classList.toggle("light-mode");
+  if (isLight) {
+    sun.style.display  = "none";
+    moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+    localStorage.setItem("rx_theme", "light");
+  } else {
+    sun.style.display  = "";
+    moon.style.display = "none";
+    if (logo) logo.src = "assets/logo/logo.png";
+    localStorage.setItem("rx_theme", "dark");
+  }
+}
+</script>
+</body>
+</html>

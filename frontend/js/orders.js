@@ -1,680 +1,634 @@
 /* ====================================================
    RadiusX — orders.js
-   Handles: order history render, filter/search/sort,
-            expense calculator with bar chart,
-            category breakdown, metrics, order drawer
+   Auth-gated via api.js JWT.
+   Loads real orders from GET /orders.
+   Falls back to empty state gracefully.
+   All UI logic (filters, drawer, chart) preserved.
    ==================================================== */
 
-/* ====================================================
-   DEMO ORDER DATA
-   In production, load this from your backend API.
-   Dates span 2023-2026 so the expense calculator
-   has rich data across multiple years to show off.
-   ==================================================== */
+/* ---- Orders loaded from backend ---- */
+var ORDERS = [];
 
-const ORDERS = [
-  {
-    id:"RX20240101", date:"2024-01-15", status:"delivered",
-    items:[
-      {id:1,name:"Laptop",     category:"Electronics",price:45000,originalPrice:52000,qty:1,image:"assets/products/laptop.jpg"},
-      {id:2,name:"Headphones", category:"Electronics",price:1200, originalPrice:1800, qty:1,image:"assets/products/headphones.jpg"}
-    ],
-    couponDiscount:0, delivery:0
-  },
-  {
-    id:"RX20240215", date:"2024-02-20", status:"delivered",
-    items:[
-      {id:3,name:"Shoes",  category:"Fashion",price:900,originalPrice:1400,qty:2,image:"assets/products/shoes.jpg"}
-    ],
-    couponDiscount:100, delivery:0
-  },
-  {
-    id:"RX20240312", date:"2024-03-05", status:"returned",
-    items:[
-      {id:4,name:"Tshirt", category:"Fashion",price:400,originalPrice:600,qty:3,image:"assets/products/tshirt.jpg"}
-    ],
-    couponDiscount:0, delivery:49
-  },
-  {
-    id:"RX20240410", date:"2024-04-18", status:"delivered",
-    items:[
-      {id:5,name:"Chair",  category:"Home",price:1500,originalPrice:2000,qty:1,image:"assets/products/chair.jpg"},
-      {id:6,name:"Lamp",   category:"Home",price:700, originalPrice:950, qty:2,image:"assets/products/lamp.jpg"}
-    ],
-    couponDiscount:200, delivery:0
-  },
-  {
-    id:"RX20240520", date:"2024-05-22", status:"cancelled",
-    items:[
-      {id:1,name:"Laptop",  category:"Electronics",price:45000,originalPrice:52000,qty:1,image:"assets/products/laptop.jpg"}
-    ],
-    couponDiscount:0, delivery:0
-  },
-  {
-    id:"RX20240608", date:"2024-06-10", status:"delivered",
-    items:[
-      {id:3,name:"Shoes",  category:"Fashion",price:900,originalPrice:1400,qty:1,image:"assets/products/shoes.jpg"},
-      {id:4,name:"Tshirt", category:"Fashion",price:400,originalPrice:600, qty:2,image:"assets/products/tshirt.jpg"}
-    ],
-    couponDiscount:0, delivery:49
-  },
-  {
-    id:"RX20240715", date:"2024-07-04", status:"delivered",
-    items:[
-      {id:2,name:"Headphones",category:"Electronics",price:1200,originalPrice:1800,qty:1,image:"assets/products/headphones.jpg"}
-    ],
-    couponDiscount:0, delivery:0
-  },
-  {
-    id:"RX20240820", date:"2024-08-14", status:"delivered",
-    items:[
-      {id:5,name:"Chair",category:"Home",price:1500,originalPrice:2000,qty:2,image:"assets/products/chair.jpg"}
-    ],
-    couponDiscount:150, delivery:0
-  },
-  {
-    id:"RX20240912", date:"2024-09-28", status:"shipped",
-    items:[
-      {id:6,name:"Lamp",category:"Home",price:700,originalPrice:950,qty:3,image:"assets/products/lamp.jpg"}
-    ],
-    couponDiscount:0, delivery:49
-  },
-  {
-    id:"RX20241018", date:"2024-10-10", status:"delivered",
-    items:[
-      {id:1,name:"Laptop",category:"Electronics",price:45000,originalPrice:52000,qty:1,image:"assets/products/laptop.jpg"},
-      {id:3,name:"Shoes", category:"Fashion",    price:900, originalPrice:1400, qty:1,image:"assets/products/shoes.jpg"}
-    ],
-    couponDiscount:500, delivery:0
-  },
-  {
-    id:"RX20241105", date:"2024-11-05", status:"delivered",
-    items:[
-      {id:4,name:"Tshirt",category:"Fashion",price:400,originalPrice:600,qty:4,image:"assets/products/tshirt.jpg"}
-    ],
-    couponDiscount:0, delivery:0
-  },
-  {
-    id:"RX20241222", date:"2024-12-20", status:"delivered",
-    items:[
-      {id:2,name:"Headphones",category:"Electronics",price:1200,originalPrice:1800,qty:2,image:"assets/products/headphones.jpg"},
-      {id:6,name:"Lamp",      category:"Home",       price:700, originalPrice:950, qty:1,image:"assets/products/lamp.jpg"}
-    ],
-    couponDiscount:200, delivery:0
-  },
-  /* 2025 orders */
-  {
-    id:"RX20250115", date:"2025-01-15", status:"delivered",
-    items:[{id:1,name:"Laptop",category:"Electronics",price:45000,originalPrice:52000,qty:1,image:"assets/products/laptop.jpg"}],
-    couponDiscount:1000, delivery:0
-  },
-  {
-    id:"RX20250210", date:"2025-02-10", status:"delivered",
-    items:[{id:3,name:"Shoes",category:"Fashion",price:900,originalPrice:1400,qty:2,image:"assets/products/shoes.jpg"}],
-    couponDiscount:0, delivery:49
-  },
-  {
-    id:"RX20250318", date:"2025-03-18", status:"returned",
-    items:[{id:5,name:"Chair",category:"Home",price:1500,originalPrice:2000,qty:1,image:"assets/products/chair.jpg"}],
-    couponDiscount:0, delivery:0
-  },
-  {
-    id:"RX20250425", date:"2025-04-25", status:"delivered",
-    items:[
-      {id:4,name:"Tshirt",    category:"Fashion",    price:400, originalPrice:600, qty:3,image:"assets/products/tshirt.jpg"},
-      {id:2,name:"Headphones",category:"Electronics",price:1200,originalPrice:1800,qty:1,image:"assets/products/headphones.jpg"}
-    ],
-    couponDiscount:200, delivery:0
-  },
-  {
-    id:"RX20250602", date:"2025-06-02", status:"delivered",
-    items:[{id:6,name:"Lamp",category:"Home",price:700,originalPrice:950,qty:2,image:"assets/products/lamp.jpg"}],
-    couponDiscount:0, delivery:49
-  },
-  {
-    id:"RX20250715", date:"2025-07-15", status:"cancelled",
-    items:[{id:1,name:"Laptop",category:"Electronics",price:45000,originalPrice:52000,qty:1,image:"assets/products/laptop.jpg"}],
-    couponDiscount:0, delivery:0
-  },
-  {
-    id:"RX20250820", date:"2025-08-20", status:"delivered",
-    items:[{id:3,name:"Shoes",category:"Fashion",price:900,originalPrice:1400,qty:1,image:"assets/products/shoes.jpg"}],
-    couponDiscount:100, delivery:0
-  },
-  {
-    id:"RX20250910", date:"2025-09-10", status:"delivered",
-    items:[
-      {id:5,name:"Chair",category:"Home",price:1500,originalPrice:2000,qty:1,image:"assets/products/chair.jpg"},
-      {id:4,name:"Tshirt",category:"Fashion",price:400,originalPrice:600,qty:2,image:"assets/products/tshirt.jpg"}
-    ],
-    couponDiscount:0, delivery:49
-  },
-  {
-    id:"RX20251105", date:"2025-11-05", status:"shipped",
-    items:[{id:2,name:"Headphones",category:"Electronics",price:1200,originalPrice:1800,qty:2,image:"assets/products/headphones.jpg"}],
-    couponDiscount:0, delivery:0
-  },
-  {
-    id:"RX20251215", date:"2025-12-15", status:"processing",
-    items:[{id:6,name:"Lamp",category:"Home",price:700,originalPrice:950,qty:3,image:"assets/products/lamp.jpg"}],
-    couponDiscount:0, delivery:49
-  },
-  /* 2026 (current year) */
-  {
-    id:"RX20260105", date:"2026-01-05", status:"delivered",
-    items:[{id:1,name:"Laptop",category:"Electronics",price:45000,originalPrice:52000,qty:1,image:"assets/products/laptop.jpg"}],
-    couponDiscount:2000, delivery:0
-  },
-  {
-    id:"RX20260208", date:"2026-02-08", status:"processing",
-    items:[{id:3,name:"Shoes",category:"Fashion",price:900,originalPrice:1400,qty:2,image:"assets/products/shoes.jpg"}],
-    couponDiscount:0, delivery:49
-  },
-  {
-    id:"RX20260301", date:"2026-03-01", status:"shipped",
-    items:[
-      {id:4,name:"Tshirt",    category:"Fashion",    price:400, originalPrice:600,  qty:2,image:"assets/products/tshirt.jpg"},
-      {id:5,name:"Chair",     category:"Home",       price:1500,originalPrice:2000, qty:1,image:"assets/products/chair.jpg"}
-    ],
-    couponDiscount:300, delivery:0
-  }
-]
+/* ---- State ---- */
+var currentFilterValue = "all";
+var selectedYear       = new Date().getFullYear();
+var toastTimer         = null;
 
-/* helpers */
-function orderTotal(o) {
-  let sum = o.items.reduce((s,i) => s + i.price * i.qty, 0)
-  return sum - o.couponDiscount + o.delivery
-}
+var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-function orderOriginalTotal(o) {
-  return o.items.reduce((s,i) => s + i.originalPrice * i.qty, 0)
-}
-
-function orderSavings(o) {
-  return orderOriginalTotal(o) - orderTotal(o)
-}
-
-/* ====================================================
-   STATE
-   ==================================================== */
-let activeFilter   = "all"
-let selectedYear   = new Date().getFullYear()
-let toastTimer     = null
-
-/* ====================================================
-   INIT
-   ==================================================== */
-window.onload = function () {
-  renderStatCards()
-  renderOrders()
-  buildYearTabs()
-  renderExpense(selectedYear)
-}
-
-/* ====================================================
-   STAT CARDS (top row)
-   ==================================================== */
-function renderStatCards() {
-  let all       = ORDERS
-  let totalSpent= all.reduce((s,o) => s + orderTotal(o), 0)
-  let delivered = all.filter(o => o.status === "delivered").length
-  let returned  = all.filter(o => o.status === "returned").length
-
-  animateCount("statTotal",     all.length)
-  animateRupee("statSpent",     totalSpent)
-  animateCount("statDelivered", delivered)
-  animateCount("statReturned",  returned)
-}
-
-function animateCount(id, target) {
-  let el = document.getElementById(id)
-  let start = 0; let duration = 800
-  let step = Math.ceil(target / (duration / 16))
-  let iv = setInterval(() => {
-    start = Math.min(start + step, target)
-    el.innerText = start
-    if (start >= target) clearInterval(iv)
-  }, 16)
-}
-
-function animateRupee(id, target) {
-  let el = document.getElementById(id)
-  let start = 0; let duration = 900
-  let step = Math.ceil(target / (duration / 16))
-  let iv = setInterval(() => {
-    start = Math.min(start + step, target)
-    el.innerText = "₹" + start.toLocaleString()
-    if (start >= target) clearInterval(iv)
-  }, 16)
-}
-
-/* ====================================================
-   ORDER LIST RENDER
-   ==================================================== */
-let currentFilterValue = "all"
-
-function setFilter(btn, filter) {
-  document.querySelectorAll(".ftab").forEach(b => b.classList.remove("active"))
-  btn.classList.add("active")
-  currentFilterValue = filter
-  filterOrders()
-}
-
-function filterOrders() {
-  let search = document.getElementById("orderSearch").value.toLowerCase()
-  let sort   = document.getElementById("orderSort").value
-
-  let list = ORDERS.filter(o => {
-    /* status filter */
-    if (currentFilterValue !== "all" && o.status !== currentFilterValue) return false
-    /* search */
-    if (search) {
-      let match = o.id.toLowerCase().includes(search) ||
-                  o.items.some(i => i.name.toLowerCase().includes(search))
-      if (!match) return false
-    }
-    return true
-  })
-
-  /* sort */
-  list = [...list].sort((a,b) => {
-    if (sort === "newest") return new Date(b.date) - new Date(a.date)
-    if (sort === "oldest") return new Date(a.date) - new Date(b.date)
-    if (sort === "high")   return orderTotal(b) - orderTotal(a)
-    if (sort === "low")    return orderTotal(a) - orderTotal(b)
-    return 0
-  })
-
-  renderOrderList(list)
-}
-
-function renderOrders() { filterOrders() }
-
-function renderOrderList(list) {
-  let container = document.getElementById("ordersList")
-  let empty     = document.getElementById("ordersEmpty")
-
-  container.innerHTML = ""
-
-  if (list.length === 0) {
-    empty.classList.remove("hidden")
-    return
-  }
-  empty.classList.add("hidden")
-
-  list.forEach((order, idx) => {
-    let card = buildOrderCard(order, idx)
-    container.appendChild(card)
-  })
-}
-
-const STATUS_ICONS = {
+var STATUS_ICONS = {
   delivered:  "fa-circle-check",
   shipped:    "fa-truck",
   processing: "fa-gear",
   cancelled:  "fa-xmark-circle",
   returned:   "fa-rotate-left"
+};
+
+var TRACKER_STEPS    = ["Order Placed","Processing","Shipped","Delivered"];
+var TRACKER_STATUS_IDX = { processing:1, shipped:2, delivered:3, cancelled:0, returned:0 };
+
+
+/* ====================================================
+   INIT — auth gate
+   ==================================================== */
+
+window.onload = async function () {
+  var loggedIn = await api.init();
+
+  if (!loggedIn) {
+    showSignInWall();
+    return;
+  }
+
+  var res = await api.get("/auth/me");
+  if (!res.success) {
+    showSignInWall();
+    return;
+  }
+
+  await loadOrders();
+};
+
+
+/* ====================================================
+   LOAD ORDERS FROM BACKEND
+   ==================================================== */
+
+async function loadOrders() {
+  showPageLoading(true);
+
+  var rawOrders = [];
+
+  /* ── Try backend first ── */
+  try {
+    var res = await api.get("/orders");
+    if (res && res.success && res.orders && res.orders.length) {
+      rawOrders = res.orders;
+    }
+  } catch(e) {}
+
+  /* ── FIX: Fall back to localStorage if backend has no orders ──
+     cart.js saves every checkout to rx_orders so this always works */
+  if (!rawOrders.length) {
+    try {
+      rawOrders = JSON.parse(localStorage.getItem("rx_orders") || "[]");
+    } catch(e) { rawOrders = []; }
+  }
+
+  showPageLoading(false);
+
+  /* ── Normalize order format for UI ── */
+  ORDERS = rawOrders.map(function(o) {
+    return {
+      id:             o._id || o.id,
+      date:           o.createdAt || o.date,
+      status:         o.status || "processing",
+      items:          (o.items || []).map(function(i) {
+        return {
+          id:            i.product || i.id,
+          name:          i.name          || "Product",
+          category:      i.category      || "General",
+          price:         i.price         || 0,
+          originalPrice: i.originalPrice || i.price || 0,
+          qty:           i.qty           || 1,
+          image:         i.image         || "assets/products/demo.jpg"
+        };
+      }),
+      couponDiscount: o.couponDiscount || 0,
+      delivery:       o.deliveryCharge || o.delivery || 0
+    };
+  });
+
+  renderStatCards();
+  renderOrders();
+  buildYearTabs();
+  renderExpense(selectedYear);
+
+  /* ── Listen for new orders placed in cart page (same tab or other tab) ── */
+  window.addEventListener("storage", function(e) {
+    if (e.key === "rx_orders") {
+      try {
+        var updated = JSON.parse(e.newValue || "[]");
+        ORDERS = updated.map(function(o) {
+          return {
+            id:             o._id || o.id,
+            date:           o.createdAt || o.date,
+            status:         o.status || "processing",
+            items:          (o.items || []).map(function(i) {
+              return {
+                id:            i.product || i.id,
+                name:          i.name          || "Product",
+                category:      i.category      || "General",
+                price:         i.price         || 0,
+                originalPrice: i.originalPrice || i.price || 0,
+                qty:           i.qty           || 1,
+                image:         i.image         || "assets/products/demo.jpg"
+              };
+            }),
+            couponDiscount: o.couponDiscount || 0,
+            delivery:       o.deliveryCharge || o.delivery || 0
+          };
+        });
+        renderStatCards();
+        renderOrders();
+        buildYearTabs();
+        renderExpense(selectedYear);
+      } catch(err) {}
+    }
+  });
 }
 
-const TRACKER_STEPS = ["Order Placed", "Processing", "Shipped", "Delivered"]
-const TRACKER_STATUS_IDX = { processing:1, shipped:2, delivered:3, cancelled:0, returned:0 }
+
+/* ====================================================
+   PAGE LOADING STATE
+   ==================================================== */
+
+function showPageLoading(show) {
+  var container = document.getElementById("ordersList");
+  if (!container) return;
+  if (show) {
+    container.innerHTML =
+      '<div style="text-align:center;padding:60px 20px;color:var(--muted)">' +
+        '<i class="fa-solid fa-circle-notch fa-spin" style="font-size:28px;margin-bottom:14px;display:block"></i>' +
+        '<p style="font-size:14px">Loading your orders...</p>' +
+      '</div>';
+  }
+}
+
+
+/* ====================================================
+   SIGN-IN WALL
+   ==================================================== */
+
+function showSignInWall() {
+  /* Hide stat cards and filter UI */
+  var hideIds = ["ordersList","yearTabs","barChart","monthLabels","categoryBars"];
+  document.querySelectorAll(".stat-card,.filter-row,.expense-section,.breakdown-section").forEach(function(el) {
+    el.style.display = "none";
+  });
+
+  var container = document.getElementById("ordersList");
+  if (container) {
+    container.innerHTML =
+      '<div style="text-align:center;padding:80px 20px">' +
+        '<i class="fa-solid fa-box-open" style="font-size:54px;color:var(--border);margin-bottom:20px;display:block"></i>' +
+        '<h3 style="font-family:\'Playfair Display\',serif;font-size:22px;color:var(--text);margin-bottom:10px">Sign in to view your orders</h3>' +
+        '<p style="color:var(--muted);font-size:14px;margin-bottom:28px">Track deliveries, view history, and manage returns — all in one place.</p>' +
+        '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">' +
+          '<a href="login.html?tab=signin" style="padding:12px 28px;background:var(--accent);color:rgb(8,12,16);border-radius:8px;text-decoration:none;font-weight:700;font-size:14px">Sign In</a>' +
+          '<a href="login.html?tab=signup" style="padding:12px 28px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;text-decoration:none;font-size:14px">Create Account</a>' +
+        '</div>' +
+      '</div>';
+  }
+}
+
+
+/* ====================================================
+   STAT CARDS
+   ==================================================== */
+
+function orderTotal(o) {
+  var sum = (o.items || []).reduce(function(s,i) { return s + i.price * i.qty; }, 0);
+  return Math.max(0, sum - (o.couponDiscount || 0) + (o.delivery || 0));
+}
+
+function orderOriginalTotal(o) {
+  return (o.items || []).reduce(function(s,i) { return s + i.originalPrice * i.qty; }, 0);
+}
+
+/* FIX: savings = (MRP total) - (sale price total)
+   Do NOT subtract coupon/delivery here — those are separate line items.
+   Old code: orderOriginalTotal - orderTotal (which included delivery/coupon)
+   → caused negative or garbage savings values. */
+function orderSavings(o) {
+  var mrpTotal  = orderOriginalTotal(o);
+  var saleTotal = (o.items || []).reduce(function(s,i) { return s + i.price * i.qty; }, 0);
+  return Math.max(0, mrpTotal - saleTotal);
+}
+
+function renderStatCards() {
+  var all        = ORDERS;
+  var totalSpent = all.reduce(function(s,o) { return s + orderTotal(o); }, 0);
+  var delivered  = all.filter(function(o) { return o.status === "delivered"; }).length;
+  var returned   = all.filter(function(o) { return o.status === "returned"; }).length;
+
+  animateCount("statTotal",     all.length);
+  animateRupee("statSpent",     totalSpent);
+  animateCount("statDelivered", delivered);
+  animateCount("statReturned",  returned);
+}
+
+function animateCount(id, target) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var start = 0, step = Math.max(1, Math.ceil(target / 50));
+  var iv = setInterval(function() {
+    start = Math.min(start + step, target);
+    el.innerText = start;
+    if (start >= target) clearInterval(iv);
+  }, 16);
+}
+
+function animateRupee(id, target) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var start = 0, step = Math.max(1, Math.ceil(target / 50));
+  var iv = setInterval(function() {
+    start = Math.min(start + step, target);
+    el.innerText = "\u20B9" + start.toLocaleString();
+    if (start >= target) clearInterval(iv);
+  }, 16);
+}
+
+
+/* ====================================================
+   ORDER LIST
+   ==================================================== */
+
+function setFilter(btn, filter) {
+  document.querySelectorAll(".ftab").forEach(function(b) { b.classList.remove("active"); });
+  btn.classList.add("active");
+  currentFilterValue = filter;
+  filterOrders();
+}
+
+function filterOrders() {
+  var search = (document.getElementById("orderSearch") || {}).value || "";
+  search = search.toLowerCase();
+  var sort = (document.getElementById("orderSort") || {}).value || "newest";
+
+  var list = ORDERS.filter(function(o) {
+    if (currentFilterValue !== "all" && o.status !== currentFilterValue) return false;
+    if (search) {
+      var match = (o.id || "").toLowerCase().includes(search) ||
+                  (o.items || []).some(function(i) { return i.name.toLowerCase().includes(search); });
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  list = list.slice().sort(function(a,b) {
+    if (sort === "newest") return new Date(b.date) - new Date(a.date);
+    if (sort === "oldest") return new Date(a.date) - new Date(b.date);
+    if (sort === "high")   return orderTotal(b) - orderTotal(a);
+    if (sort === "low")    return orderTotal(a) - orderTotal(b);
+    return 0;
+  });
+
+  renderOrderList(list);
+}
+
+function renderOrders() { filterOrders(); }
+
+function renderOrderList(list) {
+  var container = document.getElementById("ordersList");
+  var empty     = document.getElementById("ordersEmpty");
+  container.innerHTML = "";
+
+  if (!list.length) {
+    if (empty) empty.classList.remove("hidden");
+    return;
+  }
+  if (empty) empty.classList.add("hidden");
+  list.forEach(function(order, idx) { container.appendChild(buildOrderCard(order, idx)); });
+}
 
 function buildOrderCard(order, idx) {
-  let card = document.createElement("div")
-  card.className = "order-card"
-  card.style.animationDelay = (idx * 0.06) + "s"
-  card.onclick = () => openDrawer(order)
+  var card = document.createElement("div");
+  card.className = "order-card";
+  card.style.animationDelay = (idx * 0.06) + "s";
+  card.onclick = function() { openDrawer(order); };
 
-  let total    = orderTotal(order)
-  let savings  = orderSavings(order)
-  let names    = order.items.map(i => i.name).join(", ")
-  let date     = new Date(order.date).toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"})
-  let totalQty = order.items.reduce((s,i) => s + i.qty, 0)
+  var total    = orderTotal(order);
+  var savings  = orderSavings(order);
+  var names    = (order.items || []).map(function(i) { return i.name; }).join(", ");
+  var date     = new Date(order.date).toLocaleDateString("en-IN", {day:"2-digit",month:"short",year:"numeric"});
+  var totalQty = (order.items || []).reduce(function(s,i) { return s + i.qty; }, 0);
 
-  /* images (max 3 shown + overflow badge) */
-  let imgsHTML = ""
-  let showImgs = order.items.slice(0,3)
-  showImgs.forEach(i => {
-    imgsHTML += `<img class="order-img" src="${i.image}" onerror="this.src='assets/products/demo.jpg'" alt="${i.name}">`
-  })
-  if (order.items.length > 3) {
-    imgsHTML += `<div class="order-more-badge">+${order.items.length - 3}</div>`
+  var imgsHTML = "";
+  (order.items || []).slice(0,3).forEach(function(i) {
+    imgsHTML += '<img class="order-img" src="' + i.image + '" onerror="this.src=\'assets/products/demo.jpg\'" alt="' + esc(i.name) + '">';
+  });
+  if ((order.items || []).length > 3) {
+    imgsHTML += '<div class="order-more-badge">+' + ((order.items || []).length - 3) + '</div>';
   }
 
-  /* mini tracker */
-  let trackerHTML = ""
-  let statusIdx = TRACKER_STATUS_IDX[order.status] ?? 0
+  var trackerHTML = "";
+  var statusIdx = TRACKER_STATUS_IDX[order.status] || 0;
   if (order.status === "cancelled" || order.status === "returned") {
-    trackerHTML = `<span style="font-size:12px;color:var(--muted)">—</span>`
+    trackerHTML = '<span style="font-size:12px;color:var(--muted)">\u2014</span>';
   } else {
-    TRACKER_STEPS.forEach((s, i) => {
-      let dotClass = i < statusIdx ? "done" : (i === statusIdx ? "current" : "")
-      trackerHTML += `<div class="tracker-dot ${dotClass}"></div>`
+    TRACKER_STEPS.forEach(function(s, i) {
+      var dotClass = i < statusIdx ? "done" : (i === statusIdx ? "current" : "");
+      trackerHTML += '<div class="tracker-dot ' + dotClass + '"></div>';
       if (i < TRACKER_STEPS.length - 1) {
-        trackerHTML += `<div class="tracker-line ${i < statusIdx ? "done" : ""}"></div>`
+        trackerHTML += '<div class="tracker-line ' + (i < statusIdx ? "done" : "") + '"></div>';
       }
-    })
+    });
   }
 
-  card.innerHTML = `
-    <div class="order-card-header">
-      <div>
-        <div class="order-id">${order.id}</div>
-        <div class="order-date">${date}</div>
-      </div>
-      <span class="order-status-badge status-${order.status}">
-        <i class="fa-solid ${STATUS_ICONS[order.status]}"></i> ${order.status}
-      </span>
-    </div>
-    <div class="order-card-body">
-      <div class="order-imgs">${imgsHTML}</div>
-      <div class="order-meta">
-        <div class="order-items-summary">${names}</div>
-        <div class="order-items-count">${totalQty} item${totalQty > 1 ? "s" : ""}</div>
-        <div class="order-tracker">${trackerHTML}</div>
-      </div>
-      <div class="order-card-right">
-        <div class="order-total">₹${total.toLocaleString()}</div>
-        ${savings > 0 ? `<div class="order-savings">Saved ₹${savings.toLocaleString()}</div>` : ""}
-        <div class="order-action-btn"><i class="fa-solid fa-chevron-right"></i> View Details</div>
-      </div>
-    </div>
-  `
-  return card
+  var icon = STATUS_ICONS[order.status] || "fa-box";
+  card.innerHTML =
+    '<div class="order-card-header">' +
+      '<div>' +
+        '<div class="order-id">' + esc(order.id) + '</div>' +
+        '<div class="order-date">' + date + '</div>' +
+      '</div>' +
+      '<span class="order-status-badge status-' + order.status + '">' +
+        '<i class="fa-solid ' + icon + '"></i> ' + order.status +
+      '</span>' +
+    '</div>' +
+    '<div class="order-card-body">' +
+      '<div class="order-imgs">' + imgsHTML + '</div>' +
+      '<div class="order-meta">' +
+        '<div class="order-items-summary">' + esc(names) + '</div>' +
+        '<div class="order-items-count">' + totalQty + ' item' + (totalQty > 1 ? 's' : '') + '</div>' +
+        '<div class="order-tracker">' + trackerHTML + '</div>' +
+      '</div>' +
+      '<div class="order-card-right">' +
+        '<div class="order-total">\u20B9' + total.toLocaleString() + '</div>' +
+        (savings > 0 ? '<div class="order-savings">Saved \u20B9' + savings.toLocaleString() + '</div>' : '') +
+        '<div class="order-action-btn"><i class="fa-solid fa-chevron-right"></i> View Details</div>' +
+      '</div>' +
+    '</div>';
+
+  return card;
 }
+
 
 /* ====================================================
    ORDER DETAIL DRAWER
    ==================================================== */
-function openDrawer(order) {
-  let body = document.getElementById("drawerBody")
-  let date = new Date(order.date).toLocaleDateString("en-IN", {weekday:"long",day:"2-digit",month:"long",year:"numeric"})
-  let total       = orderTotal(order)
-  let subtotal    = order.items.reduce((s,i) => s + i.price * i.qty, 0)
-  let origTotal   = orderOriginalTotal(order)
-  let savings     = origTotal - subtotal
-  let statusIdx   = TRACKER_STATUS_IDX[order.status] ?? 0
 
-  /* full tracker */
-  let steps = [
+function openDrawer(order) {
+  var body       = document.getElementById("drawerBody");
+  var date       = new Date(order.date).toLocaleDateString("en-IN", {weekday:"long",day:"2-digit",month:"long",year:"numeric"});
+  var total      = orderTotal(order);
+  var subtotal   = (order.items || []).reduce(function(s,i) { return s + i.price * i.qty; }, 0);
+  var origTotal  = orderOriginalTotal(order);
+  var savings    = origTotal - subtotal;
+  var statusIdx  = TRACKER_STATUS_IDX[order.status] || 0;
+
+  var steps = [
     {label:"Placed",     icon:"fa-file-circle-check"},
     {label:"Processing", icon:"fa-gear"},
     {label:"Shipped",    icon:"fa-truck"},
     {label:"Delivered",  icon:"fa-house"}
-  ]
+  ];
 
-  let trackerHTML = `<div class="drawer-tracker">`
-  steps.forEach((s, i) => {
-    let cls = ""
+  var trackerHTML = '<div class="drawer-tracker">';
+  steps.forEach(function(s, i) {
+    var cls = "";
     if (order.status === "cancelled" || order.status === "returned") {
-      cls = i === 0 ? "done" : ""
+      cls = i === 0 ? "done" : "";
     } else {
-      cls = i < statusIdx ? "done" : (i === statusIdx ? "current" : "")
+      cls = i < statusIdx ? "done" : (i === statusIdx ? "current" : "");
     }
-    trackerHTML += `
-      <div class="tracker-step ${cls}">
-        <div class="tracker-step-icon"><i class="fa-solid ${s.icon}"></i></div>
-        <span class="tracker-step-label">${s.label}</span>
-      </div>`
+    trackerHTML +=
+      '<div class="tracker-step ' + cls + '">' +
+        '<div class="tracker-step-icon"><i class="fa-solid ' + s.icon + '"></i></div>' +
+        '<span class="tracker-step-label">' + s.label + '</span>' +
+      '</div>';
     if (i < steps.length - 1) {
-      trackerHTML += `<div class="tracker-connector ${i < statusIdx && order.status !== "cancelled" ? "done" : ""}"></div>`
+      trackerHTML += '<div class="tracker-connector ' + (i < statusIdx && order.status !== "cancelled" ? "done" : "") + '"></div>';
     }
-  })
-  trackerHTML += `</div>`
+  });
+  trackerHTML += '</div>';
 
-  /* items */
-  let itemsHTML = order.items.map(i => `
-    <div class="drawer-item">
-      <img src="${i.image}" onerror="this.src='assets/products/demo.jpg'" alt="${i.name}">
-      <div class="drawer-item-info">
-        <div class="drawer-item-name">${i.name}</div>
-        <div class="drawer-item-cat">${i.category}</div>
-        <div class="drawer-item-qty">Qty: ${i.qty}</div>
-      </div>
-      <div class="drawer-item-price">₹${(i.price * i.qty).toLocaleString()}</div>
-    </div>
-  `).join("")
+  var itemsHTML = (order.items || []).map(function(i) {
+    return '<div class="drawer-item">' +
+      '<img src="' + i.image + '" onerror="this.src=\'assets/products/demo.jpg\'" alt="' + esc(i.name) + '">' +
+      '<div class="drawer-item-info">' +
+        '<div class="drawer-item-name">' + esc(i.name) + '</div>' +
+        '<div class="drawer-item-cat">' + esc(i.category) + '</div>' +
+        '<div class="drawer-item-qty">Qty: ' + i.qty + '</div>' +
+      '</div>' +
+      '<div class="drawer-item-price">\u20B9' + (i.price * i.qty).toLocaleString() + '</div>' +
+    '</div>';
+  }).join("");
 
-  /* action buttons */
-  let actionsHTML = ""
+  var actionsHTML = "";
   if (order.status === "delivered") {
-    actionsHTML = `
-      <button class="drawer-btn primary" onclick="showToast('Reorder placed! 🎉')"><i class="fa-solid fa-rotate-right"></i> Reorder</button>
-      <button class="drawer-btn secondary" onclick="showToast('Return request submitted',false)"><i class="fa-solid fa-rotate-left"></i> Return</button>
-    `
+    actionsHTML =
+      '<button class="drawer-btn primary" onclick="showToast(\'Reorder placed!\')"><i class="fa-solid fa-rotate-right"></i> Reorder</button>' +
+      '<button class="drawer-btn secondary" onclick="showToast(\'Return request submitted\')"><i class="fa-solid fa-rotate-left"></i> Return</button>';
   } else if (order.status === "shipped" || order.status === "processing") {
-    actionsHTML = `
-      <button class="drawer-btn primary" onclick="showToast('Tracking info sent to your email')"><i class="fa-solid fa-location-dot"></i> Track Order</button>
-      <button class="drawer-btn secondary" onclick="showToast('Cancellation request sent',false)"><i class="fa-solid fa-xmark"></i> Cancel</button>
-    `
+    actionsHTML =
+      '<button class="drawer-btn primary" onclick="showToast(\'Tracking info sent to your email\')"><i class="fa-solid fa-location-dot"></i> Track Order</button>' +
+      '<button class="drawer-btn secondary" onclick="showToast(\'Cancellation request sent\')"><i class="fa-solid fa-xmark"></i> Cancel</button>';
   } else {
-    actionsHTML = `
-      <button class="drawer-btn primary" onclick="window.location.href='index.html'"><i class="fa-solid fa-store"></i> Shop Again</button>
-    `
+    actionsHTML =
+      '<button class="drawer-btn primary" onclick="window.location.href=\'index.html\'"><i class="fa-solid fa-store"></i> Shop Again</button>';
   }
 
-  body.innerHTML = `
-    <div class="drawer-order-meta">
-      <div>
-        <span class="drawer-order-id">${order.id}</span>
-        <span class="drawer-order-date">${date}</span>
-      </div>
-      <span class="order-status-badge status-${order.status}">
-        <i class="fa-solid ${STATUS_ICONS[order.status]}"></i> ${order.status}
-      </span>
-    </div>
+  var icon = STATUS_ICONS[order.status] || "fa-box";
+  body.innerHTML =
+    '<div class="drawer-order-meta">' +
+      '<div>' +
+        '<span class="drawer-order-id">' + esc(order.id) + '</span>' +
+        '<span class="drawer-order-date">' + date + '</span>' +
+      '</div>' +
+      '<span class="order-status-badge status-' + order.status + '">' +
+        '<i class="fa-solid ' + icon + '"></i> ' + order.status +
+      '</span>' +
+    '</div>' +
+    trackerHTML +
+    '<div class="drawer-items">' + itemsHTML + '</div>' +
+    '<div class="drawer-price-summary">' +
+      '<div class="drawer-price-row"><span>Subtotal</span><span>\u20B9' + subtotal.toLocaleString() + '</span></div>' +
+      (savings > 0 ? '<div class="drawer-price-row"><span>Savings</span><span class="dr-savings">\u2212\u20B9' + savings.toLocaleString() + '</span></div>' : '') +
+      ((order.couponDiscount || 0) > 0 ? '<div class="drawer-price-row"><span>Coupon</span><span class="dr-savings">\u2212\u20B9' + order.couponDiscount.toLocaleString() + '</span></div>' : '') +
+      '<div class="drawer-price-row"><span>Delivery</span><span>' + ((order.delivery || 0) === 0 ? "FREE" : "\u20B9" + order.delivery) + '</span></div>' +
+      '<div class="drawer-price-row total-row"><span>Total Paid</span><span>\u20B9' + total.toLocaleString() + '</span></div>' +
+    '</div>' +
+    '<div class="drawer-actions">' + actionsHTML + '</div>';
 
-    ${trackerHTML}
-
-    <div class="drawer-items">${itemsHTML}</div>
-
-    <div class="drawer-price-summary">
-      <div class="drawer-price-row"><span>Subtotal</span><span>₹${subtotal.toLocaleString()}</span></div>
-      ${savings > 0 ? `<div class="drawer-price-row"><span>Savings</span><span class="dr-savings">−₹${savings.toLocaleString()}</span></div>` : ""}
-      ${order.couponDiscount > 0 ? `<div class="drawer-price-row"><span>Coupon Discount</span><span class="dr-savings">−₹${order.couponDiscount.toLocaleString()}</span></div>` : ""}
-      <div class="drawer-price-row"><span>Delivery</span><span>${order.delivery === 0 ? "FREE" : "₹"+order.delivery}</span></div>
-      <div class="drawer-price-row total-row"><span>Total Paid</span><span>₹${total.toLocaleString()}</span></div>
-    </div>
-
-    <div class="drawer-actions">${actionsHTML}</div>
-  `
-
-  document.getElementById("drawerOverlay").classList.add("open")
-  document.getElementById("orderDrawer").classList.add("open")
+  document.getElementById("drawerOverlay").classList.add("open");
+  document.getElementById("orderDrawer").classList.add("open");
 }
 
 function closeDrawer() {
-  document.getElementById("drawerOverlay").classList.remove("open")
-  document.getElementById("orderDrawer").classList.remove("open")
+  document.getElementById("drawerOverlay").classList.remove("open");
+  document.getElementById("orderDrawer").classList.remove("open");
 }
+
 
 /* ====================================================
    EXPENSE CALCULATOR
    ==================================================== */
 
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-
 function getYears() {
-  let years = [...new Set(ORDERS.map(o => new Date(o.date).getFullYear()))]
-  return years.sort((a,b) => b - a)
+  if (!ORDERS.length) return [new Date().getFullYear()];
+  var years = ORDERS.map(function(o) { return new Date(o.date).getFullYear(); });
+  return Array.from(new Set(years)).sort(function(a,b) { return b - a; });
 }
 
 function buildYearTabs() {
-  let container = document.getElementById("yearTabs")
-  let years     = getYears()
-
-  container.innerHTML = ""
-  years.forEach(y => {
-    let btn = document.createElement("button")
-    btn.className = "ytab" + (y === selectedYear ? " active" : "")
-    btn.innerText = y
-    btn.onclick = () => {
-      document.querySelectorAll(".ytab").forEach(b => b.classList.remove("active"))
-      btn.classList.add("active")
-      selectedYear = y
-      renderExpense(y)
-    }
-    container.appendChild(btn)
-  })
+  var container = document.getElementById("yearTabs");
+  if (!container) return;
+  container.innerHTML = "";
+  getYears().forEach(function(y) {
+    var btn = document.createElement("button");
+    btn.className = "ytab" + (y === selectedYear ? " active" : "");
+    btn.innerText = y;
+    btn.onclick = function() {
+      document.querySelectorAll(".ytab").forEach(function(b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      selectedYear = y;
+      renderExpense(y);
+    };
+    container.appendChild(btn);
+  });
 }
 
 function ordersForYear(year) {
-  return ORDERS.filter(o => new Date(o.date).getFullYear() === year)
+  return ORDERS.filter(function(o) { return new Date(o.date).getFullYear() === year; });
 }
 
 function renderExpense(year) {
-  document.getElementById("selectedYearLabel").innerText = year
+  var lbl = document.getElementById("selectedYearLabel");
+  if (lbl) lbl.innerText = year;
 
-  let yearOrders = ordersForYear(year)
-  /* exclude cancelled for spending */
-  let spendOrders = yearOrders.filter(o => o.status !== "cancelled")
+  var yearOrders  = ordersForYear(year);
+  var spendOrders = yearOrders.filter(function(o) { return o.status !== "cancelled"; });
 
-  let totalSpent = spendOrders.reduce((s,o) => s + orderTotal(o), 0)
-  let totalSaved = spendOrders.reduce((s,o) => s + orderSavings(o), 0)
-  let avgPerOrder = spendOrders.length ? Math.round(totalSpent / spendOrders.length) : 0
+  var totalSpent  = spendOrders.reduce(function(s,o) { return s + orderTotal(o); }, 0);
+  var totalSaved  = spendOrders.reduce(function(s,o) { return s + orderSavings(o); }, 0);
+  var avgPerOrder = spendOrders.length ? Math.round(totalSpent / spendOrders.length) : 0;
 
-  /* animate total */
-  animateExpenseTotal(totalSpent)
-  document.getElementById("expenseTotalMeta").innerText =
-    `${spendOrders.length} order${spendOrders.length !== 1 ? "s" : ""} · avg ₹${avgPerOrder.toLocaleString()}/order`
+  animateExpenseTotal(totalSpent);
 
-  /* metrics */
-  let amounts = spendOrders.map(o => orderTotal(o))
-  document.getElementById("metricHighest").innerText = amounts.length ? "₹" + Math.max(...amounts).toLocaleString() : "—"
-  document.getElementById("metricLowest").innerText  = amounts.length ? "₹" + Math.min(...amounts).toLocaleString() : "—"
-  document.getElementById("metricAvgMonth").innerText= "₹" + Math.round(totalSpent / 12).toLocaleString()
+  var meta = document.getElementById("expenseTotalMeta");
+  if (meta) meta.innerText = spendOrders.length + " order" + (spendOrders.length !== 1 ? "s" : "") + " \u00B7 avg \u20B9" + avgPerOrder.toLocaleString() + "/order";
 
-  /* most bought category */
-  let catMap = {}
-  spendOrders.forEach(o => o.items.forEach(i => {
-    catMap[i.category] = (catMap[i.category] || 0) + i.qty
-  }))
-  let topCat = Object.entries(catMap).sort((a,b) => b[1]-a[1])[0]
-  document.getElementById("metricCategory").innerText = topCat ? topCat[0] : "—"
+  var amounts = spendOrders.map(function(o) { return orderTotal(o); });
+  var hi = document.getElementById("metricHighest");
+  var lo = document.getElementById("metricLowest");
+  var am = document.getElementById("metricAvgMonth");
+  var cat = document.getElementById("metricCategory");
+  if (hi) hi.innerText = amounts.length ? "\u20B9" + Math.max.apply(null, amounts).toLocaleString() : "\u2014";
+  if (lo) lo.innerText = amounts.length ? "\u20B9" + Math.min.apply(null, amounts).toLocaleString() : "\u2014";
+  if (am) am.innerText = "\u20B9" + Math.round(totalSpent / 12).toLocaleString();
 
-  document.getElementById("expenseSavings").innerText = "₹" + totalSaved.toLocaleString()
+  var catMap = {};
+  spendOrders.forEach(function(o) {
+    (o.items || []).forEach(function(i) { catMap[i.category] = (catMap[i.category] || 0) + i.qty; });
+  });
+  var topCat = Object.entries(catMap).sort(function(a,b) { return b[1] - a[1]; })[0];
+  if (cat) cat.innerText = topCat ? topCat[0] : "\u2014";
 
-  renderBarChart(year, spendOrders)
-  renderCategoryBreakdown(spendOrders)
+  var sv = document.getElementById("expenseSavings");
+  if (sv) sv.innerText = "\u20B9" + totalSaved.toLocaleString();
+
+  renderBarChart(year, spendOrders);
+  renderCategoryBreakdown(spendOrders);
 }
 
 function animateExpenseTotal(target) {
-  let el = document.getElementById("expenseTotalAmount")
-  let start = 0; let duration = 900
-  let step = Math.max(1, Math.ceil(target / (duration / 16)))
-  let iv = setInterval(() => {
-    start = Math.min(start + step, target)
-    el.innerText = "₹" + start.toLocaleString()
-    if (start >= target) clearInterval(iv)
-  }, 16)
+  var el = document.getElementById("expenseTotalAmount");
+  if (!el) return;
+  var start = 0, step = Math.max(1, Math.ceil(target / 50));
+  var iv = setInterval(function() {
+    start = Math.min(start + step, target);
+    el.innerText = "\u20B9" + start.toLocaleString();
+    if (start >= target) clearInterval(iv);
+  }, 16);
 }
 
-/* --- Monthly Bar Chart --- */
 function renderBarChart(year, spendOrders) {
-  let monthlyTotals = Array(12).fill(0)
-  spendOrders.forEach(o => {
-    let m = new Date(o.date).getMonth()
-    monthlyTotals[m] += orderTotal(o)
-  })
+  var monthlyTotals = Array(12).fill(0);
+  spendOrders.forEach(function(o) {
+    var m = new Date(o.date).getMonth();
+    monthlyTotals[m] += orderTotal(o);
+  });
+  var maxVal  = Math.max.apply(null, monthlyTotals.concat([1]));
+  var peakIdx = monthlyTotals.indexOf(Math.max.apply(null, monthlyTotals));
 
-  let maxVal   = Math.max(...monthlyTotals, 1)
-  let peakIdx  = monthlyTotals.indexOf(Math.max(...monthlyTotals))
+  var chart  = document.getElementById("barChart");
+  var labels = document.getElementById("monthLabels");
+  if (!chart || !labels) return;
+  chart.innerHTML = "";
+  labels.innerHTML = "";
 
-  let chart  = document.getElementById("barChart")
-  let labels = document.getElementById("monthLabels")
-  chart.innerHTML  = ""
-  labels.innerHTML = ""
+  monthlyTotals.forEach(function(val, i) {
+    var pct = (val / maxVal) * 100;
+    var col = document.createElement("div");
+    col.className = "bar-col";
+    var fill = document.createElement("div");
+    fill.className = "bar-fill" + (val === 0 ? " empty-bar" : "") + (i === peakIdx && val > 0 ? " peak-bar" : "");
+    fill.style.height = "3px";
+    fill.setAttribute("data-tip", val > 0 ? MONTHS[i] + ": \u20B9" + val.toLocaleString() : MONTHS[i] + ": No spend");
+    col.appendChild(fill);
+    chart.appendChild(col);
+    setTimeout(function() { fill.style.height = pct + "%"; }, 80 + i * 40);
 
-  monthlyTotals.forEach((val, i) => {
-    let pct = (val / maxVal) * 100
-    let col = document.createElement("div")
-    col.className = "bar-col"
+    var lbl = document.createElement("div");
+    lbl.className = "month-lbl";
+    lbl.innerText = MONTHS[i];
+    labels.appendChild(lbl);
+  });
 
-    let fill = document.createElement("div")
-    fill.className = "bar-fill" + (val === 0 ? " empty-bar" : "") + (i === peakIdx && val > 0 ? " peak-bar" : "")
-    fill.style.height = "3px"
-    fill.setAttribute("data-tip", val > 0 ? `${MONTHS[i]}: ₹${val.toLocaleString()}` : `${MONTHS[i]}: No spend`)
-
-    col.appendChild(fill)
-    chart.appendChild(col)
-
-    /* animate height after paint */
-    setTimeout(() => {
-      fill.style.height = pct + "%"
-    }, 80 + i * 40)
-
-    let lbl = document.createElement("div")
-    lbl.className = "month-lbl"
-    lbl.innerText = MONTHS[i]
-    labels.appendChild(lbl)
-  })
-
-  /* peak label */
-  let peakEl = document.getElementById("chartPeak")
-  if (monthlyTotals[peakIdx] > 0) {
-    peakEl.innerText = `Peak: ${MONTHS[peakIdx]} ₹${monthlyTotals[peakIdx].toLocaleString()}`
-  } else {
-    peakEl.innerText = ""
+  var peakEl = document.getElementById("chartPeak");
+  if (peakEl) {
+    peakEl.innerText = monthlyTotals[peakIdx] > 0
+      ? "Peak: " + MONTHS[peakIdx] + " \u20B9" + monthlyTotals[peakIdx].toLocaleString()
+      : "";
   }
 }
 
-/* --- Category Breakdown --- */
 function renderCategoryBreakdown(spendOrders) {
-  let catSpend = {}
-  spendOrders.forEach(o => {
-    o.items.forEach(i => {
-      let amt = i.price * i.qty
-      catSpend[i.category] = (catSpend[i.category] || 0) + amt
-    })
-  })
+  var catSpend = {};
+  spendOrders.forEach(function(o) {
+    (o.items || []).forEach(function(i) {
+      var amt = i.price * i.qty;
+      catSpend[i.category] = (catSpend[i.category] || 0) + amt;
+    });
+  });
 
-  let total   = Object.values(catSpend).reduce((s,v) => s + v, 0) || 1
-  let sorted  = Object.entries(catSpend).sort((a,b) => b[1] - a[1])
-  let container = document.getElementById("categoryBars")
-  container.innerHTML = ""
+  var total    = Object.values(catSpend).reduce(function(s,v) { return s + v; }, 0) || 1;
+  var sorted   = Object.entries(catSpend).sort(function(a,b) { return b[1] - a[1]; });
+  var container = document.getElementById("categoryBars");
+  if (!container) return;
+  container.innerHTML = "";
 
-  if (sorted.length === 0) {
-    container.innerHTML = `<p style="font-size:13px;color:var(--muted)">No data for this year</p>`
-    return
+  if (!sorted.length) {
+    container.innerHTML = '<p style="font-size:13px;color:var(--muted)">No data for this year</p>';
+    return;
   }
 
-  sorted.forEach(([cat, amt], idx) => {
-    let pct = Math.round((amt / total) * 100)
-    let row = document.createElement("div")
-    row.className = "cat-row"
-    row.style.animationDelay = (idx * 0.08) + "s"
-
-    row.innerHTML = `
-      <div class="cat-row-top">
-        <span class="cat-name">${cat}</span>
-        <span>
-          <span class="cat-amount">₹${amt.toLocaleString()}</span>
-          &nbsp;
-          <span class="cat-pct">${pct}%</span>
-        </span>
-      </div>
-      <div class="cat-bar-track">
-        <div class="cat-bar-fill" style="width:0%" data-pct="${pct}%"></div>
-      </div>
-    `
-    container.appendChild(row)
-
-    /* animate fill */
-    setTimeout(() => {
-      row.querySelector(".cat-bar-fill").style.width = pct + "%"
-    }, 100 + idx * 80)
-  })
+  sorted.forEach(function(entry, idx) {
+    var cat = entry[0], amt = entry[1];
+    var pct = Math.round((amt / total) * 100);
+    var row = document.createElement("div");
+    row.className = "cat-row";
+    row.style.animationDelay = (idx * 0.08) + "s";
+    row.innerHTML =
+      '<div class="cat-row-top">' +
+        '<span class="cat-name">' + esc(cat) + '</span>' +
+        '<span><span class="cat-amount">\u20B9' + amt.toLocaleString() + '</span>&nbsp;<span class="cat-pct">' + pct + '%</span></span>' +
+      '</div>' +
+      '<div class="cat-bar-track"><div class="cat-bar-fill" style="width:0%" data-pct="' + pct + '%"></div></div>';
+    container.appendChild(row);
+    setTimeout(function() { row.querySelector(".cat-bar-fill").style.width = pct + "%"; }, 100 + idx * 80);
+  });
 }
+
 
 /* ====================================================
-   TOAST
+   HELPERS
    ==================================================== */
-function showToast(message, isError = false) {
-  let toast = document.getElementById("toast")
-  toast.innerText = message
-  toast.classList.remove("error-toast")
-  if (isError) toast.classList.add("error-toast")
-  toast.classList.add("show")
-  clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => toast.classList.remove("show"), 2800)
+
+function esc(str) {
+  if (!str) return "";
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function showToast(message, isError) {
+  var toast = document.getElementById("toast");
+  toast.innerText = message;
+  toast.classList.remove("error-toast");
+  if (isError) toast.classList.add("error-toast");
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { toast.classList.remove("show"); }, 2800);
 }

@@ -11,8 +11,26 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="css/product.css">
 <script src="js/api.js"></script>
+
+<!-- Apply saved theme immediately to prevent flash -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.documentElement.style.background = "rgb(255,246,232)";
+  }
+})();
+</script>
 </head>
 <body>
+
+<!-- Apply theme class before first paint -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.body.classList.add("light-mode");
+  }
+})();
+</script>
 
 <!-- ===== NAVBAR ===== -->
 <div class="header-wrapper">
@@ -20,7 +38,7 @@
 
     <div class="nav-left">
       <a href="index.html" class="logo">
-        <img src="assets/logo/logo.png" alt="RadiusX">
+        <img src="assets/logo/logo.png" alt="RadiusX" id="productLogo">
       </a>
     </div>
 
@@ -38,6 +56,13 @@
         <i class="fa-solid fa-basket-shopping"></i>
         <span class="nav-cart-badge" id="navCartBadge">0</span>
       </a>
+
+      <!-- THEME TOGGLE -->
+      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <i class="fa-solid fa-sun"  id="themeIconSun"></i>
+        <i class="fa-solid fa-moon" id="themeIconMoon" style="display:none"></i>
+      </button>
+
       <a href="index.html" class="nav-back-link">
         <i class="fa-solid fa-arrow-left"></i> Back
       </a>
@@ -151,7 +176,7 @@
         <i class="fa-solid fa-rotate-left"></i>
         <div>
           <strong>7-Day Returns</strong>
-          <p>Easy hassle-free returns & exchanges</p>
+          <p>Easy hassle-free returns &amp; exchanges</p>
         </div>
       </div>
       <div class="delivery-row">
@@ -235,5 +260,42 @@
 <div class="toast" id="toast"></div>
 
 <script src="js/product.js"></script>
+
+<!-- THEME TOGGLE LOGIC (self-contained, no external file) -->
+<script>
+(function () {
+  /* Boot: sync icon + logo on load */
+  var isLight = document.body.classList.contains("light-mode");
+  var sun  = document.getElementById("themeIconSun");
+  var moon = document.getElementById("themeIconMoon");
+  var logo = document.getElementById("productLogo");
+
+  if (isLight) {
+    if (sun)  sun.style.display  = "none";
+    if (moon) moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+  }
+})();
+
+function toggleTheme() {
+  var body    = document.body;
+  var sun     = document.getElementById("themeIconSun");
+  var moon    = document.getElementById("themeIconMoon");
+  var logo    = document.getElementById("productLogo");
+  var isLight = body.classList.toggle("light-mode");
+
+  if (isLight) {
+    sun.style.display  = "none";
+    moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+    localStorage.setItem("rx_theme", "light");
+  } else {
+    sun.style.display  = "";
+    moon.style.display = "none";
+    if (logo) logo.src = "assets/logo/logo.png";
+    localStorage.setItem("rx_theme", "dark");
+  }
+}
+</script>
 </body>
 </html>

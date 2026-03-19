@@ -135,17 +135,18 @@
       <div class="profile-menu">
         <i class="fa-solid fa-user"></i>
         <div class="profile-dropdown">
-          <div><a href="login.html?tab=signin">Sign In</a></div>
-          <div><a href="profile.html">Profile</a></div>
-          <div id="signupOption"><a href="login.html?tab=signup">Sign Up</a></div>
-          <div><a href="forgot.html">Forgot Password</a></div>
-          <div id="logoutOption" onclick="logoutUser()">Logout</div>
-        </div>
+  <div id="signInOption"><a href="login.html?tab=signin">Sign In</a></div>
+  <div id="signUpOption"><a href="login.html?tab=signup">Sign Up</a></div>
+  
+  <div id="dashboardOption" style="display:none"><a href="profile.html">Dashboard</a></div>
+  <div id="forgotOption"><a href="forgot.html">Forgot Password</a></div>
+  <div id="logoutOption" style="display:none" onclick="logoutUser()">Logout</div>
+</div>
       </div>
       <div class="dropdown-icon">
         <i class="fa-solid fa-angle-down"></i>
         <div class="dropdown-menu">
-          <div><a href="sell.html">Become a Seller</a></div>
+          <div><a href="login.html?tab=seller">Become a Seller</a></div>
           <div><a href="help.html">Help</a></div>
         </div>
       </div>
@@ -162,6 +163,219 @@
   </div>
 
 </div><!-- /header-wrapper -->
+
+<!-- ================= HERO / ABOUT ================= -->
+<section class="hero-about" id="heroAbout">
+
+  <!-- Animated background grid -->
+  <div class="hero-bg-grid"></div>
+  <!-- Floating orbs -->
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
+  <div class="hero-orb hero-orb-3"></div>
+
+  <!-- LEFT: copy + CTAs -->
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      Hyper-local commerce, reimagined
+    </div>
+    <h1 class="hero-headline">
+      Shop what's<br>
+      <span class="hero-headline-accent">around you</span>
+    </h1>
+    <p class="hero-sub">
+      RadiusX connects you to real shops, real products, and real deals — all within your neighbourhood. No warehouses, no strangers. Just your city.
+    </p>
+    <div class="hero-ctas">
+      <a href="#" class="hero-btn-primary" onclick="openSearchOverlay(); return false;">
+        <i class="fa-solid fa-magnifying-glass"></i> Explore Now
+      </a>
+      <a href="login.html?tab=seller" class="hero-btn-secondary">
+        <i class="fa-solid fa-store"></i> Sell on RadiusX
+      </a>
+    </div>
+
+    <!-- Trust bar -->
+    <div class="hero-trust-bar">
+      <div class="hero-trust-item">
+        <span class="hero-trust-num" id="trustShops">2,400+</span>
+        <span class="hero-trust-label">Local Shops</span>
+      </div>
+      <div class="hero-trust-sep"></div>
+      <div class="hero-trust-item">
+        <span class="hero-trust-num">48k+</span>
+        <span class="hero-trust-label">Products Listed</span>
+      </div>
+      <div class="hero-trust-sep"></div>
+      <div class="hero-trust-item">
+        <span class="hero-trust-num">15+</span>
+        <span class="hero-trust-label">Cities Active</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: animated demo mockup -->
+  <div class="hero-visual">
+
+    <!-- Phone mockup -->
+    <div class="hero-phone">
+      <div class="hero-phone-notch"></div>
+      <div class="hero-phone-screen">
+
+        <!-- Mini nav in phone -->
+        <div class="phone-mini-nav">
+          <span class="phone-mini-logo">RadiusX</span>
+          <span class="phone-mini-loc"><i class="fa-solid fa-location-dot"></i> Raipur</span>
+        </div>
+
+        <!-- Scrolling product cards inside phone -->
+        <div class="phone-cards-wrap">
+          <div class="phone-cards-track" id="phoneCardsTrack">
+            <!-- Card 1 -->
+            <div class="phone-card">
+              <div class="phone-card-img" style="background: linear-gradient(135deg,#ff9a6c,#ff6b35);">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+                  <rect x="10" y="20" width="44" height="30" rx="4" fill="rgba(255,255,255,0.25)"/>
+                  <rect x="20" y="14" width="24" height="8" rx="2" fill="rgba(255,255,255,0.35)"/>
+                  <circle cx="32" cy="35" r="7" fill="rgba(255,255,255,0.55)"/>
+                </svg>
+              </div>
+              <div class="phone-card-body">
+                <div class="phone-card-tag">Electronics</div>
+                <div class="phone-card-name">Wireless Speaker</div>
+                <div class="phone-card-price">₹1,299</div>
+              </div>
+            </div>
+            <!-- Card 2 -->
+            <div class="phone-card">
+              <div class="phone-card-img" style="background: linear-gradient(135deg,#a8e063,#56ab2f);">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+                  <path d="M32 10 L54 24 L54 40 Q54 54 32 58 Q10 54 10 40 L10 24 Z" fill="rgba(255,255,255,0.25)"/>
+                  <path d="M22 34 L29 41 L42 26" stroke="rgba(255,255,255,0.8)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="phone-card-body">
+                <div class="phone-card-tag">Fashion</div>
+                <div class="phone-card-name">Cotton Kurta Set</div>
+                <div class="phone-card-price">₹799</div>
+              </div>
+            </div>
+            <!-- Card 3 -->
+            <div class="phone-card">
+              <div class="phone-card-img" style="background: linear-gradient(135deg,#f7971e,#ffd200);">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+                  <rect x="14" y="28" width="36" height="24" rx="4" fill="rgba(255,255,255,0.25)"/>
+                  <rect x="22" y="14" width="20" height="16" rx="3" fill="rgba(255,255,255,0.35)"/>
+                  <rect x="26" y="38" width="12" height="14" rx="2" fill="rgba(255,255,255,0.45)"/>
+                </svg>
+              </div>
+              <div class="phone-card-body">
+                <div class="phone-card-tag">Home</div>
+                <div class="phone-card-name">Wooden Shelf</div>
+                <div class="phone-card-price">₹2,199</div>
+              </div>
+            </div>
+            <!-- Card 4 -->
+            <div class="phone-card">
+              <div class="phone-card-img" style="background: linear-gradient(135deg,#ee9ca7,#ce4ea0);">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+                  <circle cx="32" cy="28" r="14" fill="rgba(255,255,255,0.25)"/>
+                  <path d="M18 52 Q32 42 46 52" fill="rgba(255,255,255,0.35)"/>
+                </svg>
+              </div>
+              <div class="phone-card-body">
+                <div class="phone-card-tag">Beauty</div>
+                <div class="phone-card-name">Skincare Kit</div>
+                <div class="phone-card-price">₹549</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification pop-up inside phone -->
+        <div class="phone-notif" id="phoneNotif">
+          <div class="phone-notif-icon"><i class="fa-solid fa-location-dot"></i></div>
+          <div class="phone-notif-text">
+            <strong>Shop nearby detected!</strong>
+            <span>0.3 km · Open now</span>
+          </div>
+        </div>
+
+      </div><!-- /phone-screen -->
+    </div><!-- /phone -->
+
+    <!-- Floating feature pills -->
+    <div class="hero-pill hero-pill-1">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#ff8c42" stroke-width="2"/><path d="M10 6v4l3 3" stroke="#ff8c42" stroke-width="2" stroke-linecap="round"/></svg>
+      Real-time stock
+    </div>
+    <div class="hero-pill hero-pill-2">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M3 10 L8 15 L17 5" stroke="#4caf50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Verified sellers
+    </div>
+    <div class="hero-pill hero-pill-3">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2 L12.4 7.8 L18.6 8.3 L14.2 12.1 L15.6 18.1 L10 14.9 L4.4 18.1 L5.8 12.1 L1.4 8.3 L7.6 7.8 Z" fill="#f7c948"/></svg>
+      Top-rated local
+    </div>
+
+  </div><!-- /hero-visual -->
+
+  <!-- FEATURE CARDS row -->
+  <div class="hero-features">
+    <div class="hero-feat-card">
+      <div class="hero-feat-icon">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2"/>
+          <path d="M16 8 L16 16 L21 21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="hero-feat-title">Live Availability</div>
+        <div class="hero-feat-desc">See shop hours &amp; stock status in real time — no surprises.</div>
+      </div>
+    </div>
+    <div class="hero-feat-card">
+      <div class="hero-feat-icon">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <path d="M16 3 L29 10 L29 22 Q29 29 16 30 Q3 29 3 22 L3 10 Z" stroke="currentColor" stroke-width="2"/>
+          <path d="M11 16 L14 19 L21 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="hero-feat-title">Verified Shops</div>
+        <div class="hero-feat-desc">Every seller is ID-verified &amp; location-confirmed by our team.</div>
+      </div>
+    </div>
+    <div class="hero-feat-card">
+      <div class="hero-feat-icon">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <path d="M4 16 Q4 6 16 6 Q28 6 28 16 Q28 26 16 26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M4 16 Q4 26 16 26" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>
+          <circle cx="16" cy="16" r="4" fill="currentColor" opacity="0.4"/>
+        </svg>
+      </div>
+      <div>
+        <div class="hero-feat-title">Radius Discovery</div>
+        <div class="hero-feat-desc">Products auto-sorted by proximity — shop local, save on delivery.</div>
+      </div>
+    </div>
+    <div class="hero-feat-card">
+      <div class="hero-feat-icon">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <rect x="4" y="10" width="24" height="17" rx="3" stroke="currentColor" stroke-width="2"/>
+          <path d="M11 10 L11 7 Q11 4 16 4 Q21 4 21 7 L21 10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 19 L15 22 L20 16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="hero-feat-title">Secure Checkout</div>
+        <div class="hero-feat-desc">Encrypted payments, buyer protection &amp; easy returns built in.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
 
 <!-- ================= BANNER ================= -->
 <section class="banner">
@@ -235,7 +449,7 @@
     </div>
     <div>
       <h4>Contact</h4>
-      <p>Email: support.radiusx@gmail.com</p>
+      <p>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d3a0a6a3a3bca1a7fda1b2b7baa6a0ab93b4beb2babffdb0bcbe">[email&#160;protected]</a></p>
     </div>
     <div>
       <img src="assets/logo/logo.png" alt="RadiusX">

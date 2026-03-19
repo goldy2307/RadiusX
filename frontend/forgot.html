@@ -11,12 +11,36 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="css/forgot.css">
 <script src="js/api.js"></script>
+
+<!-- Apply saved theme immediately to prevent flash -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.documentElement.style.background = "rgb(255,246,232)";
+  }
+})();
+</script>
 </head>
 <body>
+
+<!-- Apply theme class before first paint -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.body.classList.add("light-mode");
+  }
+})();
+</script>
 
 <a class="back-home" href="login.html">
   <i class="fa-solid fa-arrow-left"></i> Back to Sign In
 </a>
+
+<!-- THEME TOGGLE — fixed top-right, mirrors login.html position -->
+<button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode">
+  <i class="fa-solid fa-sun"  id="themeIconSun"></i>
+  <i class="fa-solid fa-moon" id="themeIconMoon" style="display:none"></i>
+</button>
 
 <!-- animated background particles -->
 <div class="bg-particles" aria-hidden="true">
@@ -28,7 +52,7 @@
 
   <!-- LOGO -->
   <div class="fp-logo">
-    <img src="assets/logo/logo.png" alt="RadiusX">
+    <img src="assets/logo/logo.png" alt="RadiusX" id="forgotLogo">
   </div>
 
   <!-- STEP INDICATOR -->
@@ -116,7 +140,8 @@
         <label>New Password</label>
         <div class="input-wrap">
           <i class="fa-solid fa-lock"></i>
-          <input type="password" id="resetPassword" placeholder="Min. 8 characters" oninput="checkResetStrength(this.value); clearFpError('resetPasswordErr')">
+          <input type="password" id="resetPassword" placeholder="Min. 8 characters"
+                 oninput="checkResetStrength(this.value); clearFpError('resetPasswordErr')">
           <i class="fa-regular fa-eye toggle-pass" onclick="togglePassword('resetPassword', this)"></i>
         </div>
         <div class="strength-bar"><span id="resetStrengthFill"></span></div>
@@ -128,7 +153,8 @@
         <label>Confirm New Password</label>
         <div class="input-wrap">
           <i class="fa-solid fa-lock"></i>
-          <input type="password" id="resetConfirm" placeholder="Re-enter new password" oninput="clearFpError('resetConfirmErr')">
+          <input type="password" id="resetConfirm" placeholder="Re-enter new password"
+                 oninput="clearFpError('resetConfirmErr')">
           <i class="fa-regular fa-eye toggle-pass" onclick="togglePassword('resetConfirm', this)"></i>
         </div>
         <span class="field-error" id="resetConfirmErr"></span>
@@ -203,5 +229,42 @@
 <div class="toast" id="toast"></div>
 
 <script src="js/forgot.js"></script>
+
+<!-- THEME TOGGLE LOGIC (self-contained, no external file) -->
+<script>
+(function () {
+  /* Boot: sync icon + logo on load */
+  var isLight = document.body.classList.contains("light-mode");
+  var sun  = document.getElementById("themeIconSun");
+  var moon = document.getElementById("themeIconMoon");
+  var logo = document.getElementById("forgotLogo");
+
+  if (isLight) {
+    if (sun)  sun.style.display  = "none";
+    if (moon) moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+  }
+})();
+
+function toggleTheme() {
+  var body    = document.body;
+  var sun     = document.getElementById("themeIconSun");
+  var moon    = document.getElementById("themeIconMoon");
+  var logo    = document.getElementById("forgotLogo");
+  var isLight = body.classList.toggle("light-mode");
+
+  if (isLight) {
+    sun.style.display  = "none";
+    moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+    localStorage.setItem("rx_theme", "light");
+  } else {
+    sun.style.display  = "";
+    moon.style.display = "none";
+    if (logo) logo.src = "assets/logo/logo.png";
+    localStorage.setItem("rx_theme", "dark");
+  }
+}
+</script>
 </body>
 </html>

@@ -4,7 +4,7 @@
    Include before login.js, main.js, and all other JS files.
    ================================================================ */
 
-const API_BASE = "https://radiusx-backend.onrender.com";
+const API_BASE = "http://localhost:5000";
 // For local development change to: http://localhost:5000
 
 const api = (() => {

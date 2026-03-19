@@ -11,14 +11,32 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="css/orders.css">
 <script src="js/api.js"></script>
+
+<!-- Apply saved theme immediately to prevent flash -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.documentElement.style.background = "rgb(255,246,232)";
+  }
+})();
+</script>
 </head>
 <body>
+
+<!-- Apply theme class before paint -->
+<script>
+(function () {
+  if (localStorage.getItem("rx_theme") === "light") {
+    document.body.classList.add("light-mode");
+  }
+})();
+</script>
 
 <!-- ===== NAVBAR ===== -->
 <div class="header-wrapper">
   <header class="navbar">
     <div class="nav-left">
-      <a href="index.html" class="logo"><img src="assets/logo/logo.png" alt="RadiusX"></a>
+      <a href="index.html" class="logo"><img src="assets/logo/logo.png" alt="RadiusX" id="ordersLogo"></a>
     </div>
     <div class="nav-center">
       <h1 class="nav-page-title">
@@ -27,6 +45,12 @@
       </h1>
     </div>
     <div class="nav-right">
+      <!-- THEME TOGGLE -->
+      <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode">
+        <i class="fa-solid fa-sun"  id="themeIconSun"></i>
+        <i class="fa-solid fa-moon" id="themeIconMoon" style="display:none"></i>
+      </button>
+
       <a href="index.html" class="nav-back-btn">
         <i class="fa-solid fa-arrow-left"></i> Back to Home
       </a>
@@ -37,9 +61,7 @@
 <!-- ===== PAGE BODY ===== -->
 <div class="page-body">
 
-  <!-- ============================================================
-       LEFT COLUMN — Order History
-       ============================================================ -->
+  <!-- LEFT COLUMN — Order History -->
   <div class="orders-col">
 
     <!-- Stat Cards Row -->
@@ -115,9 +137,7 @@
 
   </div><!-- /orders-col -->
 
-  <!-- ============================================================
-       RIGHT COLUMN — Expense Calculator
-       ============================================================ -->
+  <!-- RIGHT COLUMN — Expense Calculator -->
   <aside class="expense-col">
 
     <div class="expense-card">
@@ -199,7 +219,6 @@
 
 </div><!-- /page-body -->
 
-
 <!-- ===== ORDER DETAIL DRAWER ===== -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 
@@ -213,10 +232,46 @@
   </div>
 </div>
 
-
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script src="js/orders.js"></script>
+
+<!-- THEME TOGGLE LOGIC (self-contained) -->
+<script>
+(function () {
+  /* Boot: sync icon + logo on load */
+  var isLight = document.body.classList.contains("light-mode");
+  var sun  = document.getElementById("themeIconSun");
+  var moon = document.getElementById("themeIconMoon");
+  var logo = document.getElementById("ordersLogo");
+
+  if (isLight) {
+    if (sun)  sun.style.display  = "none";
+    if (moon) moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+  }
+})();
+
+function toggleTheme() {
+  var body    = document.body;
+  var sun     = document.getElementById("themeIconSun");
+  var moon    = document.getElementById("themeIconMoon");
+  var logo    = document.getElementById("ordersLogo");
+  var isLight = body.classList.toggle("light-mode");
+
+  if (isLight) {
+    sun.style.display  = "none";
+    moon.style.display = "";
+    if (logo) logo.src = "assets/logo/logo-light.png";
+    localStorage.setItem("rx_theme", "light");
+  } else {
+    sun.style.display  = "";
+    moon.style.display = "none";
+    if (logo) logo.src = "assets/logo/logo.png";
+    localStorage.setItem("rx_theme", "dark");
+  }
+}
+</script>
 </body>
 </html>
