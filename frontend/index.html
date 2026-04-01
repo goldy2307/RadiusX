@@ -11,7 +11,6 @@
 <link rel="stylesheet" href="css/styles.css">
 <script src="js/api.js"></script>
 <script src="https://unpkg.com/css-doodle@0.38.3/css-doodle.min.js"></script>
-
 </head>
 
 <body>
@@ -54,9 +53,7 @@
 
           <!-- Saved addresses list -->
           <div class="addr-dd-section-label" id="savedAddrLabel">Saved Addresses</div>
-          <div id="savedAddrList" class="addr-saved-list">
-            <!-- filled by JS -->
-          </div>
+          <div id="savedAddrList" class="addr-saved-list"></div>
 
           <!-- Divider + Add new -->
           <div class="addr-dd-divider"></div>
@@ -70,14 +67,14 @@
               <i class="fa-solid fa-pen-to-square"></i> New Address
             </div>
             <div class="addr-form-grid">
-              <input class="addr-input" id="af-name"     placeholder="Full Name"       autocomplete="off">
-              <input class="addr-input" id="af-phone"    placeholder="Phone Number"    autocomplete="off" type="tel">
-              <input class="addr-input" id="af-house"    placeholder="House / Flat No" autocomplete="off">
-              <input class="addr-input" id="af-street"   placeholder="Street / Road"   autocomplete="off">
-              <input class="addr-input addr-input-full" id="af-colony"   placeholder="Colony / Area"    autocomplete="off">
-              <input class="addr-input" id="af-city"     placeholder="City"            autocomplete="off">
-              <input class="addr-input" id="af-state"    placeholder="State"           autocomplete="off">
-              <input class="addr-input" id="af-pin"      placeholder="Pincode"         autocomplete="off" maxlength="6" type="tel">
+              <input class="addr-input" id="af-name"   placeholder="Full Name"       autocomplete="off">
+              <input class="addr-input" id="af-phone"  placeholder="Phone Number"    autocomplete="off" type="tel">
+              <input class="addr-input" id="af-house"  placeholder="House / Flat No" autocomplete="off">
+              <input class="addr-input" id="af-street" placeholder="Street / Road"   autocomplete="off">
+              <input class="addr-input addr-input-full" id="af-colony" placeholder="Colony / Area" autocomplete="off">
+              <input class="addr-input" id="af-city"   placeholder="City"            autocomplete="off">
+              <input class="addr-input" id="af-state"  placeholder="State"           autocomplete="off">
+              <input class="addr-input" id="af-pin"    placeholder="Pincode"         autocomplete="off" maxlength="6" type="tel">
             </div>
             <div class="addr-form-row-label" id="addrFormLabel" style="display:none"></div>
             <div class="addr-form-actions">
@@ -101,7 +98,7 @@
       </div><!-- /location-box -->
     </div>
 
-    <!-- SEARCH — opens overlay on click -->
+    <!-- SEARCH -->
     <div class="search-wrapper">
       <div class="search-box" onclick="openSearchOverlay()">
         <i class="fa-solid fa-magnifying-glass"></i>
@@ -113,17 +110,20 @@
         <h4>Filters</h4>
         <select id="priceFilter">
           <option value="">All Prices</option>
-          <option value="low">Under ₹500</option>
-          <option value="mid">₹500 – ₹2000</option>
-          <option value="high">Above ₹2000</option>
+          <option value="low">Under &#8377;500</option>
+          <option value="mid">&#8377;500 &ndash; &#8377;2000</option>
+          <option value="high">Above &#8377;2000</option>
         </select>
         <button onclick="applyFilters()">Apply</button>
       </div>
     </div>
 
-    <!-- NAV RIGHT — icons are white via .nav-icon-link -->
+    <!-- NAV RIGHT -->
     <div class="nav-right">
-      <a href="cart.html"   class="nav-icon-link"><i class="fa-solid fa-cart-shopping"></i></a>
+      <a href="cart.html" class="nav-icon-link" style="position:relative">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span id="navCartBadge" class="cart-badge"></span>
+      </a>
 
       <!-- THEME TOGGLE -->
       <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle light/dark mode">
@@ -132,17 +132,19 @@
       </button>
 
       <a href="orders.html" class="nav-icon-link"><i class="fa-solid fa-clock-rotate-left"></i></a>
+
       <div class="profile-menu">
         <i class="fa-solid fa-user"></i>
         <div class="profile-dropdown">
-  <div id="signInOption"><a href="login.html?tab=signin">Sign In</a></div>
-  <div id="signUpOption"><a href="login.html?tab=signup">Sign Up</a></div>
-  
-  <div id="dashboardOption" style="display:none"><a href="profile.html">Dashboard</a></div>
-  <div id="forgotOption"><a href="forgot.html">Forgot Password</a></div>
-  <div id="logoutOption" style="display:none" onclick="logoutUser()">Logout</div>
-</div>
+          <div id="signInOption"><a href="login.html?tab=signin">Sign In</a></div>
+          <div id="signUpOption"><a href="login.html?tab=signup">Sign Up</a></div>
+          <div id="profileOption" style="display:none"><a href="profile.html">Profile</a></div>
+          <div id="dashboardOption" style="display:none"><a href="#">Dashboard</a></div>
+          <div id="forgotOption"><a href="forgot.html">Forgot Password</a></div>
+          <div id="logoutOption" style="display:none" onclick="logoutUser()">Logout</div>
+        </div>
       </div>
+
       <div class="dropdown-icon">
         <i class="fa-solid fa-angle-down"></i>
         <div class="dropdown-menu">
@@ -164,17 +166,15 @@
 
 </div><!-- /header-wrapper -->
 
+
 <!-- ================= HERO / ABOUT ================= -->
 <section class="hero-about" id="heroAbout">
 
-  <!-- Animated background grid -->
   <div class="hero-bg-grid"></div>
-  <!-- Floating orbs -->
   <div class="hero-orb hero-orb-1"></div>
   <div class="hero-orb hero-orb-2"></div>
   <div class="hero-orb hero-orb-3"></div>
 
-  <!-- LEFT: copy + CTAs -->
   <div class="hero-content">
     <div class="hero-eyebrow">
       <span class="hero-eyebrow-dot"></span>
@@ -185,7 +185,7 @@
       <span class="hero-headline-accent">around you</span>
     </h1>
     <p class="hero-sub">
-      RadiusX connects you to real shops, real products, and real deals — all within your neighbourhood. No warehouses, no strangers. Just your city.
+      RadiusX connects you to real shops, real products, and real deals &mdash; all within your neighbourhood. No warehouses, no strangers. Just your city.
     </p>
     <div class="hero-ctas">
       <a href="#" class="hero-btn-primary" onclick="openSearchOverlay(); return false;">
@@ -196,7 +196,6 @@
       </a>
     </div>
 
-    <!-- Trust bar -->
     <div class="hero-trust-bar">
       <div class="hero-trust-item">
         <span class="hero-trust-num" id="trustShops">2,400+</span>
@@ -215,27 +214,21 @@
     </div>
   </div>
 
-  <!-- RIGHT: animated demo mockup -->
   <div class="hero-visual">
-
-    <!-- Phone mockup -->
     <div class="hero-phone">
       <div class="hero-phone-notch"></div>
       <div class="hero-phone-screen">
 
-        <!-- Mini nav in phone -->
         <div class="phone-mini-nav">
           <span class="phone-mini-logo">RadiusX</span>
           <span class="phone-mini-loc"><i class="fa-solid fa-location-dot"></i> Raipur</span>
         </div>
 
-        <!-- Scrolling product cards inside phone -->
         <div class="phone-cards-wrap">
           <div class="phone-cards-track" id="phoneCardsTrack">
-            <!-- Card 1 -->
             <div class="phone-card">
-              <div class="phone-card-img" style="background: linear-gradient(135deg,#ff9a6c,#ff6b35);">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+              <div class="phone-card-img" style="background:linear-gradient(135deg,#ff9a6c,#ff6b35)">
+                <svg viewBox="0 0 64 64" fill="none" width="38" height="38">
                   <rect x="10" y="20" width="44" height="30" rx="4" fill="rgba(255,255,255,0.25)"/>
                   <rect x="20" y="14" width="24" height="8" rx="2" fill="rgba(255,255,255,0.35)"/>
                   <circle cx="32" cy="35" r="7" fill="rgba(255,255,255,0.55)"/>
@@ -244,13 +237,12 @@
               <div class="phone-card-body">
                 <div class="phone-card-tag">Electronics</div>
                 <div class="phone-card-name">Wireless Speaker</div>
-                <div class="phone-card-price">₹1,299</div>
+                <div class="phone-card-price">&#8377;1,299</div>
               </div>
             </div>
-            <!-- Card 2 -->
             <div class="phone-card">
-              <div class="phone-card-img" style="background: linear-gradient(135deg,#a8e063,#56ab2f);">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+              <div class="phone-card-img" style="background:linear-gradient(135deg,#a8e063,#56ab2f)">
+                <svg viewBox="0 0 64 64" fill="none" width="38" height="38">
                   <path d="M32 10 L54 24 L54 40 Q54 54 32 58 Q10 54 10 40 L10 24 Z" fill="rgba(255,255,255,0.25)"/>
                   <path d="M22 34 L29 41 L42 26" stroke="rgba(255,255,255,0.8)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -258,13 +250,12 @@
               <div class="phone-card-body">
                 <div class="phone-card-tag">Fashion</div>
                 <div class="phone-card-name">Cotton Kurta Set</div>
-                <div class="phone-card-price">₹799</div>
+                <div class="phone-card-price">&#8377;799</div>
               </div>
             </div>
-            <!-- Card 3 -->
             <div class="phone-card">
-              <div class="phone-card-img" style="background: linear-gradient(135deg,#f7971e,#ffd200);">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+              <div class="phone-card-img" style="background:linear-gradient(135deg,#f7971e,#ffd200)">
+                <svg viewBox="0 0 64 64" fill="none" width="38" height="38">
                   <rect x="14" y="28" width="36" height="24" rx="4" fill="rgba(255,255,255,0.25)"/>
                   <rect x="22" y="14" width="20" height="16" rx="3" fill="rgba(255,255,255,0.35)"/>
                   <rect x="26" y="38" width="12" height="14" rx="2" fill="rgba(255,255,255,0.45)"/>
@@ -273,13 +264,12 @@
               <div class="phone-card-body">
                 <div class="phone-card-tag">Home</div>
                 <div class="phone-card-name">Wooden Shelf</div>
-                <div class="phone-card-price">₹2,199</div>
+                <div class="phone-card-price">&#8377;2,199</div>
               </div>
             </div>
-            <!-- Card 4 -->
             <div class="phone-card">
-              <div class="phone-card-img" style="background: linear-gradient(135deg,#ee9ca7,#ce4ea0);">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+              <div class="phone-card-img" style="background:linear-gradient(135deg,#ee9ca7,#ce4ea0)">
+                <svg viewBox="0 0 64 64" fill="none" width="38" height="38">
                   <circle cx="32" cy="28" r="14" fill="rgba(255,255,255,0.25)"/>
                   <path d="M18 52 Q32 42 46 52" fill="rgba(255,255,255,0.35)"/>
                 </svg>
@@ -287,25 +277,23 @@
               <div class="phone-card-body">
                 <div class="phone-card-tag">Beauty</div>
                 <div class="phone-card-name">Skincare Kit</div>
-                <div class="phone-card-price">₹549</div>
+                <div class="phone-card-price">&#8377;549</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Notification pop-up inside phone -->
         <div class="phone-notif" id="phoneNotif">
           <div class="phone-notif-icon"><i class="fa-solid fa-location-dot"></i></div>
           <div class="phone-notif-text">
             <strong>Shop nearby detected!</strong>
-            <span>0.3 km · Open now</span>
+            <span>0.3 km &middot; Open now</span>
           </div>
         </div>
 
-      </div><!-- /phone-screen -->
-    </div><!-- /phone -->
+      </div>
+    </div>
 
-    <!-- Floating feature pills -->
     <div class="hero-pill hero-pill-1">
       <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#ff8c42" stroke-width="2"/><path d="M10 6v4l3 3" stroke="#ff8c42" stroke-width="2" stroke-linecap="round"/></svg>
       Real-time stock
@@ -319,9 +307,8 @@
       Top-rated local
     </div>
 
-  </div><!-- /hero-visual -->
+  </div>
 
-  <!-- FEATURE CARDS row -->
   <div class="hero-features">
     <div class="hero-feat-card">
       <div class="hero-feat-icon">
@@ -332,7 +319,7 @@
       </div>
       <div>
         <div class="hero-feat-title">Live Availability</div>
-        <div class="hero-feat-desc">See shop hours &amp; stock status in real time — no surprises.</div>
+        <div class="hero-feat-desc">See shop hours &amp; stock status in real time &mdash; no surprises.</div>
       </div>
     </div>
     <div class="hero-feat-card">
@@ -357,7 +344,7 @@
       </div>
       <div>
         <div class="hero-feat-title">Radius Discovery</div>
-        <div class="hero-feat-desc">Products auto-sorted by proximity — shop local, save on delivery.</div>
+        <div class="hero-feat-desc">Products auto-sorted by proximity &mdash; shop local, save on delivery.</div>
       </div>
     </div>
     <div class="hero-feat-card">
@@ -377,6 +364,7 @@
 
 </section>
 
+
 <!-- ================= BANNER ================= -->
 <section class="banner">
   <div class="banner-track" id="bannerTrack"></div>
@@ -385,7 +373,7 @@
     :doodle:hover { --s: 1; }
     background: rgb(14,18,22);
     :after {
-      content: @pick(O,+,•);
+      content: @pick(O,+,&bull;);
       font-size: 3vmax;
       color: rgb(196,223,154);
       opacity: 0.7;
@@ -400,7 +388,8 @@
   <div class="banner-dots" id="bannerDots"></div>
 </section>
 
-<!-- ================= TRENDING SHOPS (real data from OSM) ================= -->
+
+<!-- ================= TRENDING SHOPS ================= -->
 <div class="shops-section">
   <div class="shops-header">
     <div class="shops-title-group">
@@ -414,31 +403,25 @@
       <i class="fa-solid fa-arrows-left-right"></i> scroll to explore
     </span>
   </div>
-
-  <!-- loading state -->
   <div class="shops-loading" id="shopsLoading">
-    <div class="shops-loader-dots">
-      <span></span><span></span><span></span>
-    </div>
-    <p>Finding shops near you…</p>
+    <div class="shops-loader-dots"><span></span><span></span><span></span></div>
+    <p>Finding shops near you&hellip;</p>
   </div>
-
-  <!-- error / permission denied state -->
   <div class="shops-error hidden" id="shopsError">
     <i class="fa-solid fa-location-dot"></i>
     <p id="shopsErrorMsg">Allow location permission to see shops near you.</p>
     <button onclick="detectLocation()">Try Again</button>
   </div>
-
-  <!-- actual scrollable grid -->
   <div class="shops-scroll-wrap hidden" id="shopsScrollWrap">
     <div class="shops-grid" id="shopsGrid"></div>
   </div>
 </div>
 
+
 <!-- ================= PRODUCTS ================= -->
 <h2 class="section-title">Trending Products</h2>
 <div class="products" id="productsContainer"></div>
+
 
 <!-- ================= FOOTER ================= -->
 <footer class="footer">
@@ -455,19 +438,17 @@
       <img src="assets/logo/logo.png" alt="RadiusX">
     </div>
   </div>
-  <div class="copyright">© 2026 RadiusX</div>
+  <div class="copyright">&copy; 2026 RadiusX</div>
 </footer>
+
 
 <!-- ================= SEARCH OVERLAY ================= -->
 <div class="search-overlay" id="searchOverlay">
   <div class="sov-box">
     <div class="sov-header">
       <i class="fa-solid fa-magnifying-glass sov-search-icon"></i>
-      <input
-        type="text" id="sovInput"
-        placeholder="Search products, shops..."
-        oninput="handleOverlaySearch(this.value)"
-        autocomplete="off">
+      <input type="text" id="sovInput" placeholder="Search products, shops..."
+             oninput="handleOverlaySearch(this.value)" autocomplete="off">
       <button class="sov-close" onclick="closeSearchOverlay()">
         <i class="fa-solid fa-xmark"></i>
       </button>
@@ -483,12 +464,20 @@
     <div class="sov-results" id="sovResults">
       <div class="sov-empty-state">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <p>Start typing to search…</p>
+        <p>Start typing to search&hellip;</p>
       </div>
     </div>
   </div>
 </div>
 
+
+<!-- ================= TOAST ================= -->
+<div class="toast" id="toast"></div>
+
+
+<!-- ================= SCRIPTS ================= -->
+<!-- api.js is already loaded in <head> above -->
 <script src="js/main.js"></script>
+
 </body>
 </html>

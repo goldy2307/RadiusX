@@ -1,490 +1,301 @@
 /* ====================================================
    RadiusX — forgot.js
-   Flow:
-     Step 1 → User enters email → "Send Reset Link" → 
-              demo email logged to console + shown in UI
-     Step 2 → User opens link (?reset=true) → 
-              enters email + new password → "Send OTP"
-     Step 3 → User enters 6-digit OTP → "Verify & Reset"
-   
-   NOTE: This is a front-end demo.
-   In production, replace the sendResetEmail() and
-   sendOtpEmail() functions with real API calls to
-   your backend / email service (e.g. EmailJS, NodeMailer).
+   Wired to real backend API:
+   Step 1: Enter email → POST /auth/forgot-password → OTP sent
+   Step 2: Enter new password → shown after email entry
+   Step 3: Enter OTP → POST /auth/verify-otp → get resetToken
+           then POST /auth/reset-password → done
    ==================================================== */
 
-
-/* ===== INIT — check URL params ===== */
+var pendingEmail    = "";
+var resetToken      = "";
+var timerInterval   = null;
+var toastTimer      = null;
 
 window.onload = function () {
-  let params  = new URLSearchParams(window.location.search)
-  let isReset = params.get("reset") === "true"
-  let token   = params.get("token") || ""
-
-  if (isReset) {
-    /* User arrived from email reset link */
-    showStep("stepReset")
-    activateStepDot(2)
-    markStepDone(1)
-
-    /* Pre-fill email if encoded in token (demo: base64) */
-    try {
-      let decoded = atob(token)
-      if (decoded.includes("@")) {
-        document.getElementById("resetEmail").value = decoded
-      }
-    } catch (e) { /* ignore bad tokens */ }
-  } else {
-    showStep("stepEmail")
-    activateStepDot(1)
-  }
-}
+  showStep("stepEmail");
+  activateStepDot(1);
+};
 
 
-/* ===== STEP NAVIGATION ===== */
-
+/* ====================================================
+   STEP UI
+   ==================================================== */
 function showStep(stepId) {
-  let all = ["stepEmail", "stepReset", "stepOtp", "stepSuccess"]
-  all.forEach(id => {
-    let el = document.getElementById(id)
+  ["stepEmail","stepReset","stepOtp","stepSuccess"].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
     if (id === stepId) {
-      el.classList.remove("hidden")
-      /* re-trigger enter animation */
-      el.style.animation = "none"
-      el.offsetHeight
-      el.style.animation = ""
+      el.classList.remove("hidden");
+      el.style.animation = "none";
+      el.offsetHeight;
+      el.style.animation = "";
     } else {
-      el.classList.add("hidden")
+      el.classList.add("hidden");
     }
-  })
+  });
 }
 
 function activateStepDot(n) {
-  [1,2,3].forEach(i => {
-    let dot = document.getElementById("step" + i + "Dot")
-    dot.classList.remove("active")
-  })
-  let active = document.getElementById("step" + n + "Dot")
-  if (active) active.classList.add("active")
+  [1,2,3].forEach(function(i) {
+    var dot = document.getElementById("step" + i + "Dot");
+    if (dot) dot.classList.remove("active");
+  });
+  var active = document.getElementById("step" + n + "Dot");
+  if (active) active.classList.add("active");
 }
 
 function markStepDone(n) {
-  let dot = document.getElementById("step" + n + "Dot")
-  if (dot) {
-    dot.classList.remove("active")
-    dot.classList.add("done")
-  }
-  let line = document.getElementById("line" + n)
-  if (line) line.classList.add("done")
+  var dot = document.getElementById("step" + n + "Dot");
+  if (dot) { dot.classList.remove("active"); dot.classList.add("done"); }
+  var line = document.getElementById("line" + n);
+  if (line) line.classList.add("done");
 }
 
 
-/* ===== FIELD HELPERS ===== */
-
+/* ====================================================
+   FIELD HELPERS
+   ==================================================== */
 function clearFpError(errId) {
-  let el = document.getElementById(errId)
-  if (el) el.innerText = ""
+  var el = document.getElementById(errId); if (el) el.innerText = "";
 }
-
 function setFpError(inputId, errId, msg) {
-  let input = document.getElementById(inputId)
-  let err   = document.getElementById(errId)
-  if (input) input.closest(".input-wrap")?.classList.add("error")
-  if (err)   err.innerText = msg
+  var input = document.getElementById(inputId);
+  var err   = document.getElementById(errId);
+  if (input) { var w = input.closest(".input-wrap"); if (w) w.classList.add("error"); }
+  if (err)   err.innerText = msg;
 }
-
 function clearWrap(inputId) {
-  let input = document.getElementById(inputId)
-  if (input) input.closest(".input-wrap")?.classList.remove("error")
+  var input = document.getElementById(inputId);
+  if (input) { var w = input.closest(".input-wrap"); if (w) w.classList.remove("error"); }
 }
-
-function isValidEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-}
-
-
-/* ===== PASSWORD VISIBILITY ===== */
+function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
 
 function togglePassword(fieldId, icon) {
-  let input = document.getElementById(fieldId)
+  var input = document.getElementById(fieldId);
+  if (!input) return;
   if (input.type === "password") {
-    input.type = "text"
-    icon.classList.replace("fa-eye", "fa-eye-slash")
+    input.type = "text"; icon.classList.replace("fa-eye","fa-eye-slash");
   } else {
-    input.type = "password"
-    icon.classList.replace("fa-eye-slash", "fa-eye")
+    input.type = "password"; icon.classList.replace("fa-eye-slash","fa-eye");
   }
 }
-
-
-/* ===== STRENGTH METER ===== */
 
 function checkResetStrength(value) {
-  let fill  = document.getElementById("resetStrengthFill")
-  let label = document.getElementById("resetStrengthLabel")
-  let score = 0
-  if (value.length >= 8)           score++
-  if (/[A-Z]/.test(value))         score++
-  if (/[0-9]/.test(value))         score++
-  if (/[^A-Za-z0-9]/.test(value))  score++
-
-  let widths  = ["0%", "25%", "50%", "75%", "100%"]
-  let colors  = ["transparent", "rgb(255,80,80)", "rgb(255,160,50)", "rgb(196,223,154)", "rgb(100,210,130)"]
-  let labels  = ["", "Weak", "Fair", "Good", "Strong"]
-
-  fill.style.width      = widths[score]
-  fill.style.background = colors[score]
-  label.innerText        = labels[score]
-  label.style.color      = colors[score]
+  var fill  = document.getElementById("resetStrengthFill");
+  var label = document.getElementById("resetStrengthLabel");
+  if (!fill || !label) return;
+  var score = 0;
+  if (value.length>=8) score++; if (/[A-Z]/.test(value)) score++;
+  if (/[0-9]/.test(value)) score++; if (/[^A-Za-z0-9]/.test(value)) score++;
+  var w=["0%","25%","50%","75%","100%"];
+  var c=["transparent","rgb(255,80,80)","rgb(255,160,50)","rgb(196,223,154)","rgb(100,210,130)"];
+  var l=["","Weak","Fair","Good","Strong"];
+  fill.style.width=w[score]; fill.style.background=c[score];
+  label.innerText=l[score]; label.style.color=c[score];
 }
 
 
-/* ===== TOAST ===== */
+/* ====================================================
+   STEP 1 — SEND OTP
+   ==================================================== */
+async function handleSendLink() {
+  clearFpError("fpEmailErr"); clearWrap("fpEmail");
 
-let toastTimer = null
+  var email = document.getElementById("fpEmail").value.trim();
+  if (!email)              { setFpError("fpEmail","fpEmailErr","Please enter your email address"); return; }
+  if (!isValidEmail(email)){ setFpError("fpEmail","fpEmailErr","Enter a valid email address"); return; }
 
-function showToast(message, isError = false) {
-  let toast = document.getElementById("toast")
-  toast.innerText = message
-  toast.classList.remove("error-toast")
-  if (isError) toast.classList.add("error-toast")
-  toast.classList.add("show")
-  clearTimeout(toastTimer)
-  toastTimer = setTimeout(() => toast.classList.remove("show"), 3000)
-}
+  var btn = document.getElementById("sendLinkBtn");
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...'; }
 
+  var res = await api.post("/auth/forgot-password", { email: email }, { noRedirect: true });
 
-/* ===================================================
-   STEP 1 — SEND RESET LINK
-   =================================================== */
+  if (btn) { btn.disabled = false; btn.innerHTML = '<span>Send Reset Code</span> <i class="fa-solid fa-paper-plane"></i>'; }
 
-let linkSent = false
-
-function handleSendLink() {
-  clearFpError("fpEmailErr")
-  clearWrap("fpEmail")
-
-  let email = document.getElementById("fpEmail").value.trim()
-
-  if (!email) {
-    setFpError("fpEmail", "fpEmailErr", "Please enter your email address")
-    return
+  if (res && res.success) {
+    pendingEmail = email;
+    /* Show confirmation */
+    var confirm  = document.getElementById("sentConfirm");
+    var display  = document.getElementById("sentEmailDisplay");
+    if (display) display.innerText = email;
+    if (confirm) confirm.classList.remove("hidden");
+    showToast("Reset code sent to " + email);
+    /* Move to step 2 (password entry) after a moment */
+    setTimeout(function() {
+      markStepDone(1); activateStepDot(2);
+      showStep("stepReset");
+      var emailField = document.getElementById("resetEmail");
+      if (emailField) { emailField.value = email; emailField.setAttribute("readonly","true"); }
+    }, 1200);
+  } else {
+    setFpError("fpEmail","fpEmailErr", (res && res.message) || "Could not send reset code.");
   }
-
-  if (!isValidEmail(email)) {
-    setFpError("fpEmail", "fpEmailErr", "Enter a valid email address")
-    return
-  }
-
-  /* Check if user exists in demo localStorage */
-  let users = JSON.parse(localStorage.getItem("rx_users") || "[]")
-  let user  = users.find(u => u.email === email)
-
-  if (!user) {
-    setFpError("fpEmail", "fpEmailErr", "No account found with this email")
-    return
-  }
-
-  /* Build reset link (demo: encodes email as base64 token) */
-  let token     = btoa(email)
-  let resetLink = `${window.location.origin}${window.location.pathname}?reset=true&token=${token}`
-
-  /* ---- In production: call your backend/email API here ---- */
-  sendResetEmail(email, user.name, resetLink)
-
-  /* Show confirmation panel */
-  linkSent = true
-  let confirm  = document.getElementById("sentConfirm")
-  let display  = document.getElementById("sentEmailDisplay")
-  display.innerText = email
-  confirm.classList.remove("hidden")
-
-  let btn = document.getElementById("sendLinkBtn")
-  btn.innerHTML = `<span>Link Sent</span> <i class="fa-solid fa-check"></i>`
-  btn.style.background = "rgba(196,223,154,0.15)"
-  btn.style.color      = "var(--accent)"
-  btn.style.border     = "1px solid var(--accent)"
-  btn.disabled         = true
 }
 
 function resendLink() {
-  if (!linkSent) { showToast("Enter your email first", true); return }
-  let email = document.getElementById("fpEmail").value.trim()
-  if (!email) return
-  showToast("Reset link resent to " + email)
-}
-
-/* ---- Demo email logger (replace with real send in production) ---- */
-function sendResetEmail(email, name, link) {
-
-  /* === EMAIL TEMPLATE PREVIEW (logged to console) ===
-     In production pass this HTML to your email API     */
-
-  let html = `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📧  RadiusX — Password Reset Email
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-To      : ${email}
-Subject : Reset your RadiusX password
-
-Hi ${name},
-
-We received a request to reset the password for your RadiusX account.
-Click the link below to set a new password. This link is valid for 15 minutes.
-
-🔗 RESET LINK:
-${link}
-
-If you didn't request a password reset, please ignore this email.
-Your account remains secure.
-
-— The RadiusX Team
-support.radiusx@gmail.com
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
-
-  console.log("%c[RadiusX] Reset Email Sent", "color:#c4df9a;font-weight:bold")
-  console.log(html)
-
-  /* PRODUCTION: replace console.log with your API call, e.g.:
-     EmailJS:   emailjs.send("service_id","template_id",{email,name,link})
-     Fetch API: fetch("/api/send-reset-email", {method:"POST", body: JSON.stringify({email,name,link})})
-  */
+  if (!pendingEmail) { showToast("Enter your email first", true); return; }
+  handleSendLink();
 }
 
 
-/* ===================================================
-   STEP 2 — SEND OTP
-   =================================================== */
+/* ====================================================
+   STEP 2 — ENTER NEW PASSWORD, THEN GET OTP
+   ==================================================== */
+async function handleSendOtp() {
+  ["resetEmail","resetPassword","resetConfirm"].forEach(function(id){ clearWrap(id); });
+  clearFpError("resetEmailErr"); clearFpError("resetPasswordErr"); clearFpError("resetConfirmErr");
 
-let pendingEmail   = ""
-let pendingPassword = ""
-let generatedOtp   = ""
+  var email    = (document.getElementById("resetEmail") || {}).value || pendingEmail;
+  var password = document.getElementById("resetPassword").value;
+  var confirm  = document.getElementById("resetConfirm").value;
+  var valid    = true;
 
-function handleSendOtp() {
-  /* clear previous errors */
-  ["resetEmail","resetPassword","resetConfirm"].forEach(id => {
-    clearWrap(id)
-  })
-  clearFpError("resetEmailErr")
-  clearFpError("resetPasswordErr")
-  clearFpError("resetConfirmErr")
+  email = email.trim();
+  if (!email || !isValidEmail(email))  { setFpError("resetEmail","resetEmailErr","Valid email required"); valid = false; }
+  if (!password || password.length<8)  { setFpError("resetPassword","resetPasswordErr","Min 8 characters"); valid = false; }
+  if (password !== confirm)            { setFpError("resetConfirm","resetConfirmErr","Passwords do not match"); valid = false; }
+  if (!valid) return;
 
-  let email    = document.getElementById("resetEmail").value.trim()
-  let password = document.getElementById("resetPassword").value
-  let confirm  = document.getElementById("resetConfirm").value
+  pendingEmail = email;
 
-  let valid = true
+  /* Show OTP step immediately — OTP was already sent in step 1 */
+  markStepDone(1); markStepDone(2); activateStepDot(3);
+  showStep("stepOtp");
+  var display = document.getElementById("otpEmailDisplay");
+  if (display) display.innerText = email;
+  startOtpTimer(10 * 60);
+  showToast("Enter the code sent to " + email);
 
-  if (!email || !isValidEmail(email)) {
-    setFpError("resetEmail", "resetEmailErr", "Enter a valid email address")
-    valid = false
-  }
-
-  if (!password || password.length < 8) {
-    setFpError("resetPassword", "resetPasswordErr", "Password must be at least 8 characters")
-    valid = false
-  }
-
-  if (password !== confirm) {
-    setFpError("resetConfirm", "resetConfirmErr", "Passwords do not match")
-    valid = false
-  }
-
-  if (!valid) return
-
-  /* Verify account exists */
-  let users = JSON.parse(localStorage.getItem("rx_users") || "[]")
-  let user  = users.find(u => u.email === email)
-
-  if (!user) {
-    setFpError("resetEmail", "resetEmailErr", "No account found with this email")
-    return
-  }
-
-  /* Generate 6-digit OTP */
-  generatedOtp    = String(Math.floor(100000 + Math.random() * 900000))
-  pendingEmail    = email
-  pendingPassword = password
-
-  /* Send OTP email (demo: logs to console) */
-  sendOtpEmail(email, user.name, generatedOtp)
-
-  /* Move to OTP step */
-  markStepDone(1)
-  markStepDone(2)
-  activateStepDot(3)
-  showStep("stepOtp")
-
-  document.getElementById("otpEmailDisplay").innerText = email
-
-  /* Start countdown */
-  startOtpTimer(10 * 60)
-
-  showToast("OTP sent to " + email)
-}
-
-/* ---- Demo OTP email logger ---- */
-function sendOtpEmail(email, name, otp) {
-
-  let html = `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📧  RadiusX — OTP Verification Email
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-To      : ${email}
-Subject : Your RadiusX OTP — ${otp}
-
-Hi ${name},
-
-Your One-Time Password (OTP) for resetting your RadiusX password is:
-
-┌─────────────────┐
-│   ${otp}    │
-└─────────────────┘
-
-This OTP is valid for 10 minutes. Do not share it with anyone.
-
-If you did not request this, please contact support immediately.
-
-— The RadiusX Team
-support.radiusx@gmail.com
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
-
-  console.log("%c[RadiusX] OTP Email Sent", "color:#c4df9a;font-weight:bold")
-  console.log(html)
-  console.log("%cDEV MODE — OTP: " + otp, "color:#ffcc44;font-size:16px;font-weight:bold")
-
-  /* PRODUCTION: replace with real email API call */
+  /* Store password for use in step 3 */
+  window._pendingPassword = password;
 }
 
 
-/* ===== OTP COUNTDOWN TIMER ===== */
-
-let timerInterval = null
-
+/* ====================================================
+   OTP TIMER
+   ==================================================== */
 function startOtpTimer(seconds) {
-  clearInterval(timerInterval)
-  let timerEl = document.getElementById("otpTimer")
-  let remaining = seconds
-
+  clearInterval(timerInterval);
+  var timerEl = document.getElementById("otpTimer");
+  var remaining = seconds;
   function tick() {
-    let m = String(Math.floor(remaining / 60)).padStart(2, "0")
-    let s = String(remaining % 60).padStart(2, "0")
-    timerEl.innerText = m + ":" + s
-
+    var m = String(Math.floor(remaining/60)).padStart(2,"0");
+    var s = String(remaining%60).padStart(2,"0");
+    if (timerEl) timerEl.innerText = m + ":" + s;
     if (remaining <= 0) {
-      clearInterval(timerInterval)
-      timerEl.innerText = "Expired"
-      timerEl.classList.add("expired")
-      generatedOtp = "" /* invalidate OTP */
+      clearInterval(timerInterval);
+      if (timerEl) { timerEl.innerText = "Expired"; timerEl.classList.add("expired"); }
     }
-    remaining--
+    remaining--;
   }
-
-  tick()
-  timerInterval = setInterval(tick, 1000)
+  tick(); timerInterval = setInterval(tick, 1000);
 }
 
-function resendOtp() {
-  if (!pendingEmail) { showToast("Session expired. Start over.", true); return }
-
-  let users = JSON.parse(localStorage.getItem("rx_users") || "[]")
-  let user  = users.find(u => u.email === pendingEmail)
-
-  generatedOtp = String(Math.floor(100000 + Math.random() * 900000))
-  sendOtpEmail(pendingEmail, user ? user.name : "User", generatedOtp)
-  startOtpTimer(10 * 60)
-  showToast("New OTP sent to " + pendingEmail)
-
-  /* reset boxes */
-  document.querySelectorAll(".otp-box").forEach(b => {
-    b.value = ""
-    b.classList.remove("filled","error-box")
-  })
-  document.getElementById("otpErr").innerText = ""
-  document.querySelectorAll(".otp-box")[0].focus()
-}
-
-
-/* ===== OTP BOX KEYBOARD NAVIGATION ===== */
-
-function otpInput(el, index) {
-  let boxes = document.querySelectorAll(".otp-box")
-  let val   = el.value.replace(/\D/g, "")
-  el.value  = val
-
-  if (val) {
-    el.classList.add("filled")
-    el.classList.remove("error-box")
-    if (index < 5) boxes[index + 1].focus()
+async function resendOtp() {
+  if (!pendingEmail) { showToast("Session expired. Start over.", true); return; }
+  var res = await api.post("/auth/forgot-password", { email: pendingEmail }, { noRedirect: true });
+  if (res && res.success) {
+    startOtpTimer(10 * 60);
+    showToast("New code sent to " + pendingEmail);
+    document.querySelectorAll(".otp-box").forEach(function(b){
+      b.value=""; b.classList.remove("filled","error-box");
+    });
+    document.getElementById("otpErr").innerText = "";
+    var first = document.querySelectorAll(".otp-box")[0];
+    if (first) first.focus();
   } else {
-    el.classList.remove("filled")
+    showToast((res && res.message) || "Could not resend code.", true);
   }
+}
+
+
+/* ====================================================
+   OTP BOX KEYBOARD NAV
+   ==================================================== */
+function otpInput(el, index) {
+  var boxes = document.querySelectorAll(".otp-box");
+  var val   = el.value.replace(/\D/g,"");
+  el.value  = val;
+  if (val) { el.classList.add("filled"); el.classList.remove("error-box"); if (index<5) boxes[index+1].focus(); }
+  else { el.classList.remove("filled"); }
 }
 
 function otpBack(el, index, event) {
-  let boxes = document.querySelectorAll(".otp-box")
-  if (event.key === "Backspace" && !el.value && index > 0) {
-    boxes[index - 1].focus()
-    boxes[index - 1].value = ""
-    boxes[index - 1].classList.remove("filled")
+  var boxes = document.querySelectorAll(".otp-box");
+  if (event.key==="Backspace" && !el.value && index>0) {
+    boxes[index-1].focus(); boxes[index-1].value=""; boxes[index-1].classList.remove("filled");
   }
 }
 
 function getOtpValue() {
-  let boxes = document.querySelectorAll(".otp-box")
-  return Array.from(boxes).map(b => b.value).join("")
-}
-
-
-/* ===================================================
-   STEP 3 — VERIFY OTP & RESET PASSWORD
-   =================================================== */
-
-function handleVerifyOtp() {
-  let otpErr  = document.getElementById("otpErr")
-  otpErr.innerText = ""
-
-  let entered = getOtpValue()
-
-  if (entered.length < 6) {
-    otpErr.innerText = "Please enter the complete 6-digit OTP"
-    shakeBoxes()
-    return
-  }
-
-  if (!generatedOtp) {
-    otpErr.innerText = "OTP has expired. Please request a new one."
-    shakeBoxes()
-    return
-  }
-
-  if (entered !== generatedOtp) {
-    otpErr.innerText = "Incorrect OTP. Please check and try again."
-    shakeBoxes()
-    return
-  }
-
-  /* OTP matched — update password in localStorage */
-  let users = JSON.parse(localStorage.getItem("rx_users") || "[]")
-  let idx   = users.findIndex(u => u.email === pendingEmail)
-
-  if (idx !== -1) {
-    users[idx].password = pendingPassword
-    localStorage.setItem("rx_users", JSON.stringify(users))
-  }
-
-  clearInterval(timerInterval)
-  generatedOtp = ""
-
-  /* Show success */
-  markStepDone(3)
-  showStep("stepSuccess")
-  showToast("Password updated successfully! 🎉")
+  return Array.from(document.querySelectorAll(".otp-box")).map(function(b){return b.value;}).join("");
 }
 
 function shakeBoxes() {
-  document.querySelectorAll(".otp-box").forEach(b => {
-    b.classList.add("error-box")
-    setTimeout(() => b.classList.remove("error-box"), 500)
-  })
+  document.querySelectorAll(".otp-box").forEach(function(b){
+    b.classList.add("error-box");
+    setTimeout(function(){ b.classList.remove("error-box"); }, 500);
+  });
+}
+
+
+/* ====================================================
+   STEP 3 — VERIFY OTP + RESET PASSWORD
+   ==================================================== */
+async function handleVerifyOtp() {
+  var otpErr = document.getElementById("otpErr");
+  if (otpErr) otpErr.innerText = "";
+
+  var entered = getOtpValue();
+  if (entered.length < 6) { if (otpErr) otpErr.innerText = "Enter the complete 6-digit code"; shakeBoxes(); return; }
+
+  var verifyBtn = document.querySelector(".otp-verify-btn") || document.querySelector("[onclick='handleVerifyOtp()']");
+  if (verifyBtn) { verifyBtn.disabled = true; verifyBtn.innerText = "Verifying..."; }
+
+  /* Step A: Verify OTP */
+  var verifyRes = await api.post("/auth/verify-otp", { email: pendingEmail, otp: entered }, { noRedirect: true });
+
+  if (!verifyRes || !verifyRes.success) {
+    if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerText = "Verify & Reset Password"; }
+    if (otpErr) otpErr.innerText = (verifyRes && verifyRes.message) || "Invalid code.";
+    shakeBoxes(); return;
+  }
+
+  resetToken = verifyRes.resetToken;
+
+  /* Step B: Reset password */
+  var resetRes = await api.post("/auth/reset-password", {
+    email:       pendingEmail,
+    resetToken:  resetToken,
+    newPassword: window._pendingPassword,
+  }, { noRedirect: true });
+
+  if (verifyBtn) { verifyBtn.disabled = false; verifyBtn.innerText = "Verify & Reset Password"; }
+
+  if (!resetRes || !resetRes.success) {
+    if (otpErr) otpErr.innerText = (resetRes && resetRes.message) || "Reset failed. Try again.";
+    return;
+  }
+
+  clearInterval(timerInterval);
+  window._pendingPassword = null;
+  markStepDone(3);
+  showStep("stepSuccess");
+  showToast("Password updated successfully!");
+}
+
+
+/* ====================================================
+   TOAST
+   ==================================================== */
+function showToast(message, isError) {
+  var toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.innerText = message;
+  toast.classList.remove("error-toast");
+  if (isError) toast.classList.add("error-toast");
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toast.classList.remove("show"); }, 3000);
 }

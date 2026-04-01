@@ -57,85 +57,41 @@ window.onload = async function () {
 async function loadOrders() {
   showPageLoading(true);
 
-  var rawOrders = [];
-
-  /* ── Try backend first ── */
-  try {
-    var res = await api.get("/orders");
-    if (res && res.success && res.orders && res.orders.length) {
-      rawOrders = res.orders;
-    }
-  } catch(e) {}
-
-  /* ── FIX: Fall back to localStorage if backend has no orders ──
-     cart.js saves every checkout to rx_orders so this always works */
-  if (!rawOrders.length) {
-    try {
-      rawOrders = JSON.parse(localStorage.getItem("rx_orders") || "[]");
-    } catch(e) { rawOrders = []; }
-  }
+  var res = await api.get("/orders");
 
   showPageLoading(false);
 
-  /* ── Normalize order format for UI ── */
-  ORDERS = rawOrders.map(function(o) {
-    return {
-      id:             o._id || o.id,
-      date:           o.createdAt || o.date,
-      status:         o.status || "processing",
-      items:          (o.items || []).map(function(i) {
-        return {
-          id:            i.product || i.id,
-          name:          i.name          || "Product",
-          category:      i.category      || "General",
-          price:         i.price         || 0,
-          originalPrice: i.originalPrice || i.price || 0,
-          qty:           i.qty           || 1,
-          image:         i.image         || "assets/products/demo.jpg"
-        };
-      }),
-      couponDiscount: o.couponDiscount || 0,
-      delivery:       o.deliveryCharge || o.delivery || 0
-    };
-  });
+  if (!res.success) {
+    /* Backend route may not exist yet — show empty state gracefully */
+    ORDERS = [];
+  } else {
+    /* Normalize backend order format to match our UI format */
+    ORDERS = (res.orders || []).map(function(o) {
+      return {
+        id:             o._id || o.id,
+        date:           o.createdAt || o.date,
+        status:         o.status || "processing",
+        items:          (o.items || []).map(function(i) {
+          return {
+            id:            i.product || i.id,
+            name:          i.name    || "Product",
+            category:      i.category || "General",
+            price:         i.price   || 0,
+            originalPrice: i.originalPrice || i.price || 0,
+            qty:           i.qty    || 1,
+            image:         i.image  || "assets/products/demo.jpg"
+          };
+        }),
+        couponDiscount: o.couponDiscount || 0,
+        delivery:       o.deliveryCharge || o.delivery || 0
+      };
+    });
+  }
 
   renderStatCards();
   renderOrders();
   buildYearTabs();
   renderExpense(selectedYear);
-
-  /* ── Listen for new orders placed in cart page (same tab or other tab) ── */
-  window.addEventListener("storage", function(e) {
-    if (e.key === "rx_orders") {
-      try {
-        var updated = JSON.parse(e.newValue || "[]");
-        ORDERS = updated.map(function(o) {
-          return {
-            id:             o._id || o.id,
-            date:           o.createdAt || o.date,
-            status:         o.status || "processing",
-            items:          (o.items || []).map(function(i) {
-              return {
-                id:            i.product || i.id,
-                name:          i.name          || "Product",
-                category:      i.category      || "General",
-                price:         i.price         || 0,
-                originalPrice: i.originalPrice || i.price || 0,
-                qty:           i.qty           || 1,
-                image:         i.image         || "assets/products/demo.jpg"
-              };
-            }),
-            couponDiscount: o.couponDiscount || 0,
-            delivery:       o.deliveryCharge || o.delivery || 0
-          };
-        });
-        renderStatCards();
-        renderOrders();
-        buildYearTabs();
-        renderExpense(selectedYear);
-      } catch(err) {}
-    }
-  });
 }
 
 
@@ -189,21 +145,15 @@ function showSignInWall() {
 
 function orderTotal(o) {
   var sum = (o.items || []).reduce(function(s,i) { return s + i.price * i.qty; }, 0);
-  return Math.max(0, sum - (o.couponDiscount || 0) + (o.delivery || 0));
+  return sum - (o.couponDiscount || 0) + (o.delivery || 0);
 }
 
 function orderOriginalTotal(o) {
   return (o.items || []).reduce(function(s,i) { return s + i.originalPrice * i.qty; }, 0);
 }
 
-/* FIX: savings = (MRP total) - (sale price total)
-   Do NOT subtract coupon/delivery here — those are separate line items.
-   Old code: orderOriginalTotal - orderTotal (which included delivery/coupon)
-   → caused negative or garbage savings values. */
 function orderSavings(o) {
-  var mrpTotal  = orderOriginalTotal(o);
-  var saleTotal = (o.items || []).reduce(function(s,i) { return s + i.price * i.qty; }, 0);
-  return Math.max(0, mrpTotal - saleTotal);
+  return orderOriginalTotal(o) - orderTotal(o);
 }
 
 function renderStatCards() {

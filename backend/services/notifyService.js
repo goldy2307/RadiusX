@@ -269,13 +269,56 @@ function escHtml(str) {
   return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
+/* ================================================================
+   9. LOGIN ALERT — new device / location login
+   ================================================================ */
+async function sendLoginAlert(user, meta) {
+  const html = shell(`
+    <h2>New Sign-In Detected &#128274;</h2>
+    <span class="badge info">Security Notice</span>
+    <p>Hi <strong class="hl">${user.name}</strong>,</p>
+    <p>Your RadiusX account was signed into.</p>
+    <div class="note"><p>
+      <strong>Time:</strong> ${new Date().toLocaleString("en-IN")}<br>
+      <strong>Method:</strong> ${escHtml(meta && meta.method || "Email/Password")}<br>
+      <strong>Device:</strong> ${escHtml(meta && meta.userAgent ? meta.userAgent.substring(0,80) : "Unknown")}
+    </p></div>
+    <p>If this was you, no action is needed. If not, change your password immediately.</p>
+    <a href="${process.env.CLIENT_URL || ""}/frontend/login.html" class="btn">Secure My Account</a>
+  `);
+  await send({ to: user.email, subject: "New sign-in to your RadiusX account", html });
+}
+
+/* ================================================================
+   SMTP TEST — call on server startup to verify email works
+   ================================================================ */
+async function testSMTP() {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn("[Email] SMTP not configured — all emails will be skipped");
+    console.warn("[Email] Set SMTP_USER and SMTP_PASS in .env to enable emails");
+    return false;
+  }
+  try {
+    await getTransporter().verify();
+    console.log("[Email] SMTP connected —", process.env.SMTP_USER);
+    return true;
+  } catch (err) {
+    console.error("[Email] SMTP connection failed:", err.message);
+    console.error("[Email] Check SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS in .env");
+    return false;
+  }
+}
+
 module.exports = {
   sendWelcome,
   sendCartAbandonment,
   sendOrderPlaced,
   sendOrderStatusUpdate,
   sendPasswordChanged,
+  sendLoginAlert,
   sendSellerReceived,
   sendSellerApproved,
   sendSellerRejected,
+  testSMTP,
+  send, /* exported so forgot.js route can use it */
 };

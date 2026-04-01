@@ -7,7 +7,7 @@ const verifyToken = require("../middleware/auth");
 const requireRole = require("../middleware/role");
 const { productRules, handleValidation } = require("../middleware/validate");
 
-// -- Image upload (local disk -- swap for S3/Cloudinary in production) --
+/* ── Image upload (local disk) ─────────────────────────────── */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/products/"),
   filename:    (req, file, cb) => {
@@ -16,6 +16,7 @@ const storage = multer.diskStorage({
     cb(null, safe);
   },
 });
+
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -25,17 +26,19 @@ const upload = multer({
   },
 });
 
-// -- GET /products ----------------------------------------------
-// Public -- supports: ?category= &pincode= &search= &page= &limit= &sort=
+/* ================================================================
+   GET /products — public, supports filtering + search + sort
+   ================================================================ */
 router.get("/", async (req, res) => {
   try {
-    const page     = Math.max(1, parseInt(req.query.page  || "1",  10));
-    const limit    = Math.min(50, parseInt(req.query.limit || "20", 10));
-    const skip     = (page - 1) * limit;
-    const filter   = { isActive: true };
+    const page   = Math.max(1, parseInt(req.query.page  || "1",  10));
+    const limit  = Math.min(50, parseInt(req.query.limit || "20", 10));
+    const skip   = (page - 1) * limit;
+    const filter = { isActive: true };
 
     if (req.query.category) filter.category = req.query.category;
     if (req.query.pincode)  filter.pincode  = req.query.pincode;
+    if (req.query.seller)   filter.seller   = req.query.seller;
 
     if (req.query.search) {
       filter.$text = { $search: req.query.search };
@@ -43,18 +46,15 @@ router.get("/", async (req, res) => {
 
     const sortMap = {
       newest:     { createdAt: -1 },
-      price_asc:  { price: 1 },
+      oldest:     { createdAt:  1 },
+      price_asc:  { price:  1 },
       price_desc: { price: -1 },
       rating:     { rating: -1 },
     };
     const sort = sortMap[req.query.sort] || { createdAt: -1 };
 
     const [products, total] = await Promise.all([
-      Product.find(filter)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .populate("seller", "name email"),
+      Product.find(filter).sort(sort).skip(skip).limit(limit).populate("seller", "name email"),
       Product.countDocuments(filter),
     ]);
 
@@ -69,7 +69,9 @@ router.get("/", async (req, res) => {
   }
 });
 
-// -- GET /products/:id ------------------------------------------
+/* ================================================================
+   GET /products/:id — public
+   ================================================================ */
 router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate("seller", "name email");
@@ -86,22 +88,23 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// -- POST /products ---------------------------------------------
-// Seller only -- add a new product
+/* ================================================================
+   POST /products — seller or admin adds a new product
+   ================================================================ */
 router.post(
   "/",
   verifyToken,
-  requireRole("seller"),
+  requireRole("seller", "admin"),
   upload.array("images", 5),
   productRules,
   handleValidation,
   async (req, res) => {
     try {
       const { name, description, category, price, originalPrice, stock, pincode } = req.body;
-      const images = (req.files || []).map((f) => f.filename);
+      const images = (req.files || []).map((f) => "/uploads/products/" + f.filename);
 
       const product = await Product.create({
-        seller: req.user.id,
+        seller:        req.user.id,
         name, description, category,
         price:         parseFloat(price),
         originalPrice: parseFloat(originalPrice),
@@ -118,19 +121,19 @@ router.post(
   }
 );
 
-// -- PUT /products/:id ------------------------------------------
-// Seller -- update own product only
+/* ================================================================
+   PUT /products/:id — seller updates own product, admin updates any
+   Uses partial validation (fields optional on update)
+   ================================================================ */
 router.put(
   "/:id",
   verifyToken,
   requireRole("seller", "admin"),
   upload.array("images", 5),
-  productRules,
-  handleValidation,
   async (req, res) => {
     try {
       const filter = { _id: req.params.id };
-      if (req.user.role === "seller") filter.seller = req.user.id; // sellers can only edit their own
+      if (req.user.role === "seller") filter.seller = req.user.id;
 
       const product = await Product.findOne(filter);
       if (!product) {
@@ -138,15 +141,18 @@ router.put(
       }
 
       const { name, description, category, price, originalPrice, stock, pincode } = req.body;
-      if (name)          product.name          = name;
-      if (description)   product.description   = description;
-      if (category)      product.category      = category;
-      if (price)         product.price         = parseFloat(price);
-      if (originalPrice) product.originalPrice = parseFloat(originalPrice);
-      if (stock !== undefined) product.stock   = parseInt(stock, 10);
-      if (pincode)       product.pincode       = pincode;
+
+      /* Only update fields that were actually sent */
+      if (name          !== undefined) product.name          = name.trim();
+      if (description   !== undefined) product.description   = description.trim();
+      if (category      !== undefined) product.category      = category;
+      if (price         !== undefined) product.price         = parseFloat(price);
+      if (originalPrice !== undefined) product.originalPrice = parseFloat(originalPrice);
+      if (stock         !== undefined) product.stock         = parseInt(stock, 10);
+      if (pincode       !== undefined) product.pincode       = pincode.trim();
+
       if (req.files && req.files.length > 0) {
-        product.images = req.files.map((f) => f.filename);
+        product.images = req.files.map((f) => "/uploads/products/" + f.filename);
       }
 
       await product.save();
@@ -158,8 +164,9 @@ router.put(
   }
 );
 
-// -- PATCH /products/:id/toggle ---------------------------------
-// Soft enable/disable a product
+/* ================================================================
+   PATCH /products/:id/toggle — soft enable/disable
+   ================================================================ */
 router.patch("/:id/toggle", verifyToken, requireRole("seller", "admin"), async (req, res) => {
   try {
     const filter = { _id: req.params.id };
@@ -173,8 +180,8 @@ router.patch("/:id/toggle", verifyToken, requireRole("seller", "admin"), async (
     if (!product) return res.status(404).json({ success: false, message: "Product not found" });
 
     return res.json({
-      success: true,
-      message: product.isActive ? "Product activated" : "Product deactivated",
+      success:  true,
+      message:  product.isActive ? "Product activated" : "Product deactivated",
       isActive: product.isActive,
     });
   } catch (err) {
@@ -183,15 +190,18 @@ router.patch("/:id/toggle", verifyToken, requireRole("seller", "admin"), async (
   }
 });
 
-// -- DELETE /products/:id ---------------------------------------
+/* ================================================================
+   DELETE /products/:id
+   ================================================================ */
 router.delete("/:id", verifyToken, requireRole("seller", "admin"), async (req, res) => {
   try {
     const filter = { _id: req.params.id };
     if (req.user.role === "seller") filter.seller = req.user.id;
 
     const product = await Product.findOneAndDelete(filter);
-    if (!product) return res.status(404).json({ success: false, message: "Product not found or access denied" });
-
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found or access denied" });
+    }
     return res.json({ success: true, message: "Product deleted" });
   } catch (err) {
     console.error("[DELETE /products/:id]", err);

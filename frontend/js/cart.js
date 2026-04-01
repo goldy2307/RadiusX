@@ -18,14 +18,20 @@ var allProducts = [
 /* ---- Cart state ---- */
 var cart = [];
 
+/* Namespace cart by user ID so switching accounts never leaks items */
+function cartKey() {
+  var uid = currentUser && (currentUser._id || currentUser.id);
+  return uid ? ("u_" + uid + "_cart") : "guest_cart";
+}
+
 function loadCart() {
-  var stored = localStorage.getItem("rx_cart");
+  var stored = localStorage.getItem(cartKey());
   if (stored) { try { return JSON.parse(stored); } catch(e) {} }
   return [];
 }
 
 function saveCart() {
-  localStorage.setItem("rx_cart", JSON.stringify(cart));
+  localStorage.setItem(cartKey(), JSON.stringify(cart));
 }
 
 /* ---- Coupon state ---- */
@@ -65,7 +71,7 @@ window.onload = async function () {
 
   currentUser = res.user;
 
-  /* Load cart from localStorage (populated by addToCart on index.html) */
+  /* Load cart AFTER currentUser is set so cartKey() uses the correct user ID */
   cart = loadCart();
 
   renderCart();
@@ -318,19 +324,16 @@ function updateSummary() {
   if (couponDiscount > subtotal) couponDiscount = subtotal;
   var total = Math.max(0, subtotal - couponDiscount + delivery);
 
-  /* FIX: use \u20B9 (₹) with innerText — &#8377; only works with innerHTML */
   document.getElementById("summaryItemCount").innerText = itemCount;
-  document.getElementById("summarySubtotal").innerText  = "\u20B9" + subtotal.toLocaleString("en-IN");
-  document.getElementById("summarySavings").innerText   = "\u2212\u20B9" + savings.toLocaleString("en-IN");
-  document.getElementById("summaryCoupon").innerText    = "\u2212\u20B9" + couponDiscount.toLocaleString("en-IN");
-  document.getElementById("summaryDelivery").innerText  = delivery === 0 ? "FREE" : "\u20B9" + delivery;
-  document.getElementById("summaryTotal").innerText     = "\u20B9" + total.toLocaleString("en-IN");
+  document.getElementById("summarySubtotal").innerText  = "₹" + subtotal.toLocaleString();
+  document.getElementById("summarySavings").innerText   = "₹" + savings.toLocaleString();
+  document.getElementById("summaryCoupon").innerText    = "₹" + couponDiscount.toLocaleString();
+  document.getElementById("summaryDelivery").innerText  = delivery === 0 ? "FREE" : "₹" + delivery;
+  document.getElementById("summaryTotal").innerText     = "₹" + total.toLocaleString();
 
   var note = document.getElementById("savingsNote");
   var totalSaved = savings + couponDiscount;
-  note.innerText = totalSaved > 0
-    ? "You're saving \u20B9" + totalSaved.toLocaleString("en-IN") + " on this order!"
-    : "";
+  note.innerText = totalSaved > 0 ? "You're saving ₹" + totalSaved.toLocaleString() + " on this order!" : "";
 
   var delivNote = document.getElementById("deliveryNote");
   if (subtotal === 0) {
@@ -338,7 +341,7 @@ function updateSummary() {
   } else if (delivery === 0) {
     delivNote.innerHTML = "<strong style=\"color:var(--success)\">Free delivery</strong> applied on your order";
   } else {
-    delivNote.innerText = "Add \u20B9" + (FREE_DELIVERY_THRESHOLD - subtotal).toLocaleString("en-IN") + " more for free delivery";
+    delivNote.innerText = "Add ₹;" + (FREE_DELIVERY_THRESHOLD - subtotal).toLocaleString() + " more for free delivery";
   }
 }
 
@@ -356,70 +359,54 @@ async function handleCheckout() {
     return;
   }
 
-  /* Disable button to prevent double-tap */
   var btn = document.getElementById("checkoutBtn");
-  if (btn) { btn.disabled = true; btn.querySelector("span").innerText = "Placing Order..."; }
+  if (btn) { btn.disabled = true; btn.innerText = "Placing order..."; }
 
-  /* Build order object with all fields orders.js + expense tracker need */
-  var subtotal  = cart.reduce(function(s,i) { return s + i.price * i.qty; }, 0);
-  var delivery  = (subtotal >= FREE_DELIVERY_THRESHOLD) ? 0 : DELIVERY_CHARGE;
-  var orderId   = "RX" + Date.now().toString().slice(-8).toUpperCase();
+  /* Build order payload.
+     product field only set when it's a real MongoDB ObjectId (24-char hex).
+     Static catalogue items have numeric ids — omit product for those. */
+  var orderItems = cart.map(function(i) {
+    var item = {
+      name:          i.name,
+      category:      (i.category || "other").toLowerCase(),
+      price:         i.price,
+      originalPrice: i.originalPrice || i.price,
+      qty:           i.qty,
+      image:         i.image || "assets/products/demo.jpg"
+    };
+    /* Only include product ref if it looks like a MongoDB ObjectId */
+    var pid = i._id || i.productId;
+    if (pid && typeof pid === "string" && pid.length === 24) {
+      item.product = pid;
+    }
+    return item;
+  });
 
-  var newOrder = {
-    _id:            orderId,
-    id:             orderId,
-    status:         "processing",
-    createdAt:      new Date().toISOString(),
-    date:           new Date().toISOString(),
+  var res = await api.post("/orders", {
+    items:          orderItems,
+    deliveryCharge: cart.reduce(function(s,i){return s+i.price*i.qty;},0) >= 999 ? 0 : 49,
     couponDiscount: couponDiscount || 0,
-    deliveryCharge: delivery,
-    delivery:       delivery,
-    items: cart.map(function(i) {
-      return {
-        id:            i.id,
-        product:       i.id,
-        name:          i.name,
-        category:      i.category      || "General",   /* needed by expense tracker */
-        price:         i.price,
-        originalPrice: i.originalPrice || i.price,     /* needed by savings calc */
-        qty:           i.qty,
-        image:         i.image         || "assets/products/demo.jpg"
-      };
-    })
-  };
+    couponCode:     appliedCoupon  || "",
+    address:        (currentUser.address || ""),
+  });
 
-  /* ── 1. Save to backend (if route exists) ── */
-  var saved = false;
-  try {
-    var res = await api.post("/orders", newOrder);
-    if (res && res.success) saved = true;
-  } catch(e) {}
+  if (btn) { btn.disabled = false; btn.innerText = "Proceed to Checkout"; }
 
-  /* ── 2. Always persist to localStorage so orders/profile pages work
-          even if the backend route is not yet implemented ── */
-  var stored = [];
-  try { stored = JSON.parse(localStorage.getItem("rx_orders") || "[]"); } catch(e) {}
-  stored.unshift(newOrder);               /* newest first */
-  localStorage.setItem("rx_orders", JSON.stringify(stored));
+  if (!res.success) {
+    showToast(res.message || "Order failed. Please try again.", true);
+    return;
+  }
 
-  /* ── 3. Notify other open tabs (profile page) of new order ── */
-  try {
-    window.dispatchEvent(new StorageEvent("storage", {
-      key: "rx_orders", newValue: JSON.stringify(stored)
-    }));
-  } catch(e) {}
+  /* Show modal with real order ID */
+  var orderId = res.order && (res.order._id || res.order.id);
+  var modalEl = document.getElementById("modalOrderId");
+  if (modalEl) modalEl.innerText = orderId || "RX" + Date.now().toString().slice(-8).toUpperCase();
 
-  /* ── 4. Clear cart ── */
-  cart           = [];
-  appliedCoupon  = null;
-  couponDiscount = 0;
+  /* Clear cart */
+  cart = [];
   saveCart();
 
-  /* ── 5. Show confirmation modal ── */
-  document.getElementById("modalOrderId").innerText = orderId;
   document.getElementById("checkoutModal").classList.add("open");
-
-  if (btn) { btn.disabled = false; btn.querySelector("span").innerText = "Proceed to Checkout"; }
 }
 
 function closeCheckoutModal() {
@@ -493,6 +480,16 @@ function renderStars(rating) {
   return h;
 }
 
+
+/* ====================================================
+   CART ABANDONMENT TRACKING
+   ==================================================== */
+
+function trackCartAbandonment() {
+  if (!currentUser || !cart.length) return;
+  /* Fire and forget — backend sets/resets the 10-min timer */
+  api.post("/orders/cart-activity", { cartItems: cart }).catch(function() {});
+}
 
 /* ====================================================
    HELPERS

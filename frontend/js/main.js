@@ -109,13 +109,20 @@ document.addEventListener("DOMContentLoaded", function () {
    SAVED ADDRESSES -- localStorage CRUD
    ================================================================ */
 
+/* Address key — user-scoped so different accounts never share addresses.
+   Must match profile.js ukey("addresses") = "u_USERID_addresses" */
+function addrKey() {
+  var uid = window.rxCurrentUser && (window.rxCurrentUser._id || window.rxCurrentUser.id);
+  return uid ? ("u_" + uid + "_addresses") : "guest_addresses";
+}
+
 function getSavedAddresses() {
-  try { return JSON.parse(localStorage.getItem("rx_saved_addresses") || "[]"); }
+  try { return JSON.parse(localStorage.getItem(addrKey()) || "[]"); }
   catch(e) { return []; }
 }
 
 function saveAddresses(list) {
-  localStorage.setItem("rx_saved_addresses", JSON.stringify(list));
+  localStorage.setItem(addrKey(), JSON.stringify(list));
 }
 
 function getActiveAddrId() {
@@ -542,45 +549,6 @@ var SHOP_EMOJI_UNICODE = {
   cinema:"\uD83C\uDFAC"
 };
 
-/* ---- Per-type gradient + SVG icon for beautiful fallback covers ---- */
-var SHOP_COVER_STYLE = {
-  supermarket:    { g: ["#f7971e","#ffd200"], icon: '<path d="M8 20h16l-2-10H10L8 20zm0 0H5m19 0h3M10 20v2m8-2v2" stroke="#fff" stroke-width="1.8" stroke-linecap="round" fill="none"/><rect x="11" y="13" width="3" height="4" rx="0.5" fill="rgba(255,255,255,0.5)"/><rect x="16" y="13" width="3" height="4" rx="0.5" fill="rgba(255,255,255,0.5)"/>' },
-  convenience:    { g: ["#f953c6","#b91d73"], icon: '<rect x="5" y="12" width="22" height="12" rx="2" fill="rgba(255,255,255,0.2)"/><path d="M5 12l4-7h14l4 7" stroke="#fff" stroke-width="1.8" fill="none" stroke-linejoin="round"/><rect x="13" y="16" width="6" height="8" rx="1" fill="rgba(255,255,255,0.45)"/>' },
-  electronics:    { g: ["#4776e6","#8e54e9"], icon: '<rect x="4" y="8" width="24" height="16" rx="2" stroke="#fff" stroke-width="1.8" fill="rgba(255,255,255,0.15)"/><rect x="12" y="24" width="8" height="3" rx="1" fill="rgba(255,255,255,0.4)"/><circle cx="16" cy="16" r="4" fill="rgba(255,255,255,0.5)"/>' },
-  clothes:        { g: ["#c471ed","#f64f59"], icon: '<path d="M4 10l5-5 3 3 4 0 3-3 5 5-3 2v11H7V12L4 10z" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>' },
-  mobile_phone:   { g: ["#00b4db","#0083b0"], icon: '<rect x="9" y="4" width="14" height="24" rx="3" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.8"/><rect x="11" y="7" width="10" height="16" rx="1.5" fill="rgba(255,255,255,0.35)"/><circle cx="16" cy="25" r="1.2" fill="white"/>' },
-  shoes:          { g: ["#f7971e","#e05d5d"], icon: '<path d="M4 22c0 0 2-8 5-10 2-1.5 4-1 6 0l7 4c1.5 1 2 2 2 3H4z" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="1.6"/><path d="M6 22c2-1 4-1 6 0" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/>' },
-  furniture:      { g: ["#834d9b","#d04ed6"], icon: '<rect x="5" y="14" width="22" height="6" rx="2" fill="rgba(255,255,255,0.3)"/><rect x="7" y="20" width="3" height="5" rx="1" fill="rgba(255,255,255,0.4)"/><rect x="22" y="20" width="3" height="5" rx="1" fill="rgba(255,255,255,0.4)"/><rect x="8" y="8" width="16" height="7" rx="1.5" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.4"/>' },
-  hardware:       { g: ["#636363","#a2ab58"], icon: '<path d="M8 24L20 8" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="21" cy="9" r="4" fill="rgba(255,255,255,0.35)" stroke="#fff" stroke-width="1.6"/><circle cx="9" cy="23" r="3" fill="rgba(255,255,255,0.35)" stroke="#fff" stroke-width="1.6"/>' },
-  bakery:         { g: ["#f7971e","#f45c43"], icon: '<ellipse cx="16" cy="18" rx="10" ry="7" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.8"/><path d="M9 16 Q16 8 23 16" stroke="#fff" stroke-width="1.6" fill="none"/><circle cx="13" cy="19" r="1.5" fill="rgba(255,255,255,0.6)"/><circle cx="19" cy="19" r="1.5" fill="rgba(255,255,255,0.6)"/>' },
-  pharmacy:       { g: ["#11998e","#38ef7d"], icon: '<rect x="13" y="7" width="6" height="18" rx="2" fill="rgba(255,255,255,0.4)"/><rect x="7" y="13" width="18" height="6" rx="2" fill="rgba(255,255,255,0.4)"/>' },
-  books:          { g: ["#1a1a2e","#16213e"], icon: '<rect x="5" y="6" width="7" height="20" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="14" y="6" width="7" height="20" rx="1" fill="rgba(255,255,255,0.2)"/><rect x="9" y="9" width="5" height="20" rx="1" fill="rgba(255,255,255,0.4)" transform="rotate(-5 9 9)"/>' },
-  jewelry:        { g: ["#b06ab3","#4568dc"], icon: '<path d="M8 12l8-7 8 7-8 13-8-13z" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 12h16M12 12l4-7 4 7" stroke="#fff" stroke-width="1.3" fill="none"/>' },
-  sports:         { g: ["#00c6ff","#0072ff"], icon: '<circle cx="16" cy="16" r="10" stroke="#fff" stroke-width="1.8" fill="rgba(255,255,255,0.15)"/><path d="M6 16 Q11 10 16 16 Q21 22 26 16" stroke="#fff" stroke-width="1.4" fill="none"/><path d="M16 6 Q10 11 16 16 Q22 21 16 26" stroke="#fff" stroke-width="1.4" fill="none"/>' },
-  cosmetics:      { g: ["#e96c9a","#c86dd8"], icon: '<rect x="12" y="5" width="8" height="16" rx="3" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="1.6"/><ellipse cx="16" cy="5" rx="4" ry="2" fill="rgba(255,255,255,0.4)"/><rect x="14" y="21" width="4" height="5" rx="1" fill="rgba(255,255,255,0.3)"/>' },
-  hairdresser:    { g: ["#ee9ca7","#ffdde1"], icon: '<path d="M10 8 Q16 4 22 8 L22 20 Q16 24 10 20 Z" fill="rgba(255,255,255,0.15)" stroke="#fff" stroke-width="1.5"/><circle cx="13" cy="12" r="2" fill="rgba(255,255,255,0.5)"/><circle cx="19" cy="12" r="2" fill="rgba(255,255,255,0.5)"/><path d="M13 14 Q16 20 19 14" stroke="#fff" stroke-width="1.4" fill="none"/>' },
-  restaurant:     { g: ["#f12711","#f5af19"], icon: '<path d="M10 6v8a4 4 0 004 4v8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><path d="M14 6v20" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/><path d="M22 6c0 0 0 8-4 8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>' },
-  cafe:           { g: ["#4e342e","#a1887f"], icon: '<path d="M7 12h14v10a3 3 0 01-3 3H10a3 3 0 01-3-3V12z" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.6"/><path d="M21 14h2a2 2 0 010 4h-2" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M11 8 Q13 4 15 8" stroke="#fff" stroke-width="1.4" fill="none"/>' },
-  florist:        { g: ["#f953c6","#7fd173"], icon: '<circle cx="16" cy="14" r="4" fill="rgba(255,255,255,0.35)"/><circle cx="10" cy="12" r="3" fill="rgba(255,255,255,0.25)"/><circle cx="22" cy="12" r="3" fill="rgba(255,255,255,0.25)"/><circle cx="16" cy="8" r="3" fill="rgba(255,255,255,0.25)"/><path d="M16 18v8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>' },
-  pet:            { g: ["#f7971e","#c471ed"], icon: '<circle cx="12" cy="10" r="3" fill="rgba(255,255,255,0.35)"/><circle cx="20" cy="10" r="3" fill="rgba(255,255,255,0.35)"/><ellipse cx="16" cy="18" rx="7" ry="6" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.6"/><circle cx="13" cy="17" r="1.2" fill="#fff" opacity="0.7"/><circle cx="19" cy="17" r="1.2" fill="#fff" opacity="0.7"/>' },
-  bank:           { g: ["#2c3e50","#4ca1af"], icon: '<rect x="5" y="14" width="22" height="12" rx="1" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="1.5"/><path d="M5 14l11-9 11 9" fill="rgba(255,255,255,0.25)" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><rect x="9" y="18" width="3" height="8" fill="rgba(255,255,255,0.45)"/><rect x="15" y="18" width="3" height="8" fill="rgba(255,255,255,0.45)"/><rect x="21" y="18" width="3" height="8" fill="rgba(255,255,255,0.45)"/>' },
-  gym:            { g: ["#1a1a2e","#16213e"], icon: '<rect x="3" y="14" width="4" height="5" rx="1" fill="rgba(255,255,255,0.4)"/><rect x="25" y="14" width="4" height="5" rx="1" fill="rgba(255,255,255,0.4)"/><rect x="7" y="12" width="4" height="9" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="21" y="12" width="4" height="9" rx="1" fill="rgba(255,255,255,0.3)"/><rect x="11" y="15" width="10" height="3" rx="1.5" fill="rgba(255,255,255,0.5)"/>' },
-  general:        { g: ["#373b44","#4286f4"], icon: '<rect x="5" y="13" width="22" height="14" rx="2" fill="rgba(255,255,255,0.18)" stroke="#fff" stroke-width="1.6"/><path d="M3 13l5-8h18l5 8" stroke="#fff" stroke-width="1.6" fill="rgba(255,255,255,0.12)" stroke-linejoin="round"/><rect x="13" y="18" width="6" height="9" rx="1" fill="rgba(255,255,255,0.4)"/>' }
-};
-
-function shopCoverSVG(type) {
-  var s = SHOP_COVER_STYLE[type] || SHOP_COVER_STYLE["general"];
-  var g1 = s.g[0], g2 = s.g[1];
-  var uid = "sg_" + Math.random().toString(36).slice(2, 8);
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid slice">' +
-    '<defs><linearGradient id="' + uid + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
-    '<stop offset="0%" stop-color="' + g1 + '"/><stop offset="100%" stop-color="' + g2 + '"/></linearGradient></defs>' +
-    '<rect width="32" height="32" fill="url(#' + uid + ')"/>' +
-    '<g opacity="0.18"><rect width="32" height="32" fill="none" stroke="white" stroke-width="0.4" style="stroke-dasharray:4 4"/></g>' +
-    s.icon +
-    '</svg>';
-}
-
 var SHOP_LABEL = {
   supermarket:"Supermarket",      convenience:"Convenience Store",
   electronics:"Electronics",      clothes:"Fashion & Clothing",
@@ -676,43 +644,22 @@ function renderShops(shops, grid) {
     var card = document.createElement("div");
     card.className = "shop-card";
     card.style.animationDelay = (i * 0.06) + "s";
-
     var bc   = s.open === false ? "closed" : "open";
     var bt   = s.open === false ? "Closed"  : "Open";
     var mUrl = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(s.name) + "&query_place_id=" + s.lat + "," + s.lon;
-    var addrHTML   = s.address ? '<div class="shop-address"><i class="fa-solid fa-location-dot" style="font-size:10px;margin-right:4px"></i>' + s.address + '</div>' : "";
+    var addrHTML   = s.address ? '<div class="shop-address"><i class="fa-solid fa-location-dot" style="color:rgb(196,223,154);font-size:10px;margin-right:4px"></i>' + s.address + '</div>' : "";
     var phoneHTML  = s.phone   ? '<span><i class="fa-solid fa-phone"></i> ' + s.phone + '</span>' : "";
-    var phoneBadge = s.phone   ? '<span class="shop-tag"><i class="fa-solid fa-phone" style="font-size:9px"></i> Call</span>'   : "";
-    var webBadge   = s.website ? '<span class="shop-tag"><i class="fa-solid fa-globe" style="font-size:9px"></i> Website</span>' : "";
-
-    /* Street View cover — loads real photo; falls back to SVG illustration */
-    var svUrl = "https://maps.googleapis.com/maps/api/streetview?size=400x160&location=" +
-                s.lat + "," + s.lon + "&fov=90&pitch=5&source=outdoor";
-
-    var coverHTML =
-      '<div class="shop-cover-wrap">' +
-        /* real photo attempt */
-        '<img class="shop-cover-photo" src="' + svUrl + '" alt="' + s.name + '" ' +
-          'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" ' +
-          'onload="this.nextElementSibling.style.display=\'none\'">' +
-        /* SVG illustrated fallback */
-        '<div class="shop-cover-svg" style="display:none">' + shopCoverSVG(s.type) + '</div>' +
-        /* type badge overlay */
-        '<div class="shop-cover-badge">' +
-          '<span class="shop-cover-type-pill">' + s.typeLabel + '</span>' +
-        '</div>' +
-      '</div>';
-
+    var phoneBadge = s.phone   ? '<span class="shop-tag">Has phone</span>'   : "";
+    var webBadge   = s.website ? '<span class="shop-tag">Has website</span>' : "";
     card.innerHTML =
-      coverHTML +
+      '<div class="shop-cover-emoji">' + s.emoji + '</div>' +
       '<div class="shop-body">' +
         '<div class="shop-top-row"><div class="shop-name">' + s.name + '</div><span class="shop-badge ' + bc + '">' + bt + '</span></div>' +
-        addrHTML +
+        '<div class="shop-type">' + s.typeLabel + '</div>' + addrHTML +
         '<div class="shop-meta"><span><i class="fa-solid fa-location-dot"></i> ' + s.distLabel + ' away</span>' + phoneHTML + '</div>' +
-        '<div class="shop-tags">' + phoneBadge + webBadge + '</div>' +
+        '<div class="shop-tags"><span class="shop-tag">' + s.typeLabel + '</span>' + phoneBadge + webBadge + '</div>' +
         '<button class="shop-order-btn" onclick="openShopMap(\'' + encodeURIComponent(s.name) + '\',' + s.lat + ',' + s.lon + ',event)"><i class="fa-solid fa-map-location-dot"></i> View on Map</button>' +
       '</div>';
-
     card.onclick = function (e) { if (e.target.closest(".shop-order-btn")) return; window.open(mUrl, "_blank"); };
     grid.appendChild(card);
   });
@@ -799,12 +746,12 @@ var products = [
   {id:4,  name:"Tshirt",         price:400,   originalPrice:600,   category:"fashion",     image:"assets/products/tshirt.jpg",     rating:3.8, reviews:42},
   {id:5,  name:"Chair",          price:1500,  originalPrice:2000,  category:"home",        image:"assets/products/chair.jpg",      rating:4.3, reviews:34},
   {id:6,  name:"Lamp",           price:700,   originalPrice:950,   category:"home",        image:"assets/products/lamp.jpg",       rating:4.1, reviews:27},
-  {id:7,  name:"Samsung Mobile", price:65000, originalPrice:75000, category:"electronics", image:"assets/products/S26.jpg",    rating:4.1, reviews:27},
+  {id:7,  name:"Samsung Mobile", price:65000, originalPrice:75000, category:"electronics", image:"assets/products/S26.jpg",        rating:4.1, reviews:27},
   {id:8,  name:"Jeans",          price:700,   originalPrice:950,   category:"fashion",     image:"assets/products/jeans.jpg",      rating:4.1, reviews:27},
-  {id:9,  name:"Oneplus Mobile", price:700,   originalPrice:950,   category:"electronics", image:"assets/products/15r.jpg",    rating:4.1, reviews:27},
+  {id:9,  name:"Oneplus Mobile", price:700,   originalPrice:950,   category:"electronics", image:"assets/products/15r.jpg",        rating:4.1, reviews:27},
   {id:10, name:"Camera",         price:85000, originalPrice:95000, category:"electronics", image:"assets/products/camera.jpg",     rating:4.1, reviews:27},
   {id:17, name:"Tablet",         price:18000, originalPrice:21000, category:"electronics", image:"assets/products/tablet.jpg",     rating:4.2, reviews:54},
-  {id:18, name:"Smartwatch",     price:3500,  originalPrice:4200,  category:"electronics", image:"assets/products/smartwatch.jpg",      rating:4.3, reviews:66},
+  {id:18, name:"Smartwatch",     price:3500,  originalPrice:4200,  category:"electronics", image:"assets/products/smartwatch.jpg", rating:4.3, reviews:66},
   {id:19, name:"Keyboard",       price:800,   originalPrice:1100,  category:"electronics", image:"assets/products/keyboard.jpg",   rating:4.0, reviews:33},
   {id:20, name:"Mouse",          price:500,   originalPrice:700,   category:"electronics", image:"assets/products/mouse.jpg",      rating:4.1, reviews:41},
   {id:21, name:"Jacket",         price:1600,  originalPrice:2200,  category:"fashion",     image:"assets/products/jacket.jpg",     rating:4.2, reviews:58},
@@ -821,7 +768,7 @@ var products = [
   {id:32, name:"Powerbank",      price:1200,  originalPrice:1600,  category:"electronics", image:"assets/products/powerbank.jpg",  rating:4.2, reviews:53},
   {id:33, name:"Dress",          price:1300,  originalPrice:1700,  category:"fashion",     image:"assets/products/dress.jpg",      rating:4.1, reviews:36},
   {id:34, name:"Scarf",          price:300,   originalPrice:450,   category:"fashion",     image:"assets/products/scarf.jpg",      rating:3.7, reviews:18},
-  {id:35, name:"Sunglasses",     price:600,   originalPrice:900,   category:"fashion",     image:"assets/products/sunglasses.jpg",    rating:4.0, reviews:27},
+  {id:35, name:"Sunglasses",     price:600,   originalPrice:900,   category:"fashion",     image:"assets/products/glasses.jpg",    rating:4.0, reviews:27},
   {id:36, name:"Belt",           price:350,   originalPrice:500,   category:"fashion",     image:"assets/products/belt.jpg",       rating:3.9, reviews:20},
   {id:37, name:"Curtains",       price:1100,  originalPrice:1500,  category:"home",        image:"assets/products/curtain.jpg",    rating:4.1, reviews:29},
   {id:38, name:"Carpet",         price:2000,  originalPrice:2600,  category:"home",        image:"assets/products/carpet.jpg",     rating:4.2, reviews:34},
@@ -833,7 +780,7 @@ var products = [
   {id:44, name:"Projector",      price:8500,  originalPrice:10000, category:"electronics", image:"assets/products/projector.jpg",  rating:4.2, reviews:31},
   {id:45, name:"Backpack",       price:1200,  originalPrice:1600,  category:"fashion",     image:"assets/products/backpack.jpg",   rating:4.1, reviews:35},
   {id:46, name:"Wallet",         price:500,   originalPrice:750,   category:"fashion",     image:"assets/products/wallet.jpg",     rating:3.9, reviews:24},
-  {id:47, name:"Sandals",        price:700,   originalPrice:950,   category:"fashion",     image:"assets/products/sandal.jpg",    rating:4.0, reviews:26},
+  {id:47, name:"Sandals",        price:700,   originalPrice:950,   category:"fashion",     image:"assets/products/sandals.jpg",    rating:4.0, reviews:26},
   {id:48, name:"Bottle",         price:300,   originalPrice:450,   category:"home",        image:"assets/products/bottle.jpg",     rating:3.8, reviews:19},
   {id:49, name:"Lunchbox",       price:450,   originalPrice:650,   category:"home",        image:"assets/products/lunchbox.jpg",   rating:3.9, reviews:21},
   {id:50, name:"Plant",          price:350,   originalPrice:500,   category:"home",        image:"assets/products/plant.jpg",      rating:4.2, reviews:23}
@@ -851,18 +798,69 @@ function renderStars(r) {
   return h;
 }
 
+function getCartKey() {
+  /* Use user-scoped key if logged in, fallback to guest */
+  var uid = window.rxCurrentUser && (window.rxCurrentUser._id || window.rxCurrentUser.id);
+  return uid ? ("u_" + uid + "_cart") : "guest_cart";
+}
+
 function addToCart(id, event) {
   event.stopPropagation();
+
+  /* Must be signed in to add to cart */
+  if (!window.rxCurrentUser) {
+    /* Show toast and briefly animate button to indicate sign-in needed */
+    showCartSignInToast();
+    var btn = event.target;
+    btn.innerText = "Sign In First";
+    btn.style.background = "rgba(255,100,100,0.18)";
+    btn.style.color = "rgb(255,100,100)";
+    setTimeout(function () {
+      btn.innerText = "Add to Cart";
+      btn.style.background = "";
+      btn.style.color = "";
+    }, 1800);
+    return;
+  }
+
   var prod = products.find(function (p) { return p.id === id; });
-  var cart = JSON.parse(localStorage.getItem("rx_cart") || "[]");
+  var key  = getCartKey();
+  var cart = JSON.parse(localStorage.getItem(key) || "[]");
   var ex   = cart.find(function (i) { return i.id === id; });
   if (ex) ex.qty++;
   else    cart.push(Object.assign({}, prod, { qty: 1 }));
-  localStorage.setItem("rx_cart", JSON.stringify(cart));
+  localStorage.setItem(key, JSON.stringify(cart));
+  updateCartBadge();
+  /* Notify backend for cart abandonment tracking */
+  api.post("/orders/cart-activity", { cartItems: cart }).catch(function() {});
   var btn = event.target;
   btn.innerText = "Added!";
   btn.style.background = "rgb(130,180,80)";
   setTimeout(function () { btn.innerText = "Add to Cart"; btn.style.background = ""; }, 1200);
+}
+
+function showCartSignInToast() {
+  /* Create or reuse a toast element */
+  var toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = '<i class="fa-solid fa-user" style="margin-right:8px"></i>' +
+    'Please <a href="login.html?tab=signin" style="color:var(--accent);font-weight:700;text-decoration:none">Sign In</a> to add items to cart';
+  toast.classList.add("show");
+  clearTimeout(window._cartToastTimer);
+  window._cartToastTimer = setTimeout(function() { toast.classList.remove("show"); }, 3000);
+}
+
+function updateCartBadge() {
+  var key   = getCartKey();
+  var cart  = JSON.parse(localStorage.getItem(key) || "[]");
+  var total = cart.reduce(function(s,i){ return s + i.qty; }, 0);
+  var badge = document.getElementById("navCartBadge");
+  if (badge) badge.innerText = total;
 }
 
 function buyNow(id, event) {
@@ -914,6 +912,7 @@ async function checkUserLogin() {
   var logoutOpt  = document.getElementById("logoutOption");
 
   if (!loggedIn) {
+    window.rxCurrentUser = null;
     if (signInOpt)  signInOpt.style.display  = "";
     if (signUpOpt)  signUpOpt.style.display  = "";
     if (profileOpt) profileOpt.style.display = "none";
@@ -922,16 +921,29 @@ async function checkUserLogin() {
     return;
   }
 
-  var res = await api.get("/auth/me");
-  if (!res.success) {
-    api.clearToken();
-    return;
+  /* Fast path: use cached user from sessionStorage (set on login/register).
+     This avoids a /auth/me network call on every page navigation. */
+  var user = api.getUser();
+
+  if (!user) {
+    /* Cache miss — fetch from backend once and cache the result */
+    var res = await api.get("/auth/me", { noRedirect: true });
+    if (!res.success) {
+      api.clearToken();
+      if (signInOpt)  signInOpt.style.display  = "";
+      if (signUpOpt)  signUpOpt.style.display  = "";
+      if (profileOpt) profileOpt.style.display = "none";
+      if (forgotOpt)  forgotOpt.style.display  = "";
+      if (logoutOpt)  logoutOpt.style.display  = "none";
+      return;
+    }
+    user = res.user;
+    api.setUser(user);
   }
 
-  var user = res.user;
+  window.rxCurrentUser = user;
   localStorage.setItem("rx_user_name", user.name);
   localStorage.setItem("rx_user_role", user.role);
-  window.rxCurrentUser = user;
 
   if (signInOpt)  signInOpt.style.display  = "none";
   if (signUpOpt)  signUpOpt.style.display  = "none";
@@ -939,16 +951,24 @@ async function checkUserLogin() {
   if (profileOpt) profileOpt.style.display = "";
   if (logoutOpt)  logoutOpt.style.display  = "";
 
-  /* Show dashboard link in navbar for admin/seller */
+  /* Update cart badge with user-scoped cart */
+  updateCartBadge();
+
+  /* Show dashboard link for admin/seller */
   var dashLink = document.getElementById("dashboardOption");
   if (dashLink) {
     dashLink.style.display = "";
-    if (user.role === "admin") {
-      dashLink.querySelector("a").href = "admin-dashboard.html";
-      dashLink.querySelector("a").innerText = "Admin Dashboard";
-    } else if (user.role === "seller") {
-      dashLink.querySelector("a").href = "seller-dashboard.html";
-      dashLink.querySelector("a").innerText = "Seller Dashboard";
+    var dashAnchor = dashLink.querySelector("a");
+    if (dashAnchor) {
+      if (user.role === "admin") {
+        dashAnchor.href = "admin-dashboard.html";
+        dashAnchor.innerText = "Admin Dashboard";
+      } else if (user.role === "seller") {
+        dashAnchor.href = "seller-dashboard.html";
+        dashAnchor.innerText = "Seller Dashboard";
+      } else {
+        dashLink.style.display = "none";
+      }
     }
   }
 }

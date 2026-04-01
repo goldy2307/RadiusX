@@ -1,98 +1,99 @@
 /* ================================================================
-   config/passport.js
-   Google OAuth 2.0 strategy via passport-google-oauth20
+   config/passport.js — Google OAuth strategy
    ================================================================ */
 
-const passport       = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const User           = require("../models/User");
-const { sendWelcome } = require("../services/notifyService");
+const passport = require("passport");
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID:     process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL:  process.env.GOOGLE_CALLBACK_URL ||
-                    "http://localhost:5000/auth/google/callback",
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        const email    = profile.emails?.[0]?.value;
-        const name     = profile.displayName || "Google User";
-        const googleId = profile.id;
-        const avatar   = profile.photos?.[0]?.value || null;
+if (
+  process.env.GOOGLE_CLIENT_ID &&
+  process.env.GOOGLE_CLIENT_ID !== "placeholder" &&
+  process.env.GOOGLE_CLIENT_SECRET &&
+  process.env.GOOGLE_CLIENT_SECRET !== "placeholder"
+) {
+  const GoogleStrategy  = require("passport-google-oauth20").Strategy;
+  const User            = require("../models/User");
+  const crypto          = require("crypto");
+  const { sendWelcome } = require("../services/notifyService");
 
-        if (!email) {
-          return done(new Error("Google did not return an email address"), null);
-        }
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID:     process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL:  process.env.GOOGLE_CALLBACK_URL ||
+                      "http://localhost:5000/auth/google/callback",
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          const email    = profile.emails && profile.emails[0] && profile.emails[0].value;
+          const name     = profile.displayName || "Google User";
+          const googleId = profile.id;
+          const avatar   = profile.photos && profile.photos[0] ? profile.photos[0].value : null;
 
-        /* ── 1. Already registered via Google ── */
-        let user = await User.findOne({ googleId });
+          if (!email) {
+            return done(new Error("Google account has no email address"), null);
+          }
 
-        /* ── 2. Registered with email+password before, link Google now ── */
-        if (!user) {
+          /* ── 1. Already linked by googleId ── */
+          let user = await User.findOne({ googleId });
+          if (user) {
+            console.log("[Google OAuth] Existing Google user:", email);
+            return done(null, user);
+          }
+
+          /* ── 2. Account exists with same email — link Google to it ── */
           user = await User.findOne({ email: email.toLowerCase() });
           if (user) {
-            user.googleId = googleId;
-            user.avatar   = user.avatar || avatar;
-            await user.save();
+            console.log("[Google OAuth] Linking Google to existing account:", email);
+            /* Use updateOne to avoid triggering password validation on save */
+            await User.updateOne(
+              { _id: user._id },
+              { $set: { googleId, avatar: user.avatar || avatar } }
+            );
+            /* Reload fresh user after update */
+            user = await User.findById(user._id);
+            return done(null, user);
           }
-        }
 
-        /* ── 3. Brand-new user — create account ── */
-        if (!user) {
-          /*
-           * FIX: Do NOT pass mobile/pincode placeholders.
-           * mobile is now optional (sparse unique) in the schema,
-           * so omitting it allows unlimited Google signups without
-           * duplicate-key errors on the mobile field.
-           *
-           * password gets a random 64-char hex — unguessable, never
-           * exposed. The schema no longer requires it (select: false).
-           */
+          /* ── 3. Brand new user via Google ── */
+          console.log("[Google OAuth] Creating new user:", email);
+
+          /* Generate unique mobile placeholder using googleId (always 21 chars, unique per Google account) */
+          const uniqueMobile = "g" + googleId;
+
+          /* Generate a strong random password — user cannot use it, they must use Google to login */
+          const randomPassword = crypto.randomBytes(32).toString("hex");
+
           user = await User.create({
             name,
             email:    email.toLowerCase(),
-            password: require("crypto").randomBytes(32).toString("hex"),
+            mobile:   uniqueMobile,
+            password: randomPassword,
+            pincode:  "000000",
+            address:  "Please update via Profile",
             role:     "buyer",
             googleId,
             avatar,
-            // mobile  → intentionally omitted (null by default)
-            // pincode → defaults to "" in schema
-            // address → defaults to "" in schema
           });
 
-          /* Send welcome email — fire-and-forget */
-          sendWelcome(user).catch((mailErr) => {
-            console.warn("[Google OAuth] Welcome email failed:", mailErr.message);
-          });
+          console.log("[Google OAuth] New user created:", email);
+          sendWelcome(user).catch(() => {});
+          return done(null, user);
+
+        } catch (err) {
+          console.error("[Google OAuth Strategy] Error:", err.message);
+          /* Log the full error for debugging */
+          if (err.code === 11000) {
+            console.error("[Google OAuth Strategy] Duplicate key:", JSON.stringify(err.keyValue));
+          }
+          return done(err, null);
         }
-
-        return done(null, user);
-
-      } catch (err) {
-        /*
-         * FIX: Log the FULL error object so you can see the real cause
-         * in your server console (e.g. duplicate key, validation error).
-         */
-        console.error("[Google OAuth Strategy] Full error:", err);
-        return done(err, null);
       }
-    }
-  )
-);
-
-/* Serialize / deserialize are not used (session: false) but keeping
-   stubs here avoids accidental issues if session is ever enabled. */
-passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err, null);
-  }
-});
+    )
+  );
+  console.log("[Passport] Google OAuth strategy registered");
+} else {
+  console.log("[Passport] Google OAuth skipped — GOOGLE_CLIENT_ID/SECRET not set or placeholder");
+}
 
 module.exports = passport;

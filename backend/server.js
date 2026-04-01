@@ -18,6 +18,7 @@ const authRouter    = require("./routes/auth");
 const sellerRouter  = require("./routes/seller");
 const productRouter = require("./routes/product");
 const adminRouter   = require("./routes/admin");
+const ordersRouter  = require("./routes/orders");
 
 const app  = express();
 const PORT = process.env.PORT || 5000;
@@ -66,10 +67,13 @@ const globalLimiter = rateLimit({
   message: { success: false, message: "Too many requests, please try again later" },
 });
 
+/* Auth limiter — only applies to login/register, NOT refresh
+   Refresh is called silently on every page load so it must be separate */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30, // relaxed slightly — 30 auth attempts per 15 min
-  message: { success: false, message: "Too many auth attempts, please wait a few minutes" },
+  max: 20,
+  skip: (req) => req.path === "/refresh", // never rate-limit token refresh
+  message: { success: false, message: "Too many login attempts, please wait 15 minutes" },
 });
 
 app.use(globalLimiter);
@@ -87,6 +91,7 @@ app.use("/auth",     authLimiter, authRouter);
 app.use("/seller",   sellerRouter);
 app.use("/products", productRouter);
 app.use("/admin",    adminRouter);
+app.use("/orders",   ordersRouter);
 
 // -- 404 -------------------------------------------------------
 app.use((req, res) => {
@@ -110,6 +115,10 @@ async function bootstrap() {
   if (redis) redis.connect().catch((e) => console.warn("[Redis] Could not connect:", e.message));
 
   await seedAdmin();
+
+  // Verify SMTP on startup
+  const { testSMTP } = require("./services/notifyService");
+  testSMTP().catch(() => {});
 
   app.listen(PORT, () => {
     console.log(`[Server] RadiusX API running on port ${PORT}`);

@@ -568,17 +568,17 @@ function signInWithGoogle() {
   }
 
   if (token) {
-    /* Store the access token in api.js memory */
     api.setToken(token);
     var userRole = params.get("role") || "buyer";
-
-    /* Clean the URL so the token isn't visible */
     window.history.replaceState({}, "", "login.html");
-
     localStorage.setItem("rx_user_role", userRole);
-    showToast("Signed in with Google!");
 
-    /* Redirect based on role */
+    /* Fetch and cache user so navbar on next page loads instantly */
+    api.get("/auth/me", { noRedirect: true }).then(function(res) {
+      if (res && res.success) api.setUser(res.user);
+    }).catch(function(){});
+
+    showToast("Signed in with Google!");
     setTimeout(function() {
       if (userRole === "admin")  { window.location.href = "admin-dashboard.html"; return; }
       if (userRole === "seller") { window.location.href = "seller-dashboard.html"; return; }
