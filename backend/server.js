@@ -46,6 +46,8 @@ app.use(cors({
       "http://127.0.0.1:5500",
       "http://localhost:5173",
       "http://127.0.0.1:3000",
+      "https://goldy2307.github.io",
+      "https://goldy2307.github.io/RadiusX/frontend",
     ].filter(Boolean);
     if (!origin) return callback(null, true); // curl / Postman / server-to-server
     if (allowed.some(function(a){ return origin === a || origin.startsWith(a); })) {
