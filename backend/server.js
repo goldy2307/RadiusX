@@ -23,6 +23,10 @@ const ordersRouter  = require("./routes/orders");
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust reverse proxy (Render, Railway, Heroku) — required for
+// secure cookies and correct req.ip behind their load balancers
+app.set("trust proxy", 1);
+
 // -- Upload directory ------------------------------------------
 const uploadDir = path.join(__dirname, "uploads/products");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
@@ -33,8 +37,10 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 // -- CORS (function-based to handle all localhost ports) -------
 app.use(cors({
   origin: function (origin, callback) {
+    // In production only allow explicit origins; in dev allow all localhost
     const allowed = [
-      process.env.CLIENT_URL,
+      process.env.CLIENT_URL,              // e.g. https://yourname.github.io
+      process.env.FRONTEND_URL,            // alternate env var
       "http://localhost:3000",
       "http://localhost:5500",
       "http://127.0.0.1:5500",
@@ -42,7 +48,10 @@ app.use(cors({
       "http://127.0.0.1:3000",
     ].filter(Boolean);
     if (!origin) return callback(null, true); // curl / Postman / server-to-server
-    if (allowed.indexOf(origin) !== -1) return callback(null, true);
+    if (allowed.some(function(a){ return origin === a || origin.startsWith(a); })) {
+      return callback(null, true);
+    }
+    console.warn("[CORS] Blocked origin:", origin);
     return callback(new Error("CORS: origin " + origin + " not allowed"));
   },
   credentials: true,

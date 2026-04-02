@@ -4,7 +4,15 @@
    Include before ALL other JS files on every page.
    ================================================================ */
 
-const API_BASE = "http://localhost:5000";
+/* API_BASE: reads from window.API_URL if set (inject via HTML meta tag in production),
+   otherwise falls back to localhost for local development.
+   On your live site, add this to every HTML page <head>:
+   <meta name="api-url" content="https://your-render-app.onrender.com"> */
+const API_BASE = (function() {
+  var meta = document.querySelector('meta[name="api-url"]');
+  if (meta && meta.content) return meta.content.replace(/\/$/, "");
+  return "http://localhost:5000";
+})();
 
 const api = (() => {
   /* Access token lives in memory AND sessionStorage.
