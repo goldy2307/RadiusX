@@ -277,7 +277,7 @@ router.post("/logout-all", verifyToken, async (req, res) => {
 /* HARDCODED for local dev: http://localhost:3000/frontend
    Change this to your GitHub Pages URL before deploying:
    e.g. https://goldy2307.github.io/RadiusX/frontend           */
-var FRONTEND_URL = "http://localhost:3000/frontend";
+var FRONTEND_URL = "https://goldy2307.github.io/RadiusX/frontend";
 
 router.get("/google",
   (req, res, next) => {
